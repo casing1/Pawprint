@@ -74,14 +74,32 @@ final class LocalizationManager {
         return nil
     }
 
+    /// Deliberately avoids `Bundle.module`. SwiftPM's generated accessor **traps** when it can't
+    /// find the resource bundle, and it looks beside the executable and at the absolute build
+    /// directory — not in `Contents/Resources`, where an assembled .app puts it. Locally the build
+    /// directory still existed so the app worked; the shipped build crashed on launch for
+    /// everyone. Searching `Bundle.main` ourselves cannot trap and covers both layouts.
     nonisolated static func loadPackFile(_ code: String) -> [String: String] {
-        guard let url = Bundle.module.url(forResource: code, withExtension: "json",
-                                          subdirectory: "Localization")
-                ?? Bundle.module.url(forResource: code, withExtension: "json"),
-              let data = try? Data(contentsOf: url),
-              let parsed = try? JSONDecoder().decode([String: String].self, from: data)
-        else { return [:] }
-        return parsed
+        let name = code + ".json"
+        var candidates: [URL] = []
+        if let resources = Bundle.main.resourceURL {
+            candidates.append(resources.appendingPathComponent("Localization/" + name))
+            candidates.append(resources.appendingPathComponent(name))
+            // The SwiftPM resource bundle, when it has been copied into the app.
+            candidates.append(resources.appendingPathComponent("Pawprint_Pawprint.bundle/" + name))
+            candidates.append(resources.appendingPathComponent("Pawprint_Pawprint.bundle/Localization/" + name))
+        }
+        // `swift run` and test runs, where the bundle sits beside the executable.
+        let executableDirectory = Bundle.main.bundleURL.deletingLastPathComponent()
+        candidates.append(executableDirectory.appendingPathComponent("Pawprint_Pawprint.bundle/" + name))
+
+        for url in candidates {
+            guard let data = try? Data(contentsOf: url),
+                  let parsed = try? JSONDecoder().decode([String: String].self, from: data)
+            else { continue }
+            return parsed
+        }
+        return [:]
     }
 }
 

@@ -39,6 +39,12 @@ if [ ! -f "$ROOT_DIR/Assets/AppIcon.icns" ]; then
 fi
 cp "$ROOT_DIR/Assets/AppIcon.icns" "$STAGING/Contents/Resources/AppIcon.icns"
 
+# Language packs go somewhere `Bundle.main` can find them. Relying on SwiftPM's resource bundle
+# alone shipped a build that crashed on launch: its accessor traps when the bundle isn't at the
+# path baked in at compile time, which no assembled .app matches.
+mkdir -p "$STAGING/Contents/Resources/Localization"
+cp "$ROOT_DIR/Sources/Pawprint/Resources/Localization/"*.json "$STAGING/Contents/Resources/Localization/"
+
 # Copy SwiftPM-processed resource bundle if it exists
 RESOURCE_BUNDLE="$(dirname "$BIN_PATH")/${APP_NAME}_${APP_NAME}.bundle"
 if [ -d "$RESOURCE_BUNDLE" ]; then
