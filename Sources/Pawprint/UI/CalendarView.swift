@@ -1,5 +1,6 @@
 import SwiftUI
 
+@MainActor
 struct CalendarView: View {
     @Bindable var activityCenter = ActivityCenter.shared
     /// Selected basis, resolved from the catalog by id so a newly added metric appears here
@@ -319,6 +320,7 @@ struct CalendarView: View {
     }
 }
 
+@MainActor
 private struct CalendarDayDetailCard: View {
     let summary: DailySummary
     let metric: MetricDefinition

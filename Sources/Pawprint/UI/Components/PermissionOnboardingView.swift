@@ -4,6 +4,7 @@ import SwiftUI
 /// Shown before any permission request. Per the spec's privacy principle #8 ("권한 요청 전,
 /// 무엇을 수집하지 않는지 먼저 설명한다") — explains what Pawprint never touches *before*
 /// asking for Accessibility / Input Monitoring access.
+@MainActor
 struct PermissionOnboardingView: View {
     @Bindable var permissions = PermissionsManager.shared
 

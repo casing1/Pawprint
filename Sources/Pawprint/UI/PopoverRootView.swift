@@ -14,6 +14,7 @@ enum PopoverTab: Int, CaseIterable {
     }
 }
 
+@MainActor
 struct PopoverRootView: View {
     @Bindable var permissions = PermissionsManager.shared
     @Bindable var activityCenter = ActivityCenter.shared

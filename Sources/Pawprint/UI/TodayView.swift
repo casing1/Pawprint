@@ -1,5 +1,6 @@
 import SwiftUI
 
+@MainActor
 struct TodayView: View {
     @Bindable var activityCenter = ActivityCenter.shared
 
@@ -541,6 +542,7 @@ struct TodayView: View {
     }
 }
 
+@MainActor
 private struct RecordingStatusLabel: View {
     @Bindable var activityCenter = ActivityCenter.shared
 
@@ -556,6 +558,7 @@ private struct RecordingStatusLabel: View {
     }
 }
 
+@MainActor
 private struct HighlightRow: View {
     let highlight: Highlight
 
@@ -573,6 +576,7 @@ private struct HighlightRow: View {
     }
 }
 
+@MainActor
 private struct IndexBadge: View {
     let title: String
     let value: Double

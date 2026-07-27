@@ -1,5 +1,6 @@
 import SwiftUI
 
+@MainActor
 struct RecordsView: View {
     @Bindable var activityCenter = ActivityCenter.shared
     /// Loaded once per tab appearance (cached across visits by `SummaryCache`).

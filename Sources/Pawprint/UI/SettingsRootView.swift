@@ -2,6 +2,7 @@ import SwiftUI
 import AppKit
 import UserNotifications
 
+@MainActor
 struct SettingsRootView: View {
     @Bindable var activityCenter = ActivityCenter.shared
 
@@ -37,6 +38,7 @@ struct SettingsRootView: View {
 
 // MARK: - General
 
+@MainActor
 private struct GeneralSettingsTab: View {
     @Bindable var activityCenter = ActivityCenter.shared
     @State private var launchAtLoginEnabled = LaunchAtLogin.isEnabled
@@ -85,6 +87,7 @@ private struct GeneralSettingsTab: View {
     }
 }
 
+@MainActor
 private struct DashboardCardPicker: View {
     @Bindable var activityCenter = ActivityCenter.shared
 
@@ -118,6 +121,7 @@ private struct DashboardCardPicker: View {
 
 /// Same catalog-driven pattern as the dashboard picker — a metric added to `MetricCatalog`
 /// becomes selectable for the share card with no edit here.
+@MainActor
 private struct ShareCardMetricPicker: View {
     @Bindable var activityCenter = ActivityCenter.shared
 
@@ -149,6 +153,7 @@ private struct ShareCardMetricPicker: View {
 
 // MARK: - Collection
 
+@MainActor
 private struct CollectionSettingsTab: View {
     @Bindable var activityCenter = ActivityCenter.shared
 
@@ -186,6 +191,7 @@ private struct CollectionSettingsTab: View {
 
 // MARK: - Excluded apps
 
+@MainActor
 private struct ExcludedAppsSettingsTab: View {
     @Bindable var activityCenter = ActivityCenter.shared
 
@@ -244,6 +250,7 @@ private struct ExcludedAppsSettingsTab: View {
 
 // MARK: - Live HUD
 
+@MainActor
 private struct HUDSettingsTab: View {
     @Bindable var activityCenter = ActivityCenter.shared
 
@@ -306,6 +313,7 @@ private struct HUDSettingsTab: View {
 /// All notifications are opt-in and capped at one per day. The spec is explicit that Pawprint
 /// must not pressure anyone, so there are no goal reminders or "you haven't used me" nudges —
 /// only a recap of what already happened.
+@MainActor
 private struct NotificationSettingsTab: View {
     @Bindable var activityCenter = ActivityCenter.shared
     @State private var authorizationNote: String?
@@ -450,6 +458,7 @@ private struct NotificationSettingsTab: View {
 
 // MARK: - Data
 
+@MainActor
 private struct DataSettingsTab: View {
     @Bindable var activityCenter = ActivityCenter.shared
     @State private var deleteDate = Date()
@@ -551,6 +560,7 @@ private struct DataSettingsTab: View {
 /// Live status of the two grants the app can't work without. Shown in Settings as well as the
 /// wizard because macOS lets a user revoke them at any time, and the failure mode — every counter
 /// silently stuck at zero — gives no hint about why.
+@MainActor
 private struct PermissionStatusRows: View {
     @Bindable var permissions = PermissionsManager.shared
 
@@ -582,6 +592,7 @@ private struct PermissionStatusRows: View {
 /// Pawprint is distributed outside the App Store, so it has to look after its own updates.
 /// The check is a network request, which this app otherwise never makes — hence the explicit
 /// opt-in and the plain description of exactly what gets sent.
+@MainActor
 private struct UpdateSettingsTab: View {
     @Bindable var activityCenter = ActivityCenter.shared
     @Bindable var updater = UpdateChecker.shared

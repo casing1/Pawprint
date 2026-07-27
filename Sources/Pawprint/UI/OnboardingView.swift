@@ -12,6 +12,7 @@ import UserNotifications
 ///
 /// Notifications and the login item are offered here too but never required: both are conveniences,
 /// and the app works completely without them.
+@MainActor
 struct OnboardingView: View {
     @Bindable var permissions = PermissionsManager.shared
     @Bindable var activityCenter = ActivityCenter.shared

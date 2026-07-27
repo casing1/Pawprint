@@ -6,6 +6,7 @@ import SwiftUI
 /// The appeal is watching numbers move: a WPM needle that responds as you type, a focus timer
 /// that keeps climbing. Everything here is already tracked — this just puts it somewhere you can
 /// see it without opening the popover.
+@MainActor
 struct LiveHUDView: View {
     @Bindable var activityCenter = ActivityCenter.shared
 
@@ -293,6 +294,7 @@ final class LiveHUDController: NSObject, NSWindowDelegate {
 /// Deliberately not a `Slider`: the HUD lives in a `.nonactivatingPanel` that never becomes key,
 /// and an AppKit-backed control there is a gamble. A plain shape plus a drag gesture behaves the
 /// same whether or not the window has focus, and reads better at 10pt tall than a mini slider.
+@MainActor
 struct OpacityBar: View {
     @Binding var value: Double
     let range: ClosedRange<Double>

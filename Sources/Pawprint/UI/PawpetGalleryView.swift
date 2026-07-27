@@ -6,6 +6,7 @@ import SwiftUI
 /// becomes a record — you can find your rarest day, or the week you wore the gold frame every day.
 /// Nothing extra is stored: each cat is a pure function of its day's summary, so the gallery is
 /// built by re-deriving traits from history already in the database.
+@MainActor
 struct PawpetGalleryView: View {
     @Bindable var activityCenter = ActivityCenter.shared
 
@@ -251,6 +252,7 @@ struct PawpetGalleryView: View {
 }
 
 /// One cat, big, with its rarity breakdown, the day's numbers, and why every trait looks that way.
+@MainActor
 struct PawpetDetailView: View {
     let summary: DailySummary
     var streakDays: Int = 0

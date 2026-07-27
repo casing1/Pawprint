@@ -2,6 +2,7 @@ import SwiftUI
 
 /// Share control with a preview + copy/save actions. Shows inline confirmation after copying
 /// so the user knows the image is on the clipboard without leaving the popover.
+@MainActor
 struct ShareButton: View {
     let mode: ShareCardView.Mode
     let label: String
@@ -62,6 +63,7 @@ struct ShareButton: View {
     }
 }
 
+@MainActor
 private struct SharePreview: View {
     let mode: ShareCardView.Mode
     let metrics: [MetricDefinition]
