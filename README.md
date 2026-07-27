@@ -1,67 +1,154 @@
-# Pawprint
+<div align="center">
 
-<img src="https://img.shields.io/badge/macOS-14%2B-black" alt="macOS 14+"> <img src="https://img.shields.io/badge/Swift-5.10-orange" alt="Swift 5.10">
+<img src="docs/images/banner.png" alt="Pawprint" width="100%">
 
-Mac을 어떻게 쓰는지 조용히 기록하고, 하루가 끝나면 귀여운 통계로 보여주는 메뉴 바 앱입니다.
+**English** · [한국어](docs/README.ko.md)
 
-## 다운로드
+<br>
 
-[**최신 릴리즈에서 .dmg 받기**](https://github.com/yhcho0405/Pawprint/releases/latest)
+<a href="https://github.com/yhcho0405/Pawprint/releases/latest/download/Pawprint.dmg">
+<img src="https://img.shields.io/badge/Download%20for%20macOS-.dmg-1a7f37?style=for-the-badge&logo=apple&logoColor=white" alt="Download for macOS" height="42">
+</a>
 
-DMG를 열고 Pawprint를 Applications 폴더로 끌어다 놓으세요. 처음 실행할 때는
-**우클릭 → 열기**로 실행해야 합니다 (Apple Developer ID 서명이 아직 없어 Gatekeeper가 막습니다).
+<br><br>
 
-## 기록하지 않는 것
+<img src="https://img.shields.io/badge/macOS-14%2B-000000?style=flat-square&logo=apple&logoColor=white" alt="macOS 14+">
+<img src="https://img.shields.io/badge/Swift-5.10-F05138?style=flat-square&logo=swift&logoColor=white" alt="Swift 5.10">
+<img src="https://img.shields.io/badge/license-Apache%202.0-blue?style=flat-square" alt="Apache 2.0">
+<a href="https://github.com/yhcho0405/Pawprint/releases/latest"><img src="https://img.shields.io/github/v/release/yhcho0405/Pawprint?style=flat-square&color=8957e5" alt="Latest release"></a>
 
-입력한 **글자와 순서**, 비밀번호, **클립보드 내용**, 화면 캡처, 창·문서·웹페이지 내용은
-저장하지 않습니다. 횟수와 시간, 집계값만 기록합니다.
+</div>
 
-모든 데이터는 이 Mac의 `~/Library/Application Support/Pawprint/` 안에만 있고,
-동의 없이 어디로도 전송되지 않습니다. 앱은 인터넷 없이 완전히 동작합니다.
-유일한 네트워크 기능인 업데이트 확인은 기본값이 **꺼짐**입니다.
+<br>
 
-## 필요한 권한
+Pawprint sits in your menu bar and quietly notes how you use your Mac — keys pressed, distance
+scrolled, time spent in focus, battery burned. At the end of the day it hands all of that back to
+you as a cat.
 
-| 권한 | 이유 |
+**It never records what you type.** Only counts, durations and aggregates. Everything stays on
+your Mac.
+
+<br>
+
+## The cat
+
+Every day generates one cat. Its coat is fixed by the date, so it stays the same animal from
+midnight to midnight — but its expression, hat, glasses, prop, collar and surroundings each track
+a *different* metric, so the drawing reads as a summary of the whole day rather than one number
+restyled eight ways.
+
+A handful of traits have to be **earned**. Type enough and a glowing charm appears at its paw —
+which charm is a surprise, drawn from the date. Cover enough distance and it grows wings. Score
+well and it gets a frame: bronze, silver, gold, or the rainbow one.
+
+<div align="center">
+<img src="docs/images/cats.png" alt="Top-tier cats" width="620">
+<br>
+<sub>Top-grade cats: rainbow frames, paw charms, wings and sunburst backdrops</sub>
+</div>
+
+<br>
+
+Each one is scored out of 100 for rarity and graded S through D. They collect in a **gallery**
+you can sort by rarity, date or score, and filter down to just the days you earned something.
+
+There are around **171 trillion** reachable combinations.
+
+<br>
+
+## What else it does
+
+| | |
 |---|---|
-| 손쉬운 사용 | 마우스 이벤트와 앱 전환 감지 |
-| 입력 모니터링 | 키를 눌렀다는 **사실만** 감지 (무엇을 눌렀는지는 읽지 않음) |
+| **Endless levels** | 11 tracks — typing, scrolling, focus, power and more — with targets that keep growing. No checklist that runs out. |
+| **Live HUD** | A floating panel with your current WPM, session time and whichever stats you pick. |
+| **Activity calendar** | Every day coloured by any metric you choose. |
+| **Pawprint Wrapped** | A monthly retrospective, slide by slide. |
+| **Share cards** | Turn today or your lifetime totals into an image, copied straight to the clipboard. |
+| **Keyboard heatmap** | A real keyboard layout showing which keys you lean on — counts only, never characters. |
+| **Percentile ranking** | Where today sits against every day you've recorded. |
 
-첫 실행 시 설정 마법사가 안내합니다. 설정 > 일반에서 다시 열 수 있습니다.
+<br>
 
-## 주요 기능
+## What it never stores
 
-- **오늘의 고양이** — 그날의 기록에 따라 생김새가 달라지는 캐릭터 (17경 가지 조합)
-- **도감** — 지금까지 모은 고양이를 희귀도·날짜·점수순으로 정렬
-- **무한 레벨** — 타건·스크롤 등반·집중 등 11개 트랙, 끝없이 올라가는 목표치
-- **라이브 HUD** — 항상 떠 있는 실시간 세션 패널
-- **Pawprint Wrapped** — 월간 회고 슬라이드
-- **공유 카드** — 오늘/누적 기록을 이미지로 만들어 클립보드에 복사
+- The characters you type, or the order you typed them
+- Passwords
+- Clipboard **contents**
+- Screenshots, window titles, document or web page contents
+- Long-term raw cursor paths
 
-## 직접 빌드하기
+Data lives in `~/Library/Application Support/Pawprint/` and goes nowhere else. Pawprint works
+entirely offline; the one network request it makes is checking for a new version, which you can
+turn off in Settings → Updates.
+
+<br>
+
+## Permissions
+
+| Permission | Why |
+|---|---|
+| **Accessibility** | Detect mouse events and app switches |
+| **Input Monitoring** | Detect *that* a key was pressed — never which one |
+
+A setup wizard walks you through both on first launch, and you can reopen it any time from
+Settings → General.
+
+<br>
+
+## Updates
+
+Pawprint checks for new versions on its own and offers them in the popover. One click downloads,
+verifies and installs.
+
+Every release archive is signed with an Ed25519 key whose public half is compiled into the app.
+Nothing is unpacked, let alone run, until that signature checks out — so a substituted download
+URL cannot become a substituted app.
+
+<br>
+
+## Building from source
 
 ```bash
-swift build -c release
+git clone https://github.com/yhcho0405/Pawprint.git
+cd Pawprint
 ./scripts/build_app.sh release
 open ./build/Pawprint.app
 ```
 
-DMG를 만들려면:
+To package a `.dmg`:
 
 ```bash
-./scripts/make_dmg.sh
+./scripts/make_dmg.sh --build
 ```
 
-## 릴리즈
+The release process is documented in [docs/RELEASING.md](docs/RELEASING.md).
 
-버전을 올리고 태그를 밀면 GitHub Actions가 빌드·서명·DMG 생성·릴리즈 발행까지 처리합니다.
+<br>
 
-```bash
-./scripts/release.sh 0.2.0
-```
+## Troubleshooting
 
-자세한 내용은 [docs/RELEASING.md](docs/RELEASING.md)를 참고하세요.
+<details>
+<summary>macOS won't open the app on first launch</summary>
 
-## 라이선스
+<br>
 
-Apache 2.0 — [LICENSE](LICENSE)
+Right-click Pawprint in Applications and choose **Open**, then confirm. This is only needed once.
+
+</details>
+
+<details>
+<summary>Every counter reads zero</summary>
+
+<br>
+
+Accessibility or Input Monitoring was probably revoked. Settings → General shows the live status
+of both, and the setup wizard can be reopened from the same place.
+
+</details>
+
+<br>
+
+## License
+
+[Apache 2.0](LICENSE)

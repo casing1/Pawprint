@@ -30,19 +30,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
 
-        if settings.updateCheckEnabled, settings.updateCheckAutomatically, !settings.updateFeedURL.isEmpty {
-            Task { @MainActor in
-                // Let launch settle before touching the network.
-                try? await Task.sleep(for: .seconds(6))
-                await UpdateChecker.shared.check(feedURL: settings.updateFeedURL, manual: false)
-            }
-        }
+        UpdateChecker.shared.startPeriodicChecks(settings: settings)
 
         // End-to-end exercise of the update pipeline: check → download → ditto → signature
         // verification → swap. There is no other way to prove the install path works, since it
         // replaces the running bundle and can't be unit-tested in-process.
         if let feed = ProcessInfo.processInfo.environment["PAWPRINT_UPDATE_TEST"] {
             Task { @MainActor in DebugSnapshot.runUpdateFlow(feed: feed) }
+        }
+
+        if ProcessInfo.processInfo.environment["PAWPRINT_BANNER"] != nil {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                DebugSnapshot.renderBanner(); NSApp.terminate(nil)
+            }
         }
 
         if ProcessInfo.processInfo.environment["PAWPRINT_SHOWCASE"] != nil {

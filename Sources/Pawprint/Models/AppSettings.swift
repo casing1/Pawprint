@@ -109,15 +109,33 @@ struct AppSettings: Codable {
 
     // MARK: - Updates
 
-    /// Off by default. Pawprint promises to work fully offline and to make no request the user
-    /// didn't ask for — an update check is still a network request, so it stays opt-in.
-    var updateCheckEnabled: Bool = false
+    /// On by default: distributing outside the App Store means nobody else will tell the user a
+    /// fix exists. It is still the app's only network request, it is disclosed in the first-run
+    /// wizard, and this toggle turns it off for good — after which Pawprint is fully offline.
+    var updateCheckEnabled: Bool = true
     /// Feed URL. Defaults to this project's GitHub Releases so a fresh install already knows
-    /// where updates come from — but `updateCheckEnabled` is still off until the user opts in,
-    /// so nothing is fetched until they say so.
+    /// where updates come from.
     var updateFeedURL: String = UpdateDistribution.feedURL
     /// Skip the daily background check but keep the manual button working.
     var updateCheckAutomatically: Bool = true
+
+    /// Automatic update checks shipped as opt-in first and became the default afterwards. Without
+    /// a marker, everyone who ran the earlier build would stay opted out forever — their stored
+    /// `false` is indistinguishable from a deliberate choice — and their stored empty feed URL
+    /// would never pick up the real one. `true` here so a fresh install has nothing to migrate;
+    /// the decoder defaults it to `false` when the key is absent, which is exactly the old build.
+    var updateDefaultsMigrated: Bool = true
+
+    /// One-time switchover for installs that predate automatic updates. Returns nil when there is
+    /// nothing to do, so the caller only writes to disk when something actually changed.
+    func migratedForUpdateDefaults() -> AppSettings? {
+        guard !updateDefaultsMigrated else { return nil }
+        var updated = self
+        updated.updateCheckEnabled = true
+        if updated.updateFeedURL.isEmpty { updated.updateFeedURL = UpdateDistribution.feedURL }
+        updated.updateDefaultsMigrated = true
+        return updated
+    }
 
     static let maxHUDMetrics = 4
 
@@ -141,7 +159,7 @@ struct AppSettings: Codable {
     private enum CodingKeys: String, CodingKey {
         case notifiedQuestLevels, notificationDay, notificationCountToday
         case hasCompletedOnboarding
-        case updateCheckEnabled, updateFeedURL, updateCheckAutomatically
+        case updateCheckEnabled, updateFeedURL, updateCheckAutomatically, updateDefaultsMigrated
         case launchAtLogin, showDockIcon, menuBarMetric, dayStartHour, theme
         case collectKeyboard, collectMouse, collectAppUsage, collectClipboard
         case collectSleepWake, collectPowerPeripherals
@@ -166,6 +184,7 @@ struct AppSettings: Codable {
         updateCheckEnabled = try c.decodeIfPresent(Bool.self, forKey: .updateCheckEnabled) ?? fallback.updateCheckEnabled
         updateFeedURL = try c.decodeIfPresent(String.self, forKey: .updateFeedURL) ?? fallback.updateFeedURL
         updateCheckAutomatically = try c.decodeIfPresent(Bool.self, forKey: .updateCheckAutomatically) ?? fallback.updateCheckAutomatically
+        updateDefaultsMigrated = try c.decodeIfPresent(Bool.self, forKey: .updateDefaultsMigrated) ?? false
         launchAtLogin = try c.decodeIfPresent(Bool.self, forKey: .launchAtLogin) ?? fallback.launchAtLogin
         showDockIcon = try c.decodeIfPresent(Bool.self, forKey: .showDockIcon) ?? fallback.showDockIcon
         menuBarMetric = try c.decodeIfPresent(MenuBarMetric.self, forKey: .menuBarMetric) ?? fallback.menuBarMetric
@@ -224,6 +243,7 @@ struct AppSettings: Codable {
         try c.encode(updateCheckEnabled, forKey: .updateCheckEnabled)
         try c.encode(updateFeedURL, forKey: .updateFeedURL)
         try c.encode(updateCheckAutomatically, forKey: .updateCheckAutomatically)
+        try c.encode(updateDefaultsMigrated, forKey: .updateDefaultsMigrated)
         try c.encode(launchAtLogin, forKey: .launchAtLogin)
         try c.encode(showDockIcon, forKey: .showDockIcon)
         try c.encode(menuBarMetric, forKey: .menuBarMetric)

@@ -83,7 +83,13 @@ final class ActivityCenter {
     static let typingStreakGapSeconds: TimeInterval = 3
 
     private init() {
-        let loadedSettings = PawprintStore.shared.loadSettings()
+        var loadedSettings = PawprintStore.shared.loadSettings()
+        // Applied here rather than in the decoder so the result is actually persisted; a decoder
+        // fix-up lives only in memory until something unrelated happens to save.
+        if let migrated = loadedSettings.migratedForUpdateDefaults() {
+            loadedSettings = migrated
+            PawprintStore.shared.saveSettings(migrated)
+        }
         self.settings = loadedSettings
         let day = DayKey.today(dayStartHour: loadedSettings.dayStartHour)
         self.currentDayString = day

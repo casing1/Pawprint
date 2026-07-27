@@ -107,6 +107,94 @@ enum DebugSnapshot {
         }
     }
 
+    static let bannerStates: [(String, UpdateChecker.State)] = [
+        ("available", .available(UpdateRelease(version: "0.2.0", build: "9", notes: nil,
+                                               downloadURL: "https://example.invalid/a.zip",
+                                               minimumSystemVersion: nil, publishedAt: nil,
+                                               signature: nil))),
+        ("downloading", .downloading(progress: 0.45)),
+        ("ready", .readyToInstall(UpdateRelease(version: "0.2.0", build: "9", notes: nil,
+                                                downloadURL: "https://example.invalid/a.zip",
+                                                minimumSystemVersion: nil, publishedAt: nil,
+                                                signature: nil)))
+    ]
+
+    // MARK: - README banner (PAWPRINT_BANNER)
+
+    /// Renders the repository banner from the app's own drawing code, so the artwork can never
+    /// drift from what the app actually produces.
+    @MainActor
+    static func renderBanner() {
+        // Four S-grade cats, each with a different charm, picked by walking dates until the
+        // date-seeded draw lands on the one we want.
+        let wanted: [(PawpetTraits.PawCharm, PawpetTraits.Wings)] = [
+            (.star, .feathered), (.flame, .ember), (.orb, .crystal), (.crystal, .feathered)
+        ]
+        var cats: [(DailySummary, Bool)] = []
+        var usedPalettes: Set<Int> = []
+
+        for (charm, wings) in wanted {
+            var fallback: (DailySummary, Bool)?
+            search: for month in 1...12 {
+                for day in 1...28 {
+                    var summary = excellentDay()
+                    summary.day = String(format: "2026-%02d-%02d", month, day)
+                    let celebrating = cats.isEmpty
+                    let traits = PawpetTraits(day: summary.day, summary: summary,
+                                              streakDays: 40, isCelebrating: celebrating)
+                    guard traits.charmAndWings == (charm, wings) else { continue }
+                    if fallback == nil { fallback = (summary, celebrating) }
+                    if !usedPalettes.contains(traits.paletteIndex) {
+                        usedPalettes.insert(traits.paletteIndex)
+                        cats.append((summary, celebrating))
+                        break search
+                    }
+                }
+            }
+            if cats.count < wanted.firstIndex(where: { $0 == (charm, wings) })! + 1,
+               let fallback { cats.append(fallback) }
+        }
+
+        let banner = ZStack {
+            LinearGradient(
+                colors: [Color(red: 0.09, green: 0.10, blue: 0.16),
+                         Color(red: 0.16, green: 0.13, blue: 0.24),
+                         Color(red: 0.10, green: 0.15, blue: 0.22)],
+                startPoint: .topLeading, endPoint: .bottomTrailing
+            )
+            // Text and cats as one centred group: a full-width HStack with a Spacer left a dead
+            // gap in the middle at banner proportions.
+            HStack(spacing: 34) {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack(spacing: 10) {
+                        Image(systemName: "pawprint.fill")
+                            .font(.system(size: 40))
+                            .foregroundStyle(Color(red: 1.0, green: 0.78, blue: 0.35))
+                        Text("Pawprint")
+                            .font(.system(size: 54, weight: .heavy, design: .rounded))
+                            .foregroundStyle(.white)
+                    }
+                    Text("Your Mac, as a cat you collect every day.")
+                        .font(.system(size: 19, weight: .medium))
+                        .foregroundStyle(.white.opacity(0.82))
+                    Text("A quiet menu bar tracker that never records what you type.")
+                        .font(.system(size: 14))
+                        .foregroundStyle(.white.opacity(0.55))
+                }
+                HStack(spacing: -10) {
+                    ForEach(Array(cats.enumerated()), id: \.offset) { index, entry in
+                        PawpetView(summary: entry.0, size: 116, streakDays: 40,
+                                   isCelebrating: entry.1, showsAura: false)
+                            .rotationEffect(.degrees(Double(index - 1) * 4))
+                    }
+                }
+            }
+        }
+        .frame(width: 1200, height: 272)
+
+        capture(banner, name: "banner", scale: 2, bare: true)
+    }
+
     // MARK: - Best-combination showcase (PAWPRINT_SHOWCASE)
 
     /// Renders the *top-tier* cats: S-grade frames, every paw charm, every wing type.
@@ -215,7 +303,7 @@ enum DebugSnapshot {
         .padding(16)
         .background(Color(white: 0.12))
 
-        capture(sheet, name: "showcase")
+        capture(sheet, name: "showcase", bare: true)
     }
 
     /// An S-grade day: high score, heavy typing, long distances — everything a reward axis wants.
@@ -411,6 +499,14 @@ enum DebugSnapshot {
         out += "HUD available: \(LiveHUDController.shared.isVisible ? "visible" : "hidden")\n"
         write(out)
 
+        // Drive the banner through each state it can be in — it is the one piece of UI a user
+        // only ever sees when something is already happening.
+        for (label, state) in DebugSnapshot.bannerStates {
+            UpdateChecker.shared.debugForceState(state)
+            capture(UpdateBanner().frame(width: 340).padding(8), name: "banner_\(label)")
+        }
+        UpdateChecker.shared.debugForceState(.idle)
+
         capture(OnboardingView(onFinish: {}).checklist.frame(width: 428).padding(16), name: "onboarding")
         capture(LiveHUDView().padding(6), name: "hud")
         capture(LiveHUDView(showingOpacity: true).padding(6), name: "hud_opacity")
@@ -430,9 +526,11 @@ enum DebugSnapshot {
     }
 
     @MainActor
-    private static func capture<V: View>(_ view: V, name: String) {
-        let renderer = ImageRenderer(content: view.padding(8).background(Color(white: 0.15)))
-        renderer.scale = 2
+    /// `bare` skips the debug matte — fine for inspecting a layout, wrong for artwork that ships.
+    private static func capture<V: View>(_ view: V, name: String, scale: CGFloat = 2, bare: Bool = false) {
+        let matted = AnyView(bare ? AnyView(view) : AnyView(view.padding(8).background(Color(white: 0.15))))
+        let renderer = ImageRenderer(content: matted)
+        renderer.scale = scale
         guard let image = renderer.nsImage,
               let tiff = image.tiffRepresentation,
               let bitmap = NSBitmapImageRep(data: tiff),

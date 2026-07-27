@@ -118,6 +118,9 @@ struct OnboardingView: View {
             Text("입력한 글자와 순서, 비밀번호, 클립보드 내용, 화면 캡처, 창·문서·웹페이지 내용은 저장하지 않아요. 횟수와 시간만 기록하고, 모든 데이터는 이 Mac에만 남아요.")
                 .font(.caption2).foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
+            Text("인터넷을 쓰는 기능은 새 버전 확인 하나뿐이에요. 기기 정보나 사용 기록은 함께 보내지 않고, 설정 > 업데이트에서 끌 수 있어요.")
+                .font(.caption2).foregroundStyle(.tertiary)
+                .fixedSize(horizontal: false, vertical: true)
         }
         .padding(10)
         .frame(maxWidth: .infinity, alignment: .leading)

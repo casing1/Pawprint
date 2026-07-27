@@ -49,6 +49,11 @@ struct PopoverRootView: View {
         VStack(spacing: 0) {
             topBar
 
+            // Above the tabs so it is visible whichever tab was last open.
+            UpdateBanner()
+                .padding(.horizontal, 14)
+                .padding(.top, 8)
+
             if let celebration = achievements.pendingCelebration {
                 AchievementCelebrationBanner(id: celebration) {
                     withAnimation { achievements.clearCelebration() }

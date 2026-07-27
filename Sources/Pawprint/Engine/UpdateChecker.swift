@@ -93,7 +93,65 @@ final class UpdateChecker {
 
     static var updatePublicKey: String { UpdateDistribution.publicKey }
 
+    private var scheduleTimer: Timer?
+
     private init() {}
+
+    /// Checks now (after a short delay so launch isn't competing with the network) and then on a
+    /// slow repeat. Six hours is chosen to be useful without being a poll: releases are occasional,
+    /// and a user who leaves the app running for a week should still hear about one.
+    func startPeriodicChecks(settings: AppSettings) {
+        scheduleTimer?.invalidate()
+        scheduleTimer = nil
+        guard settings.updateCheckEnabled,
+              settings.updateCheckAutomatically,
+              !settings.updateFeedURL.isEmpty else { return }
+
+        let feed = settings.updateFeedURL
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(8))
+            await self.checkIfIdle(feedURL: feed)
+        }
+        scheduleTimer = Timer.scheduledTimer(withTimeInterval: 6 * 3600, repeats: true) { _ in
+            Task { @MainActor in await self.checkIfIdle(feedURL: feed) }
+        }
+    }
+
+    func stopPeriodicChecks() {
+        scheduleTimer?.invalidate()
+        scheduleTimer = nil
+    }
+
+    /// A background check must never disturb a download the user started, or clear an update
+    /// they have already been offered.
+    private func checkIfIdle(feedURL: String) async {
+        switch state {
+        case .idle, .upToDate, .failed:
+            await check(feedURL: feedURL, manual: false)
+        case .checking, .downloading, .available, .readyToInstall:
+            return
+        }
+    }
+
+    /// One-tap path for the popover banner: fetch, verify, install, relaunch.
+    func downloadAndInstall(_ release: UpdateRelease) async {
+        await download(release)
+        guard case .readyToInstall = state else { return }
+        install()
+    }
+
+    /// Snapshot-only: puts the checker into a given state so each banner variant can be rendered
+    /// without a real release to react to. Reachable only from `DebugSnapshot`, which needs an
+    /// environment variable to run at all.
+    func debugForceState(_ forced: State) { state = forced }
+
+    /// Set while an update is worth showing in the UI.
+    var pendingRelease: UpdateRelease? {
+        switch state {
+        case .available(let release), .readyToInstall(let release): return release
+        default: return nil
+        }
+    }
 }
 
 /// Distribution constants, kept outside the `@MainActor` class so non-isolated types such as

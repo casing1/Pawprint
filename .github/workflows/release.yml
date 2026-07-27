@@ -84,6 +84,7 @@ jobs:
             exit 1
           fi
           ./scripts/make_dmg.sh --build
+          cp "dist/Pawprint-${{ steps.version.outputs.version }}.dmg" dist/Pawprint.dmg
 
       # A release that quietly fell back to ad-hoc after the secrets were configured is the exact
       # failure that went unnoticed once already: it publishes fine and only bites users later,
@@ -114,14 +115,13 @@ jobs:
           TAG="${{ steps.version.outputs.tag }}"
           NOTES_FILE=$(mktemp)
           {
-            echo "### 설치"
+            echo "### Install"
             echo ""
-            echo "\`Pawprint-$VERSION.dmg\`를 열고 Pawprint를 Applications로 끌어다 놓으세요."
-            echo "처음 실행할 때는 **우클릭 → 열기**가 필요합니다 (Apple Developer ID 서명이 없어 Gatekeeper가 막습니다)."
+            echo "Open \`Pawprint-$VERSION.dmg\` and drag Pawprint to Applications."
             echo ""
-            echo "이미 설치되어 있다면 설정 > 업데이트에서 바로 받을 수 있습니다."
+            echo "Already running Pawprint? It will offer this update to you automatically."
             echo ""
-            echo "### 변경사항"
+            echo "### Changes"
             echo ""
             PREVIOUS=$(git describe --tags --abbrev=0 "$TAG^" 2>/dev/null || true)
             if [ -n "$PREVIOUS" ]; then
@@ -135,12 +135,14 @@ jobs:
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release upload "$TAG" \
               "dist/Pawprint-$VERSION.dmg" \
+              "dist/Pawprint.dmg" \
               "dist/Pawprint-$VERSION.zip" \
               "dist/Pawprint-$VERSION.zip.sig" --clobber
             gh release edit "$TAG" --notes-file "$NOTES_FILE"
           else
             gh release create "$TAG" \
               "dist/Pawprint-$VERSION.dmg" \
+              "dist/Pawprint.dmg" \
               "dist/Pawprint-$VERSION.zip" \
               "dist/Pawprint-$VERSION.zip.sig" \
               --title "Pawprint $VERSION" \
