@@ -67,6 +67,25 @@ private struct GeneralSettingsTab: View {
                 )
             }
 
+            // Deliberately a plain link, not an in-app action. Starring a repository is a public
+            // act on someone's GitHub account, so it belongs to them: this opens the page and
+            // they decide. Doing it on their behalf would need their credentials, and quietly
+            // inflating stars is against GitHub's terms besides.
+            Section {
+                Link(destination: URL(string: "https://github.com/yhcho0405/Pawprint")!) {
+                    HStack(spacing: 5) {
+                        Image(systemName: "star")
+                        Text("GitHub에서 Pawprint 보기")
+                        Spacer()
+                        Image(systemName: "arrow.up.forward.square")
+                            .foregroundStyle(.tertiary)
+                    }
+                    .font(.caption)
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(.secondary)
+            }
+
             Section("권한") {
                 PermissionStatusRows()
                 HStack {
