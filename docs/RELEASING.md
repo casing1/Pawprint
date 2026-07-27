@@ -60,3 +60,43 @@ Apple Developer ID($99/년)를 발급받으면 Gatekeeper 경고 없이 배포�
 
 실패한 릴리즈를 다시 발행하려면 Actions에서 **Release** 워크플로를
 `workflow_dispatch`로 실행하고 태그를 입력하세요. 기존 에셋은 덮어씁니다.
+
+## 안정적인 서명 인증서 (권장)
+
+macOS는 **손쉬운 사용 / 입력 모니터링 권한을 코드 서명에 묶어둡니다.** ad-hoc 서명은
+빌드마다 해시가 달라지므로, 지금 상태에서는 **자동 업데이트를 받을 때마다 권한을 다시
+허용해야 합니다.** 안정적인 인증서로 서명하면 이 문제가 사라집니다.
+
+### 방법 A — 자체 서명 인증서 (무료)
+
+Gatekeeper 경고는 남지만 권한 유지 문제는 해결됩니다. 로컬의 `Pawprint Dev` 인증서를
+내보내서 저장소 시크릿에 넣으세요.
+
+```bash
+# 1. 인증서 + 개인키를 .p12로 내보내기 (내보내기 암호를 물어봅니다)
+security export -k ~/Library/Keychains/login.keychain-db \
+  -t identities -f pkcs12 -o /tmp/pawprint-signing.p12
+
+# 2. base64로 인코딩해서 시크릿에 등록
+base64 -i /tmp/pawprint-signing.p12 | gh secret set MACOS_CERTIFICATE_P12 --repo yhcho0405/Pawprint
+gh secret set MACOS_CERTIFICATE_PASSWORD --repo yhcho0405/Pawprint   # 위에서 정한 내보내기 암호
+
+# 3. 흔적 지우기
+rm -f /tmp/pawprint-signing.p12
+```
+
+시크릿이 있으면 워크플로가 자동으로 인증서를 가져와 서명합니다. 없으면 ad-hoc으로 넘어갑니다.
+
+### 방법 B — Apple Developer ID ($99/년)
+
+Gatekeeper 경고까지 없애려면 Developer ID Application 인증서를 같은 방식으로 등록하고,
+워크플로의 패키징 단계 뒤에 공증을 추가하세요.
+
+```yaml
+- name: Notarize
+  run: |
+    xcrun notarytool submit dist/Pawprint-$VERSION.dmg \
+      --apple-id "$APPLE_ID" --team-id "$TEAM_ID" \
+      --password "$APP_SPECIFIC_PASSWORD" --wait
+    xcrun stapler staple dist/Pawprint-$VERSION.dmg
+```
