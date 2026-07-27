@@ -344,6 +344,33 @@ enum DebugSnapshot {
         capture(background, name: "dmg_background", scale: 2, bare: true)
     }
 
+    // MARK: - Clipboard shape probe (PAWPRINT_CLIPBOARD)
+
+    /// Copies a share card and reports what actually landed on the pasteboard. The bug this
+    /// guards against is invisible in the app: the copy "works", and only a receiver that reads
+    /// every item — a messaging app — reveals that there were two.
+    @MainActor
+    static func probeClipboard() {
+        let center = ActivityCenter.shared
+        let metrics = MetricCatalog.all.filter(\.availableAsCard)
+        let result = ShareCardRenderer.copyToPasteboard(.today(center.todaySummary), metrics: Array(metrics.prefix(4)))
+        write("CLIPBOARD copy result: \(result)\n")
+
+        let pasteboard = NSPasteboard.general
+        let items = pasteboard.pasteboardItems ?? []
+        write("CLIPBOARD items: \(items.count)\n")
+        for (index, item) in items.enumerated() {
+            write("   item \(index): \(item.types.map(\.rawValue).joined(separator: ", "))\n")
+        }
+        let imageItems = items.filter { item in
+            item.types.contains(.png) || item.types.contains(.tiff)
+        }
+        write(imageItems.count == 1
+              ? "CLIPBOARD OK — one image, \(imageItems[0].types.count) representations\n"
+              : "CLIPBOARD BROKEN — \(imageItems.count) separate images\n")
+        exit(imageItems.count == 1 ? 0 : 1)
+    }
+
     // MARK: - Localization audit (PAWPRINT_L10N)
 
     /// Walks every catalog and enum that renders text and reports anything that came back as a

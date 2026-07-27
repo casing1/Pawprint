@@ -32,11 +32,19 @@ enum ShareCardRenderer {
             return .failed(L10n.t("shareCardRenderer.bedb79f1"))
         }
 
+        // One item carrying both representations, not two writes. `writeObjects` *appends* an
+        // item rather than merging into the one `setData` just made, so the pasteboard ended up
+        // holding two images — and anything that reads every item (messaging apps do) pasted the
+        // card twice. A single item lets each receiver pick the representation it prefers.
+        let item = NSPasteboardItem()
+        item.setData(png, forType: .png)
+        item.setData(tiff, forType: .tiff)
+
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
-        // Write both PNG and the NSImage: some targets prefer one over the other.
-        pasteboard.setData(png, forType: .png)
-        pasteboard.writeObjects([image])
+        guard pasteboard.writeObjects([item]) else {
+            return .failed(L10n.t("shareCardRenderer.bedb79f1"))
+        }
         return .copied
     }
 
