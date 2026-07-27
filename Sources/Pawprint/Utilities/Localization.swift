@@ -33,7 +33,10 @@ final class LocalizationManager {
 
     /// Resolves `.system` against the user's preferred languages, falling back to the base pack
     /// when none of them has a pack.
-    nonisolated func apply(_ language: AppLanguage) {
+    /// Returns true when the active pack actually changed, so the caller can rebuild anything
+    /// that has already-translated text baked into it.
+    @discardableResult
+    nonisolated func apply(_ language: AppLanguage) -> Bool {
         let resolved: String
         switch language {
         case .system:
@@ -43,7 +46,7 @@ final class LocalizationManager {
         case .english:
             resolved = "en"
         }
-        guard resolved != Tables.activeCode else { return }
+        guard resolved != Tables.activeCode else { return false }
         Tables.setActive(resolved == Self.baseLanguage ? Tables.base : Self.loadPackFile(resolved),
                          code: resolved)
         // The observable properties exist only to nudge SwiftUI, so they are touched on the main
@@ -52,6 +55,7 @@ final class LocalizationManager {
             self.languageCode = resolved
             self.revision &+= 1
         }
+        return true
     }
 
     /// First of the user's preferred languages that we actually ship a pack for.

@@ -15,24 +15,30 @@ struct SettingsRootView: View {
     }
 
     var body: some View {
-        TabView {
-            GeneralSettingsTab()
+        // Read once so the `tabItem` labels below re-evaluate when the language changes.
+        // `L10n.t` is a plain dictionary read and creates no dependency of its own.
+        let revision = LocalizationManager.shared.revision
+
+        return TabView {
+            GeneralSettingsTab().id(revision)
                 .tabItem { Label(L10n.t("settingsRootView.aef1a1e7"), systemImage: "gearshape") }
-            CollectionSettingsTab()
+            CollectionSettingsTab().id(revision)
                 .tabItem { Label(L10n.t("settingsRootView.c5b9a11e"), systemImage: "chart.bar") }
-            ExcludedAppsSettingsTab()
+            ExcludedAppsSettingsTab().id(revision)
                 .tabItem { Label(L10n.t("settingsRootView.48511ffb"), systemImage: "nosign") }
-            HUDSettingsTab()
+            HUDSettingsTab().id(revision)
                 .tabItem { Label("HUD", systemImage: "rectangle.inset.filled") }
-            NotificationSettingsTab()
+            NotificationSettingsTab().id(revision)
                 .tabItem { Label(L10n.t("settingsRootView.e29d147e"), systemImage: "bell") }
-            DataSettingsTab()
+            DataSettingsTab().id(revision)
                 .tabItem { Label(L10n.t("settingsRootView.0c6de345"), systemImage: "externaldrive") }
-            UpdateSettingsTab()
+            UpdateSettingsTab().id(revision)
                 .tabItem { Label(L10n.t("settingsRootView.4f72dd68"), systemImage: "arrow.triangle.2.circlepath") }
         }
-        .frame(width: 460, height: 420)
-        .id(LocalizationManager.shared.revision)
+        // Seven tabs need the room: at 460 the labels were squeezed into each other, and the
+        // longer English ones dropped out entirely. `.id` stays off the TabView itself — forcing
+        // AppKit to rebuild NSTabView is what mangled the bar; only the contents are rebuilt.
+        .frame(width: 620, height: 480)
         .preferredColorScheme(colorScheme)
     }
 }

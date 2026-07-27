@@ -297,7 +297,11 @@ final class ActivityCenter {
         let dockIconChanged = newSettings.showDockIcon != settings.showDockIcon
         let dayStartChanged = newSettings.dayStartHour != settings.dayStartHour
         let focusThresholdChanged = newSettings.focusThresholdSeconds != settings.focusThresholdSeconds
-        LocalizationManager.shared.apply(newSettings.language)
+        // Derived text is *generated*, not looked up: summary sentences, highlights, fun facts,
+        // personal-best titles and the day's persona are all produced by the engines and then
+        // stored or cached. Swapping the pack doesn't touch any of it, so everything computed
+        // before the switch stays in the old language until it is rebuilt.
+        let languageChanged = LocalizationManager.shared.apply(newSettings.language)
         settings = newSettings
         store.saveSettings(newSettings)
         refreshExclusionState()
@@ -307,9 +311,12 @@ final class ActivityCenter {
         if focusThresholdChanged {
             focusEngine.focusThresholdSeconds = TimeInterval(newSettings.focusThresholdSeconds)
         }
-        if dayStartChanged {
+        if dayStartChanged || languageChanged {
             SummaryCache.shared.invalidateAll()
             reloadRecentDaysCache()
+        }
+        if languageChanged {
+            refreshLifetimeStats(force: true)
         }
         dirtySinceLastSummary = true
         refreshSummary()

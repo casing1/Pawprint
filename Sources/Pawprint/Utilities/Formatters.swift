@@ -31,7 +31,11 @@ enum Formatters {
 
     static func time(_ date: Date) -> String {
         let formatter = DateFormatter()
-        formatter.dateFormat = "a h:mm"
+        // `timeStyle`, not a fixed "a h:mm" pattern: the pattern pins the AM/PM marker to the
+        // front, which is right for Korean and gives "AM 4:11" in English. A style lets the
+        // locale decide both the order and the separator.
+        formatter.timeStyle = .short
+        formatter.dateStyle = .none
         formatter.locale = LocalizationManager.activeLocale
         return formatter.string(from: date)
     }

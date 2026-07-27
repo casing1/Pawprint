@@ -344,6 +344,62 @@ enum DebugSnapshot {
         capture(background, name: "dmg_background", scale: 2, bare: true)
     }
 
+    // MARK: - Language switch probe (PAWPRINT_SWITCH)
+
+    /// Switches language at runtime and checks that *generated* text follows.
+    ///
+    /// Simple lookups were never the risk. Summary sentences, highlights, personal-best titles
+    /// and the persona are produced by the engines and then cached or stored, so they used to
+    /// keep whatever language was active when they were first computed.
+    @MainActor
+    static func probeLanguageSwitch() {
+        let center = ActivityCenter.shared
+
+        func sample() -> [String: String] {
+            var out: [String: String] = [:]
+            out["summary"] = center.todaySummary.summarySentence
+            out["persona"] = center.todaySummary.persona?.title ?? "-"
+            out["score"] = center.todaySummary.score?.headline ?? "-"
+            out["highlight"] = center.todaySummary.highlights.first?.title ?? "-"
+            out["funFact"] = center.todaySummary.funFacts.first?.text ?? "-"
+            out["personalBest"] = center.personalBests.first?.title ?? "-"
+            out["quest"] = center.quests.first?.displayTitle ?? "-"
+            out["metric"] = MetricCatalog.all.first?.title ?? "-"
+            return out
+        }
+
+        func hasHangul(_ text: String) -> Bool {
+            text.unicodeScalars.contains { (0xAC00...0xD7A3).contains($0.value) }
+        }
+
+        var settings = center.settings
+        settings.language = .korean
+        center.updateSettings(settings)
+        let korean = sample()
+
+        settings.language = .english
+        center.updateSettings(settings)
+        let english = sample()
+
+        var stale: [String] = []
+        for (field, koreanValue) in korean.sorted(by: { $0.key < $1.key }) {
+            let englishValue = english[field] ?? ""
+            write("SWITCH \(field)\n    ko: \(koreanValue)\n    en: \(englishValue)\n")
+            // A field that stayed identical, or still carries Hangul in English, never rebuilt.
+            if koreanValue != "-" && (koreanValue == englishValue || hasHangul(englishValue)) {
+                stale.append(field)
+            }
+        }
+
+        // Put it back so the probe doesn't leave the app in English.
+        settings.language = .korean
+        center.updateSettings(settings)
+
+        write(stale.isEmpty ? "SWITCH OK — every field followed the language\n"
+                            : "SWITCH STALE: \(stale.joined(separator: ", "))\n")
+        exit(stale.isEmpty ? 0 : 1)
+    }
+
     // MARK: - Clipboard shape probe (PAWPRINT_CLIPBOARD)
 
     /// Copies a share card and reports what actually landed on the pasteboard. The bug this

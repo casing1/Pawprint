@@ -59,6 +59,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
 
+        // Opens Settings so its window can be screenshotted; SwiftUI's TabView renders as a
+        // placeholder in ImageRenderer, so a real window is the only way to check the tab bar.
+        if let language = ProcessInfo.processInfo.environment["PAWPRINT_SETTINGS"] {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                var updated = ActivityCenter.shared.settings
+                updated.language = language == "en" ? .english : .korean
+                ActivityCenter.shared.updateSettings(updated)
+                SettingsOpener.open()
+            }
+        }
+
+        if ProcessInfo.processInfo.environment["PAWPRINT_SWITCH"] != nil {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { DebugSnapshot.probeLanguageSwitch() }
+        }
+
         if ProcessInfo.processInfo.environment["PAWPRINT_CLIPBOARD"] != nil {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { DebugSnapshot.probeClipboard() }
         }
