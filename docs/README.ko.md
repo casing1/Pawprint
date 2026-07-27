@@ -104,6 +104,17 @@ Pawprint는 메뉴 바에 조용히 앉아 Mac을 어떻게 쓰는지 기록합�
 
 ## 직접 빌드하기
 
+**직접 빌드할 필요 없습니다.** 이 항목은 코드를 고치려는 분들을 위한 것이고, 그냥 쓰실 거라면
+완성된 앱을 받으시면 됩니다:
+
+<div align="center">
+<a href="https://github.com/yhcho0405/Pawprint/releases/latest/download/Pawprint.dmg">
+<img src="https://img.shields.io/badge/macOS용%20다운로드-.dmg-1a7f37?style=for-the-badge&logo=apple&logoColor=white" alt="macOS용 다운로드" height="38">
+</a>
+</div>
+
+그래도 직접 빌드하시려면:
+
 ```bash
 git clone https://github.com/yhcho0405/Pawprint.git
 cd Pawprint

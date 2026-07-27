@@ -109,6 +109,17 @@ URL cannot become a substituted app.
 
 ## Building from source
 
+**You don't need to.** Building is for people who want to change something — to just use
+Pawprint, grab the ready-made app:
+
+<div align="center">
+<a href="https://github.com/yhcho0405/Pawprint/releases/latest/download/Pawprint.dmg">
+<img src="https://img.shields.io/badge/Download%20for%20macOS-.dmg-1a7f37?style=for-the-badge&logo=apple&logoColor=white" alt="Download for macOS" height="38">
+</a>
+</div>
+
+Still want to build it yourself?
+
 ```bash
 git clone https://github.com/yhcho0405/Pawprint.git
 cd Pawprint
