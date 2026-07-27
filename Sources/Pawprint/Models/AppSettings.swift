@@ -90,6 +90,12 @@ struct AppSettings: Codable {
     /// Personal-best celebrations already shown, keyed "day/metricID". Pruned to the current day
     /// whenever it is written, so it stays a handful of entries.
     var celebratedRecords: [String] = []
+    /// Days on which at least one personal best fell, as "yyyy-MM-dd".
+    ///
+    /// Separate from `celebratedRecords`, which is pruned to the current day and answers "has the
+    /// banner been shown". This one is permanent, because it answers "did this day earn its party
+    /// hat" — a fact about the day that has to outlive both the banner and the app session.
+    var recordDays: [String] = []
     /// Day and running count for the per-day cap.
     var notificationDay: String = ""
     var notificationCountToday: Int = 0
@@ -124,6 +130,22 @@ struct AppSettings: Codable {
     var updateFeedURL: String = UpdateDistribution.feedURL
     /// Skip the daily background check but keep the manual button working.
     var updateCheckAutomatically: Bool = true
+
+    // MARK: - Anonymous usage count
+
+    /// Whether to send the once-a-day "this install ran" ping. See `UsageReporter` for exactly
+    /// what it contains — no counters, no metrics, no stable identifier.
+    ///
+    /// On by default, but that alone sends nothing: `usageStatsEndpoint` ships empty, and with no
+    /// endpoint the reporter never opens a connection. A build only becomes capable of sending
+    /// anything once someone deploys an endpoint and points this at it.
+    var usageStatsEnabled: Bool = true
+    /// Where the ping goes. Empty means the feature is inert.
+    var usageStatsEndpoint: String = ""
+    /// Random, local, never transmitted — only rotating hashes of it are. Blank until first use.
+    var installID: String = ""
+    /// Last day a ping was sent, as "yyyy-MM-dd" in UTC.
+    var lastUsagePingDay: String = ""
 
     /// Automatic update checks shipped as opt-in first and became the default afterwards. Without
     /// a marker, everyone who ran the earlier build would stay opted out forever — their stored
@@ -164,6 +186,8 @@ struct AppSettings: Codable {
 
     private enum CodingKeys: String, CodingKey {
         case notifiedQuestLevels, notificationDay, notificationCountToday, celebratedRecords
+        case recordDays
+        case usageStatsEnabled, usageStatsEndpoint, installID, lastUsagePingDay
         case hasCompletedOnboarding
         case updateCheckEnabled, updateFeedURL, updateCheckAutomatically, updateDefaultsMigrated
         case launchAtLogin, showDockIcon, menuBarMetric, dayStartHour, theme, language
@@ -185,6 +209,11 @@ struct AppSettings: Codable {
 
         notifiedQuestLevels = try c.decodeIfPresent([String: Int].self, forKey: .notifiedQuestLevels) ?? fallback.notifiedQuestLevels
         celebratedRecords = try c.decodeIfPresent([String].self, forKey: .celebratedRecords) ?? fallback.celebratedRecords
+        recordDays = try c.decodeIfPresent([String].self, forKey: .recordDays) ?? fallback.recordDays
+        usageStatsEnabled = try c.decodeIfPresent(Bool.self, forKey: .usageStatsEnabled) ?? fallback.usageStatsEnabled
+        usageStatsEndpoint = try c.decodeIfPresent(String.self, forKey: .usageStatsEndpoint) ?? fallback.usageStatsEndpoint
+        installID = try c.decodeIfPresent(String.self, forKey: .installID) ?? fallback.installID
+        lastUsagePingDay = try c.decodeIfPresent(String.self, forKey: .lastUsagePingDay) ?? fallback.lastUsagePingDay
         notificationDay = try c.decodeIfPresent(String.self, forKey: .notificationDay) ?? fallback.notificationDay
         notificationCountToday = try c.decodeIfPresent(Int.self, forKey: .notificationCountToday) ?? fallback.notificationCountToday
         hasCompletedOnboarding = try c.decodeIfPresent(Bool.self, forKey: .hasCompletedOnboarding) ?? fallback.hasCompletedOnboarding
@@ -246,6 +275,11 @@ struct AppSettings: Codable {
         var c = encoder.container(keyedBy: CodingKeys.self)
         try c.encode(notifiedQuestLevels, forKey: .notifiedQuestLevels)
         try c.encode(celebratedRecords, forKey: .celebratedRecords)
+        try c.encode(recordDays, forKey: .recordDays)
+        try c.encode(usageStatsEnabled, forKey: .usageStatsEnabled)
+        try c.encode(usageStatsEndpoint, forKey: .usageStatsEndpoint)
+        try c.encode(installID, forKey: .installID)
+        try c.encode(lastUsagePingDay, forKey: .lastUsagePingDay)
         try c.encode(notificationDay, forKey: .notificationDay)
         try c.encode(notificationCountToday, forKey: .notificationCountToday)
         try c.encode(hasCompletedOnboarding, forKey: .hasCompletedOnboarding)

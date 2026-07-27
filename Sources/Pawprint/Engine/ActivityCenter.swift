@@ -148,10 +148,18 @@ final class ActivityCenter {
         ) {
             var updated = settings
             updated.celebratedRecords = Array(celebrated).sorted()
+            // A record fell today, so today keeps its reward for good — whether or not the banner
+            // is ever dismissed, and however many times the app is relaunched.
+            if !celebrated.isEmpty, !updated.recordDays.contains(todaySummary.day) {
+                updated.recordDays.append(todaySummary.day)
+            }
             updateSettings(updated)
         }
         todayPercentiles = PercentileEngine.rankings(for: todaySummary, samples: percentileSamples)
     }
+
+    /// Did a personal best fall on this day? Survives dismissing the banner and relaunching.
+    func setARecord(on day: String) -> Bool { settings.recordDays.contains(day) }
 
     @ObservationIgnored private var dirtySinceLastSummary = false
 

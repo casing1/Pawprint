@@ -31,6 +31,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         UpdateChecker.shared.startPeriodicChecks(settings: settings)
+        // Inert unless an endpoint has been configured; see UsageReporter.
+        UsageReporter.reportIfDue()
 
         // End-to-end exercise of the update pipeline: check → download → ditto → signature
         // verification → swap. There is no other way to prove the install path works, since it
@@ -82,6 +84,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // synthetic mouse move and screenshotted — ImageRenderer has no pointer.
         if ProcessInfo.processInfo.environment["PAWPRINT_ITEMS_WINDOW"] != nil {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { DebugSnapshot.openItemCatalogWindow() }
+        }
+
+        if ProcessInfo.processInfo.environment["PAWPRINT_PRIVACY"] != nil {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { DebugSnapshot.probePrivacyAndRewards() }
         }
 
         if ProcessInfo.processInfo.environment["PAWPRINT_ITEMS"] != nil {

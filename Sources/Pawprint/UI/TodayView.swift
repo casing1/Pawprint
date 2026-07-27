@@ -86,12 +86,7 @@ struct TodayView: View {
 
             indicesRow
 
-            PawpetCard(
-                summary: summary,
-                streakDays: activityCenter.currentStreak,
-                isCelebrating: RecordTracker.shared.pendingCelebration != nil
-                    || activityCenter.pendingLevelUp != nil
-            )
+            PawpetCard(summary: summary, streakDays: activityCenter.currentStreak)
 
             KeyboardHeatmapView(summary: summary)
 

@@ -82,6 +82,11 @@ Data lives in `~/Library/Application Support/Pawprint/` and goes nowhere else. P
 entirely offline; the one network request it makes is checking for a new version, which you can
 turn off in Settings → Updates.
 
+There is also an optional daily "this install ran today" count, which sends no counters and no
+identifier — only a hash that changes every day, so two days cannot be linked. It ships with no
+endpoint configured, meaning a stock build never sends it at all. Details in
+[docs/ANALYTICS.md](docs/ANALYTICS.md).
+
 <br>
 
 ## Permissions

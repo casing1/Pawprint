@@ -25,7 +25,14 @@ enum PawpetItemCatalog {
         /// Rarity points, or nil on axes that don't score.
         let points: Int?
         /// A cat wearing this item and nothing else, so the row can show what it looks like.
-        let preview: PawpetTraits
+        /// Nil on the date-seeded axes, which show `swatches` instead — a single cat can't convey
+        /// "fourteen coat colours", which is the only thing those rows have to say.
+        let preview: PawpetTraits?
+        /// Colours to lay out as a strip, for rows describing a whole range.
+        var swatches: [Color] = []
+        /// Miniature cats differing only in the axis this row describes. Used where the variation
+        /// is a shape rather than a colour, and a swatch would have nothing to show.
+        var strip: [PawpetTraits] = []
     }
 
     /// The cat every preview starts from — deliberately not left to the date seed.
@@ -290,25 +297,35 @@ enum PawpetItemCatalog {
             isEarned: false)
     }
 
-    /// The date-seeded axes, summarised by count rather than listed — they aren't earned, and
-    /// fourteen coat colours as fourteen rows would bury the parts you can actually influence.
+    /// The date-seeded axes.
+    ///
+    /// These describe *ranges*, not items, so they're the one place a preview cat is the wrong
+    /// picture: showing one cat for "coat colours" told you nothing about the other thirteen, and
+    /// nothing at all about which part of the cat the row even meant. The colour axes show their
+    /// full palette as a strip; the shape axes, which have no colour to show, state their count.
     private static var coat: Group {
-        func item(_ nameKey: String, _ count: Int, _ day: String) -> Item {
-            var traits = PawpetTraits(day: day, summary: DailySummary(day: day))
-            traits.expression = .content
-            return Item(group: "coat", name: L10n.t(nameKey),
-                        condition: L10n.t("itemCatalog.coat.count", count), points: nil,
-                        preview: traits)
+        func swatchItem(_ nameKey: String, _ colors: [Color]) -> Item {
+            Item(group: "coat", name: L10n.t(nameKey),
+                 condition: L10n.t("itemCatalog.coat.count", colors.count), points: nil,
+                 preview: nil, swatches: colors)
+        }
+        func stripItem(_ nameKey: String, _ variants: [PawpetTraits]) -> Item {
+            Item(group: "coat", name: L10n.t(nameKey),
+                 condition: L10n.t("itemCatalog.coat.count", variants.count), points: nil,
+                 preview: nil, strip: variants)
         }
         return Group(
             title: L10n.t("itemCatalog.coat"), icon: "paintpalette",
             summary: L10n.t("itemCatalog.coat.summary"), maximum: nil,
             items: [
-                item("itemCatalog.coat.colours", PawpetTraits.palettes.count, "2025-01-07"),
-                item("itemCatalog.coat.patterns", PawpetTraits.Pattern.allCases.count, "2025-04-22"),
-                item("itemCatalog.coat.eyes", PawpetTraits.eyeColors.count, "2025-06-30"),
-                item("itemCatalog.coat.ears", PawpetTraits.EarShape.allCases.count, "2025-09-11"),
-                item("itemCatalog.coat.tails", PawpetTraits.TailShape.allCases.count, "2025-11-25")
+                swatchItem("itemCatalog.coat.colours", PawpetTraits.palettes.map(\.body)),
+                swatchItem("itemCatalog.coat.eyes", PawpetTraits.eyeColors.map(\.color)),
+                stripItem("itemCatalog.coat.patterns",
+                          PawpetTraits.Pattern.allCases.map { p in preview { $0.pattern = p } }),
+                stripItem("itemCatalog.coat.ears",
+                          PawpetTraits.EarShape.allCases.map { e in preview { $0.ears = e } }),
+                stripItem("itemCatalog.coat.tails",
+                          PawpetTraits.TailShape.allCases.map { t in preview { $0.tail = t } })
             ],
             isEarned: false)
     }
@@ -369,34 +386,49 @@ struct PawpetItemCatalogView: View {
     /// The thumbnail is a real cat wearing only this item, drawn by the same renderer as the
     /// gallery — not a separate icon set that could quietly stop matching.
     ///
-    /// At 46pt a collar or a cheek mark is only a few pixels, so hovering magnifies it in place.
-    /// Deliberately a `scaleEffect` and not a `.popover`: a popover is a real window, and one per
-    /// row means the list spawns and tears down windows every time the pointer crosses it.
+    /// At 46pt a collar or a cheek mark is only a few pixels, so hovering enlarges it.
+    ///
+    /// The enlargement draws a *second* cat at its full size rather than applying `scaleEffect`
+    /// to the small one. `PawpetView` is a `Canvas`, so scaling it up magnifies the 46pt raster
+    /// — the result was visibly soft exactly when you were trying to look closely. Drawing at
+    /// 100pt re-runs the vector path at that size and stays sharp.
+    ///
+    /// Deliberately not a `.popover`: a popover is a real window, and one per row means the list
+    /// spawns and tears down windows every time the pointer crosses it.
     @ViewBuilder
     private func row(_ item: PawpetItemCatalog.Item) -> some View {
         let isHovered = (forcedHover ?? hovered) == item.id
         HStack(alignment: .center, spacing: 9) {
-            PawpetView(summary: emptyDay, size: 46, showsAura: true, traitsOverride: item.preview)
-                // An opaque plate under the magnified cat: it grows over the row's own text, and
-                // without this the two are painted on top of each other.
-                .background {
-                    RoundedRectangle(cornerRadius: 7, style: .continuous)
-                        .fill(.background)
-                        .opacity(isHovered ? 1 : 0)
-                }
-                .scaleEffect(isHovered ? 2.1 : 1, anchor: .leading)
-                .shadow(color: .black.opacity(isHovered ? 0.4 : 0), radius: 7, y: 3)
-                // Above its own row's text as well as the neighbouring rows: siblings in an
-                // HStack draw in order, so the label would otherwise sit on top of the cat.
-                .zIndex(isHovered ? 1 : 0)
-                .animation(.easeOut(duration: 0.14), value: isHovered)
-                .onHover { hovered = $0 ? item.id : (isHovered ? nil : hovered) }
+            if let preview = item.preview {
+                PawpetView(summary: emptyDay, size: 46, showsAura: true, traitsOverride: preview)
+                    .opacity(isHovered ? 0 : 1)
+                    .overlay(alignment: .leading) {
+                        if isHovered {
+                            PawpetView(summary: emptyDay, size: 100, showsAura: true,
+                                       traitsOverride: preview)
+                                .padding(5)
+                                // Opaque: it covers the row's own text, which would otherwise
+                                // show through the cat.
+                                .background(RoundedRectangle(cornerRadius: 11, style: .continuous)
+                                    .fill(.background))
+                                .shadow(color: .black.opacity(0.4), radius: 8, y: 3)
+                                .offset(x: -5)
+                        }
+                    }
+                    .frame(width: 46, height: 46)
+                    // Above its own row's text as well as the neighbouring rows: siblings in an
+                    // HStack draw in order, so the label would otherwise sit on top of the cat.
+                    .zIndex(isHovered ? 1 : 0)
+                    .onHover { hovered = $0 ? item.id : (isHovered ? nil : hovered) }
+            }
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 3) {
                 Text(item.name).font(.system(size: 11, weight: .medium))
                 Text(item.condition)
                     .font(.system(size: 10)).foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
+                if !item.swatches.isEmpty { swatchStrip(item.swatches) }
+                if !item.strip.isEmpty { catStrip(item.strip) }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -410,6 +442,32 @@ struct PawpetItemCatalogView: View {
         .padding(.vertical, 5)
         // Without this the magnified cat is painted under the rows that follow it.
         .zIndex(isHovered ? 1 : 0)
+    }
+
+    /// The whole palette for an axis whose only content is "there are N of these".
+    private func swatchStrip(_ colors: [Color]) -> some View {
+        HStack(spacing: 3) {
+            ForEach(Array(colors.enumerated()), id: \.offset) { _, color in
+                RoundedRectangle(cornerRadius: 3, style: .continuous)
+                    .fill(color)
+                    .frame(width: 15, height: 15)
+                    .overlay(RoundedRectangle(cornerRadius: 3, style: .continuous)
+                        .strokeBorder(.white.opacity(0.18), lineWidth: 0.5))
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.top, 1)
+    }
+
+    /// Every variant of a shape axis, side by side. Small, but side-by-side is the only way a
+    /// difference in ear or tail shape is legible at all.
+    private func catStrip(_ variants: [PawpetTraits]) -> some View {
+        HStack(spacing: 1) {
+            ForEach(Array(variants.enumerated()), id: \.offset) { _, traits in
+                PawpetView(summary: emptyDay, size: 42, showsAura: false, traitsOverride: traits)
+            }
+            Spacer(minLength: 0)
+        }
     }
 
     @ViewBuilder

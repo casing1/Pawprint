@@ -179,7 +179,7 @@ enum DebugSnapshot {
                     summary.day = String(format: "2026-%02d-%02d", month, day)
                     let celebrating = cats.isEmpty
                     let traits = PawpetTraits(day: summary.day, summary: summary,
-                                              streakDays: 40, isCelebrating: celebrating)
+                                              streakDays: 40, setARecord: celebrating)
                     guard traits.charmAndWings == (charm, wings) else { continue }
                     if fallback == nil { fallback = (summary, celebrating) }
                     if !usedPalettes.contains(traits.paletteIndex) {
@@ -221,8 +221,9 @@ enum DebugSnapshot {
                 }
                 HStack(spacing: -10) {
                     ForEach(Array(cats.enumerated()), id: \.offset) { index, entry in
-                        PawpetView(summary: entry.0, size: 116, streakDays: 40,
-                                   isCelebrating: entry.1, showsAura: false)
+                        PawpetView(summary: entry.0, size: 116, streakDays: 40, showsAura: false,
+                                   traitsOverride: PawpetTraits(day: entry.0.day, summary: entry.0,
+                                                                streakDays: 40, setARecord: entry.1))
                             .rotationEffect(.degrees(Double(index - 1) * 4))
                     }
                 }
@@ -568,10 +569,14 @@ enum DebugSnapshot {
     @MainActor
     private static func hoveredCatalogRows() -> some View {
         let group = PawpetItemCatalog.groups[0]
+        let coat = PawpetItemCatalog.groups[PawpetItemCatalog.groups.count - 1]
         let view = PawpetItemCatalogView(onClose: {}, forcedHover: group.items[1].id)
-        // Only the first group — the full sheet is 4,600pt tall and unreadable as one image.
-        return VStack(alignment: .leading) { view.groupCard(group) }
-            .padding(14).frame(width: 430).background(Color(white: 0.11))
+        // Two groups, not the whole sheet: the full thing is 4,600pt tall and unreadable at once.
+        return VStack(alignment: .leading, spacing: 14) {
+            view.groupCard(group)
+            view.groupCard(coat)
+        }
+        .padding(14).frame(width: 430).background(Color(white: 0.11))
     }
 
     /// One row from each axis, at the size they appear in the sheet.
@@ -582,7 +587,7 @@ enum DebugSnapshot {
             ForEach(Array(picks.enumerated()), id: \.offset) { _, pair in
                 HStack(spacing: 9) {
                     PawpetView(summary: DailySummary(day: "2025-03-14"), size: 46,
-                               traitsOverride: pair.1.preview)
+                               traitsOverride: pair.1.preview ?? PawpetItemCatalog.baseCat)
                     VStack(alignment: .leading, spacing: 2) {
                         Text("\(pair.0) · \(pair.1.name)").font(.system(size: 11, weight: .medium))
                         Text(pair.1.condition).font(.system(size: 10)).foregroundStyle(.secondary)
@@ -620,6 +625,75 @@ enum DebugSnapshot {
             (.fullKeyboard, day { $0.distinctKeysUsed = 60 }),
             (.quietKeys, day { $0.activeSeconds = 4 * 3600; $0.totalKeyPresses = 3_000; $0.totalClicks = 40 })
         ]
+    }
+
+    // MARK: - Record reward + usage ping (PAWPRINT_PRIVACY)
+
+    /// Checks the two things here that would be bad to get wrong and invisible if we did.
+    @MainActor
+    static func probePrivacyAndRewards() {
+        var failures = 0
+
+        // 1. Setting a record must be a small bonus, not a free grade. It used to force the
+        //    prismatic frame — 32 of 100 points — plus the sparkle expression, so a quiet day
+        //    that happened to nudge one counter jumped straight to grade S.
+        var day = DailySummary(day: "2026-02-10")
+        day.totalKeyPresses = 400
+        day.activeSeconds = 3_600
+        let plain = PawpetTraits(day: day.day, summary: day, setARecord: false)
+        let record = PawpetTraits(day: day.day, summary: day, setARecord: true)
+        let bonus = record.rarity - plain.rarity
+        write("record bonus \(plain.rarity) -> \(record.rarity)  (+\(bonus))\n")
+        write("  frame \(plain.frame) -> \(record.frame), head \(plain.headwear) -> \(record.headwear)\n")
+        write("  expr \(plain.expression) -> \(record.expression), float \(plain.floaters) -> \(record.floaters)\n")
+        if bonus > 10 { write("FAIL record bonus \(bonus) is too large\n"); failures += 1 }
+        if bonus <= 0 { write("FAIL record earns nothing\n"); failures += 1 }
+        if record.frame != plain.frame {
+            write("FAIL a record changed the frame\n"); failures += 1
+        }
+        if record.rarityGrade != plain.rarityGrade {
+            write("FAIL a record changed the grade \(plain.rarityGrade) -> \(record.rarityGrade)\n")
+            failures += 1
+        }
+
+        // 2. The usage ping must be inert without an endpoint. `reportIfDue` marks the day as
+        //    sent before firing the request, so a stamped day is a reliable witness that it
+        //    decided to send.
+        var settings = ActivityCenter.shared.settings
+        let restore = settings
+        settings.usageStatsEnabled = true
+        settings.usageStatsEndpoint = ""
+        settings.lastUsagePingDay = ""
+        ActivityCenter.shared.updateSettings(settings)
+        UsageReporter.reportIfDue()
+        if !ActivityCenter.shared.settings.lastUsagePingDay.isEmpty {
+            write("FAIL usage ping ran with no endpoint configured\n"); failures += 1
+        } else {
+            write("usage ping inert with empty endpoint: ok\n")
+        }
+        // http:// must be refused too — the payload is small but it is still someone's data.
+        settings.usageStatsEndpoint = "http://example.com"
+        ActivityCenter.shared.updateSettings(settings)
+        UsageReporter.reportIfDue()
+        if !ActivityCenter.shared.settings.lastUsagePingDay.isEmpty {
+            write("FAIL usage ping accepted a plain-http endpoint\n"); failures += 1
+        } else {
+            write("usage ping refuses http: ok\n")
+        }
+        ActivityCenter.shared.updateSettings(restore)
+
+        // 3. The rotating hash must actually rotate, and must not be the install ID.
+        let id = UUID().uuidString
+        let a = UsageReporter.rotatingHash(id, salt: "2026-02-10")
+        let b = UsageReporter.rotatingHash(id, salt: "2026-02-11")
+        let again = UsageReporter.rotatingHash(id, salt: "2026-02-10")
+        write("hash \(a) / \(b)\n")
+        if a == b { write("FAIL hash does not rotate between days\n"); failures += 1 }
+        if a != again { write("FAIL hash is unstable within a day\n"); failures += 1 }
+        if a.contains(id) || id.contains(a) { write("FAIL hash leaks the install id\n"); failures += 1 }
+
+        write(failures == 0 ? "\nPRIVACY OK\n" : "\nPRIVACY \(failures) FAILURES\n")
+        exit(failures == 0 ? 0 : 1)
     }
 
     // MARK: - Cat wall for the README (PAWPRINT_WALL)
@@ -671,7 +745,7 @@ enum DebugSnapshot {
                     summary.goldenHour = (index * 5) % 24
                     let celebrating = index % 11 == 0
                     let traits = PawpetTraits(day: summary.day, summary: summary,
-                                              streakDays: 40, isCelebrating: celebrating)
+                                              streakDays: 40, setARecord: celebrating)
                     let signature = "\(traits.paletteIndex)/\(traits.pattern)/\(traits.pawCharm)"
                         + "/\(traits.wings)/\(traits.frame)/\(traits.expression)"
                     if requireNew && seenSignature.contains(signature) { continue }
@@ -690,7 +764,8 @@ enum DebugSnapshot {
                     ForEach(0..<columns, id: \.self) { column in
                         let entry = chosen[row * columns + column]
                         PawpetView(summary: entry.0, size: 104, streakDays: 40,
-                                   isCelebrating: entry.1)
+                                   traitsOverride: PawpetTraits(day: entry.0.day, summary: entry.0,
+                                                                streakDays: 40, setARecord: entry.1))
                     }
                 }
             }
@@ -764,7 +839,7 @@ enum DebugSnapshot {
                     s.goldenHour = recipe.hour
                     s.lastActivity = Calendar.current.date(bySettingHour: recipe.hour, minute: 0, second: 0, of: Date())
                     recipe.tune(&s)
-                    let t = PawpetTraits(day: s.day, summary: s, streakDays: 40, isCelebrating: recipe.celebrating)
+                    let t = PawpetTraits(day: s.day, summary: s, streakDays: 40, setARecord: recipe.celebrating)
                     guard t.charmAndWings == (recipe.charm, recipe.wings) else { continue }
                     if fallback == nil { fallback = (s, t) }
                     if !used.contains(t.paletteIndex) {
@@ -803,7 +878,8 @@ enum DebugSnapshot {
                     ForEach(0..<columns, id: \.self) { column in
                         let entry = built[row * columns + column]
                         PawpetView(summary: entry.0, size: 132, streakDays: 40,
-                                   isCelebrating: entry.1)
+                                   traitsOverride: PawpetTraits(day: entry.0.day, summary: entry.0,
+                                                                streakDays: 40, setARecord: entry.1))
                     }
                 }
             }

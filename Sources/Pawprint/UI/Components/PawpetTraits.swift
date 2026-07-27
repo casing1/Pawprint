@@ -165,7 +165,10 @@ struct PawpetTraits {
 
     // MARK: - Derivation
 
-    init(day: String, summary: DailySummary, streakDays: Int = 0, isCelebrating: Bool = false) {
+    /// `setARecord` is a fact about the day, read from `AppSettings.recordDays`. It used to be
+    /// `isCelebrating` — literally "is the congratulation banner on screen" — which meant the cat
+    /// changed when you dismissed a banner, and reverted on relaunch.
+    init(day: String, summary: DailySummary, streakDays: Int = 0, setARecord: Bool = false) {
         // --- Identity: date only ---
         var generator = SeededGenerator(seed: Self.daySeed(day))
         paletteIndex = generator.nextInt(below: Self.palettes.count)
@@ -179,19 +182,19 @@ struct PawpetTraits {
         // --- State: one metric per axis ---
         let score = summary.score?.total ?? 0
 
-        expression = Self.expression(summary, score: score, isCelebrating: isCelebrating)
-        headwear = Self.headwear(summary, score: score, isCelebrating: isCelebrating)
+        expression = Self.expression(summary, score: score)
+        headwear = Self.headwear(summary, score: score, setARecord: setARecord)
         eyewear = Self.eyewear(summary)
         prop = Self.prop(summary)
         collar = Self.collar(streakDays: streakDays)
         cheekMark = Self.cheekMark(summary, score: score)
         aura = Self.aura(summary)
-        floaters = Self.floaters(summary, isCelebrating: isCelebrating)
+        floaters = Self.floaters(summary, setARecord: setARecord)
 
         // Rewards. `generator` has already been advanced by the identity draws, so the charm and
         // wing choices vary from day to day without needing a second seed.
         pawCharm = Self.pawCharm(summary, generator: &generator)
-        frame = Self.frame(score: score, isCelebrating: isCelebrating)
+        frame = Self.frame(score: score)
         wings = Self.wings(summary, generator: &generator)
         backdrop = Self.backdrop(summary, score: score)
     }
@@ -210,8 +213,7 @@ struct PawpetTraits {
     // Each of these is a priority chain over one metric family. Thresholds are coarse so the cat
     // changes a handful of times a day rather than continuously.
 
-    private static func expression(_ s: DailySummary, score: Int, isCelebrating: Bool) -> Expression {
-        if isCelebrating { return .sparkle }
+    private static func expression(_ s: DailySummary, score: Int) -> Expression {
         if s.activeSeconds < 300 { return .sleepy }
         if s.totalKeyPresses > 50, s.backspaceRatio > 0.30 { return .dizzy }
         if s.chaosIndex >= 70 { return .chaotic }
@@ -225,8 +227,8 @@ struct PawpetTraits {
         return .content
     }
 
-    private static func headwear(_ s: DailySummary, score: Int, isCelebrating: Bool) -> Headwear {
-        if isCelebrating { return .partyHat }
+    private static func headwear(_ s: DailySummary, score: Int, setARecord: Bool) -> Headwear {
+        if setARecord { return .partyHat }
         if score >= 85 { return .crown }
         if s.totalKeyPresses >= 500, s.regretIndex <= 15 { return .halo }
         if s.audioOutputDeviceChangeCount >= 2 { return .headphones }
@@ -287,8 +289,8 @@ struct PawpetTraits {
         }
     }
 
-    private static func floaters(_ s: DailySummary, isCelebrating: Bool) -> Floaters {
-        if isCelebrating { return .sparkles }
+    private static func floaters(_ s: DailySummary, setARecord: Bool) -> Floaters {
+        if setARecord { return .sparkles }
         if s.idleSeconds > 3_600, s.idleSeconds > s.activeSeconds * 2 { return .zzz }
         if s.networkTotalBytes >= 5 * 1024 * 1024 * 1024 { return .bits }
         if s.audioOutputDeviceChangeCount >= 3 { return .notes }
@@ -303,8 +305,11 @@ struct PawpetTraits {
         return choices[generator.nextInt(below: choices.count)]
     }
 
-    private static func frame(score: Int, isCelebrating: Bool) -> Frame {
-        if isCelebrating { return .prismatic }
+    /// Score alone. A broken record used to force the prismatic frame, which is 32 of the 100
+    /// rarity points on its own — enough to lift any day, however quiet, straight to grade S.
+    /// Setting a personal best is now worth the party hat and the sparkles (8 points together);
+    /// the frame stays an honest reading of the day's score.
+    private static func frame(score: Int) -> Frame {
         // Mirrors `PawprintScore.gradeFor`: S / A / B / C.
         switch score {
         case 85...: return .prismatic

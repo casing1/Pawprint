@@ -8,7 +8,6 @@ import SwiftUI
 struct PawpetCard: View {
     let summary: DailySummary
     var streakDays: Int = 0
-    var isCelebrating: Bool = false
 
     @State private var showAllNotes = false
 
@@ -16,8 +15,7 @@ struct PawpetCard: View {
         let pet = PawpetView(
             summary: summary,
             size: 108,
-            streakDays: streakDays,
-            isCelebrating: isCelebrating
+            streakDays: streakDays
         )
         let traits = pet.traits
         let notes = traits.notes

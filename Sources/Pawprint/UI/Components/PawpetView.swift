@@ -16,8 +16,7 @@ struct PawpetView: View {
     let summary: DailySummary
     var size: CGFloat = 120
     var streakDays: Int = 0
-    /// Set while the record/level celebration is on screen so the cat reacts to it.
-    var isCelebrating: Bool = false
+
     /// The aura wash reads as clutter at small sizes.
     var showsAura: Bool = true
     /// Draws these traits instead of deriving them from `summary`. Only the item catalog uses it,
@@ -26,8 +25,11 @@ struct PawpetView: View {
     var traitsOverride: PawpetTraits? = nil
 
     var traits: PawpetTraits {
+        // The record flag is looked up here rather than passed in, so no call site can forget it
+        // and quietly draw a record day without its party hat.
         traitsOverride
-            ?? PawpetTraits(day: summary.day, summary: summary, streakDays: streakDays, isCelebrating: isCelebrating)
+            ?? PawpetTraits(day: summary.day, summary: summary, streakDays: streakDays,
+                            setARecord: ActivityCenter.shared.setARecord(on: summary.day))
     }
 
     var caption: String { traits.caption }

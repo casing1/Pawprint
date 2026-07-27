@@ -650,6 +650,24 @@ private struct UpdateSettingsTab: View {
                 }
             }
 
+            Section(L10n.t("settings.usageStats.section")) {
+                Toggle(L10n.t("settings.usageStats.toggle"),
+                       isOn: activityCenter.binding(\.usageStatsEnabled))
+                Text(L10n.t("settings.usageStats.detail"))
+                    .font(.caption2).foregroundStyle(.secondary)
+                if settings.usageStatsEnabled {
+                    TextField(L10n.t("settings.usageStats.endpoint"),
+                              text: activityCenter.binding(\.usageStatsEndpoint))
+                        .textFieldStyle(.roundedBorder)
+                    // Says out loud that the shipped default sends nothing at all, rather than
+                    // leaving "on" to imply otherwise.
+                    Text(settings.usageStatsEndpoint.trimmingCharacters(in: .whitespaces).isEmpty
+                         ? L10n.t("settings.usageStats.inactive")
+                         : L10n.t("settings.usageStats.active"))
+                        .font(.caption2).foregroundStyle(.secondary)
+                }
+            }
+
             if settings.updateCheckEnabled {
                 Section(L10n.t("settingsRootView.2926977b")) {
                     statusRow
