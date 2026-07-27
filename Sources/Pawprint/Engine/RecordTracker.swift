@@ -1,0 +1,143 @@
+import Foundation
+import Observation
+
+/// One metric's all-time best, measured over days *before* today.
+struct PersonalBest {
+    var id: String
+    var title: String
+    var icon: String
+    var best: Double
+    var bestDay: String?
+    var format: (Double) -> String
+
+    func formatted(_ value: Double) -> String { format(value) }
+}
+
+/// Live standing of today's value against the all-time best.
+struct RecordStanding: Identifiable {
+    enum State {
+        /// Today has passed the previous all-time best.
+        case broken
+        /// Close enough that it's worth mentioning — the near-miss is the interesting part.
+        case near(Double)   // 0...1 progress toward the record
+        case ordinary
+    }
+
+    var id: String { best.id }
+    var best: PersonalBest
+    var todayValue: Double
+    var state: State
+
+    var progress: Double {
+        guard best.best > 0 else { return 0 }
+        return min(todayValue / best.best, 1)
+    }
+}
+
+/// Compares today against personal bests as the day happens, rather than only when the user
+/// opens the Records tab.
+///
+/// The near-miss case is deliberately first-class: "오늘이 최고 기록의 92%" lands harder than
+/// finding out after the fact that you missed it. Celebrations are capped at one per record per
+/// day so a good session can't turn into a stream of alerts.
+/// Not `@MainActor`: it is driven from `ActivityCenter`'s refresh, which runs on the same timer
+/// as everything else and is not actor-isolated. Mutation stays on that single path.
+@Observable
+final class RecordTracker {
+    static let shared = RecordTracker()
+
+    /// Fraction of the record at which a near-miss becomes worth surfacing.
+    static let nearThreshold = 0.85
+
+    private(set) var standings: [RecordStanding] = []
+    /// Records already celebrated today, keyed by "day/metricID".
+    @ObservationIgnored private var celebrated: Set<String> = []
+    /// Set when a record breaks so the UI can fire a celebration once.
+    private(set) var pendingCelebration: RecordStanding?
+
+    private init() {}
+
+    func clearCelebration() { pendingCelebration = nil }
+
+    /// Builds personal bests from days strictly before today, so today can actually beat them.
+    static func personalBests(fromPastDays past: [DailySummary]) -> [PersonalBest] {
+        func best(
+            _ id: String, _ title: String, _ icon: String,
+            _ value: (DailySummary) -> Double,
+            _ format: @escaping (Double) -> String
+        ) -> PersonalBest? {
+            guard let top = past.max(by: { value($0) < value($1) }), value(top) > 0 else { return nil }
+            return PersonalBest(id: id, title: title, icon: icon, best: value(top), bestDay: top.day, format: format)
+        }
+
+        return [
+            best("maxWPM", "최고 타자 속도", "bolt.fill", { $0.maxWPM }, { Formatters.wpm($0) }),
+            best("totalKeys", "하루 키 입력", "keyboard", { Double($0.totalKeyPresses) }, { Formatters.compactNumber(Int($0)) }),
+            best("activeTime", "하루 사용시간", "clock.fill", { Double($0.activeSeconds) }, { Formatters.compactDuration(Int($0)) }),
+            best("focusTime", "하루 집중시간", "target", { Double($0.totalFocusSeconds) }, { Formatters.compactDuration(Int($0)) }),
+            best("totalClicks", "하루 클릭", "cursorarrow.click", { Double($0.totalClicks) }, { Formatters.compactNumber(Int($0)) }),
+            best("cursorDistance", "하루 커서 이동", "figure.run", { $0.cursorDistanceMeters }, { Formatters.compactDistance(meters: $0) }),
+        ].compactMap { $0 }
+    }
+
+    /// Recomputes standings for today. Cheap enough to call on the summary refresh cadence.
+    func evaluate(today: DailySummary, bests: [PersonalBest]) {
+        var next: [RecordStanding] = []
+
+        for best in bests {
+            let value = Self.todayValue(for: best.id, summary: today)
+            guard value > 0 else { continue }
+
+            let ratio = best.best > 0 ? value / best.best : 0
+            let state: RecordStanding.State
+            if ratio > 1 {
+                state = .broken
+            } else if ratio >= Self.nearThreshold {
+                state = .near(ratio)
+            } else {
+                state = .ordinary
+            }
+
+            let standing = RecordStanding(best: best, todayValue: value, state: state)
+            next.append(standing)
+
+            if case .broken = state {
+                let key = "\(today.day)/\(best.id)"
+                if !celebrated.contains(key) {
+                    celebrated.insert(key)
+                    // In-app confetti only. Beating a personal best is not a *notification*
+                    // -worthy event: several of these metrics are cumulative, so a long day
+                    // crosses one record after another, and every relaunch re-armed the check.
+                    // The user sees this in the popover when they open it, which is enough.
+                    pendingCelebration = standing
+                }
+            }
+        }
+
+        // Most interesting first: broken records, then near-misses by closeness.
+        standings = next.sorted { lhs, rhs in
+            func rank(_ s: RecordStanding) -> Double {
+                switch s.state {
+                case .broken: return 2
+                case .near(let ratio): return 1 + ratio
+                case .ordinary: return s.progress
+                }
+            }
+            return rank(lhs) > rank(rhs)
+        }
+    }
+
+    /// Today's value for a given personal-best id. Kept beside `personalBests` so the two can't
+    /// drift apart.
+    private static func todayValue(for id: String, summary: DailySummary) -> Double {
+        switch id {
+        case "maxWPM": return summary.maxWPM
+        case "totalKeys": return Double(summary.totalKeyPresses)
+        case "activeTime": return Double(summary.activeSeconds)
+        case "focusTime": return Double(summary.totalFocusSeconds)
+        case "totalClicks": return Double(summary.totalClicks)
+        case "cursorDistance": return summary.cursorDistanceMeters
+        default: return 0
+        }
+    }
+}
