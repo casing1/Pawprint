@@ -529,9 +529,72 @@ enum DebugSnapshot {
         capture(HiddenAchievementsView(onClose: {}).content.frame(width: 430)
             .background(Color(white: 0.11)), name: "achievements", bare: true)
         capture(PawpetGalleryView().frame(width: 360), name: "gallerybar")
+        // A few rows at full size — the tall catalog capture is only good for checking that it
+        // renders at all, not for reading it.
+        capture(itemCatalogSampler(), name: "itemsample", bare: true)
+        // The magnified state, forced open — a synthetic mouse-moved event needs an Accessibility
+        // grant this debug binary doesn't have, so hover can't be driven from outside.
+        capture(hoveredCatalogRows(), name: "itemhover", bare: true)
 
         write(failures == 0 ? "\nITEMS OK\n" : "\nITEMS \(failures) FAILURES\n")
         exit(failures == 0 ? 0 : 1)
+    }
+
+    /// Hosts the catalog in a plain window so the real sheet can be screenshotted with its own
+    /// chrome — `ImageRenderer` draws a `ScrollView`'s contents empty.
+    ///
+    /// Hovering can't be driven from here: posting a synthetic mouse-moved event needs an
+    /// Accessibility grant this binary doesn't have (verified — `NSEvent.mouseLocation` never
+    /// moved). `forcedHover` covers the magnified state instead.
+    @MainActor
+    static func openItemCatalogWindow() {
+        NSApp.setActivationPolicy(.regular)
+        NSApp.activate(ignoringOtherApps: true)
+        let hosting = NSHostingController(rootView: PawpetItemCatalogView(onClose: {}))
+        let window = NSWindow(contentViewController: hosting)
+        window.title = "Item catalog"
+        window.styleMask = [.titled, .closable, .resizable]
+        window.setContentSize(NSSize(width: 430, height: 540))
+        window.center()
+        window.makeKeyAndOrderFront(nil)
+        itemCatalogWindow = window
+        write("ITEM WINDOW OPEN\n")
+    }
+
+    @MainActor private static var itemCatalogWindow: NSWindow?
+
+    /// The first four rows with the second one magnified, to check that the enlarged cat lands
+    /// above its neighbours instead of behind them.
+    @MainActor
+    private static func hoveredCatalogRows() -> some View {
+        let group = PawpetItemCatalog.groups[0]
+        let view = PawpetItemCatalogView(onClose: {}, forcedHover: group.items[1].id)
+        // Only the first group — the full sheet is 4,600pt tall and unreadable as one image.
+        return VStack(alignment: .leading) { view.groupCard(group) }
+            .padding(14).frame(width: 430).background(Color(white: 0.11))
+    }
+
+    /// One row from each axis, at the size they appear in the sheet.
+    @MainActor
+    private static func itemCatalogSampler() -> some View {
+        let picks = PawpetItemCatalog.groups.map { ($0.title, $0.items[0]) }
+        return VStack(alignment: .leading, spacing: 0) {
+            ForEach(Array(picks.enumerated()), id: \.offset) { _, pair in
+                HStack(spacing: 9) {
+                    PawpetView(summary: DailySummary(day: "2025-03-14"), size: 46,
+                               traitsOverride: pair.1.preview)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("\(pair.0) · \(pair.1.name)").font(.system(size: 11, weight: .medium))
+                        Text(pair.1.condition).font(.system(size: 10)).foregroundStyle(.secondary)
+                    }
+                    Spacer(minLength: 0)
+                }
+                .padding(.vertical, 5)
+            }
+        }
+        .padding(14)
+        .frame(width: 430)
+        .background(Color(white: 0.11))
     }
 
     /// One day per hidden achievement, built to sit just past its threshold.

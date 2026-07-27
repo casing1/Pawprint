@@ -469,6 +469,17 @@ struct PawpetTraits {
         }
     }
 
+    static func auraName(_ value: Aura) -> String {
+        switch value {
+        case .dawn: return L10n.t("itemCatalog.aura.dawn")
+        case .morning: return L10n.t("itemCatalog.aura.morning")
+        case .afternoon: return L10n.t("itemCatalog.aura.afternoon")
+        case .evening: return L10n.t("itemCatalog.aura.evening")
+        case .night: return L10n.t("itemCatalog.aura.night")
+        case .deepNight: return L10n.t("itemCatalog.aura.deepNight")
+        }
+    }
+
     static func cheekMarkName(_ value: CheekMark) -> String {
         switch value {
         case .none: return L10n.t("pawpetTraits.d58fa73a")

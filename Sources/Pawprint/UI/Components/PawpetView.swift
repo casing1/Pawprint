@@ -20,9 +20,14 @@ struct PawpetView: View {
     var isCelebrating: Bool = false
     /// The aura wash reads as clutter at small sizes.
     var showsAura: Bool = true
+    /// Draws these traits instead of deriving them from `summary`. Only the item catalog uses it,
+    /// to show one item at a time on an otherwise neutral cat — there is no real day that wears a
+    /// bandana and nothing else.
+    var traitsOverride: PawpetTraits? = nil
 
     var traits: PawpetTraits {
-        PawpetTraits(day: summary.day, summary: summary, streakDays: streakDays, isCelebrating: isCelebrating)
+        traitsOverride
+            ?? PawpetTraits(day: summary.day, summary: summary, streakDays: streakDays, isCelebrating: isCelebrating)
     }
 
     var caption: String { traits.caption }

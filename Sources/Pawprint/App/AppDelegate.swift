@@ -78,6 +78,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { DebugSnapshot.probeClipboard() }
         }
 
+        // Opens the item catalog in a real window so the hover magnifier can be driven with a
+        // synthetic mouse move and screenshotted — ImageRenderer has no pointer.
+        if ProcessInfo.processInfo.environment["PAWPRINT_ITEMS_WINDOW"] != nil {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { DebugSnapshot.openItemCatalogWindow() }
+        }
+
         if ProcessInfo.processInfo.environment["PAWPRINT_ITEMS"] != nil {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { DebugSnapshot.probeItemCatalog() }
         }

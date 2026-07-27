@@ -43,23 +43,44 @@ struct HiddenAchievementsView: View {
     /// Split out so verification can snapshot it: `ImageRenderer` draws `ScrollView` contents empty.
     var content: some View {
         VStack(alignment: .leading, spacing: 16) {
-            section(
-                title: L10n.t("achievements.hidden"),
-                caption: L10n.t("achievements.hidden.caption"),
-                progress: "\(hiddenFound) / \(AchievementID.hidden.count)",
-                ids: AchievementID.hidden)
+            VStack(alignment: .leading, spacing: 6) {
+                header(L10n.t("achievements.hidden"),
+                       L10n.t("achievements.hidden.caption"),
+                       "\(hiddenFound) / \(AchievementID.hidden.count)")
+                LazyVGrid(columns: columns, spacing: 8) {
+                    ForEach(AchievementID.hidden) { id in
+                        slot(id, unlockedOn: achievements.unlockedRecord(id)?.unlockedOn)
+                    }
+                }
+                // Grid cells are too narrow for the condition text, so found ones explain
+                // themselves underneath. Locked ones say nothing — that is the point.
+                ForEach(AchievementID.hidden.filter { achievements.isUnlocked($0) }) { id in
+                    conditionRow(id)
+                }
+            }
 
-            section(
-                title: L10n.t("achievements.open"),
-                caption: L10n.t("achievements.open.caption"),
-                progress: "\(AchievementID.open.filter { achievements.isUnlocked($0) }.count) / \(AchievementID.open.count)",
-                ids: AchievementID.open)
+            VStack(alignment: .leading, spacing: 6) {
+                header(L10n.t("achievements.open"),
+                       L10n.t("achievements.open.caption"),
+                       "\(AchievementID.open.filter { achievements.isUnlocked($0) }.count) / \(AchievementID.open.count)")
+                // Rows, not a grid: the whole question about these is *when do they fire*, and a
+                // three-column badge has nowhere to say so. It used to be tooltip-only.
+                VStack(spacing: 0) {
+                    ForEach(Array(AchievementID.open.enumerated()), id: \.element) { index, id in
+                        if index > 0 { Divider().opacity(0.3) }
+                        openRow(id)
+                    }
+                }
+                .padding(.horizontal, 9)
+                .background(RoundedRectangle(cornerRadius: 9, style: .continuous)
+                    .fill(Color.primary.opacity(0.045)))
+            }
         }
         .padding(14)
     }
 
-    private func section(title: String, caption: String, progress: String, ids: [AchievementID]) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
+    private func header(_ title: String, _ caption: String, _ progress: String) -> some View {
+        VStack(alignment: .leading, spacing: 3) {
             HStack(spacing: 6) {
                 Text(title).font(.system(size: 12, weight: .semibold))
                 Spacer()
@@ -70,12 +91,45 @@ struct HiddenAchievementsView: View {
             Text(caption)
                 .font(.system(size: 10)).foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
-            LazyVGrid(columns: columns, spacing: 8) {
-                ForEach(ids) { id in
-                    slot(id, unlockedOn: achievements.unlockedRecord(id)?.unlockedOn)
-                }
+        }
+    }
+
+    /// What a hidden achievement turned out to require, shown once it has been found.
+    private func conditionRow(_ id: AchievementID) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 6) {
+            Text(id.emoji).font(.system(size: 11))
+            Text(id.title).font(.system(size: 10, weight: .semibold))
+            Text(id.detail)
+                .font(.system(size: 10)).foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 0)
+        }
+    }
+
+    private func openRow(_ id: AchievementID) -> some View {
+        let unlockedOn = achievements.unlockedRecord(id)?.unlockedOn
+        return HStack(alignment: .center, spacing: 8) {
+            Text(id.emoji)
+                .font(.system(size: 17))
+                .grayscale(unlockedOn == nil ? 1 : 0)
+                .opacity(unlockedOn == nil ? 0.4 : 1)
+                .frame(width: 22)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(id.title)
+                    .font(.system(size: 11, weight: unlockedOn == nil ? .regular : .semibold))
+                    .foregroundStyle(unlockedOn == nil ? .secondary : .primary)
+                Text(id.detail)
+                    .font(.system(size: 10)).foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            if let unlockedOn {
+                Text(Formatters.shortDayLabel(unlockedOn))
+                    .font(.system(size: 9).monospacedDigit())
+                    .foregroundStyle(Color.accentColor)
             }
         }
+        .padding(.vertical, 6)
     }
 
     @ViewBuilder

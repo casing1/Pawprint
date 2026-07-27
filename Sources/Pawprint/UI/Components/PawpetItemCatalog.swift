@@ -14,16 +14,52 @@ import SwiftUI
 enum PawpetItemCatalog {
 
     struct Item: Identifiable {
-        let id = UUID()
+        /// Stable across rebuilds. `groups` is a computed property, so a `UUID()` here would be
+        /// freshly minted on every render — ForEach identity would churn, and hover state (which
+        /// remembers an id across renders) could never match anything.
+        var id: String { group + "/" + name }
+        let group: String
         let name: String
         /// What has to happen for this to appear.
         let condition: String
         /// Rarity points, or nil on axes that don't score.
         let points: Int?
+        /// A cat wearing this item and nothing else, so the row can show what it looks like.
+        let preview: PawpetTraits
+    }
+
+    /// The cat every preview starts from — deliberately not left to the date seed.
+    ///
+    /// The coat is pinned to the warm plain one because a dark palette swallows exactly the items
+    /// worth looking at: a collar, a cheek mark and a charm all read as a few dim pixels against
+    /// charcoal fur. Fixing it also keeps every row on the same animal, so the only thing that
+    /// changes down the list is the item being described.
+    ///
+    /// The expression is forced to `.content` because an empty day otherwise resolves to `.sleepy`
+    /// (under five minutes of activity), which would put half-shut eyes on every thumbnail.
+    static var baseCat: PawpetTraits {
+        var traits = PawpetTraits(day: previewDay, summary: DailySummary(day: previewDay))
+        traits.paletteIndex = 0
+        traits.eyeColorIndex = 1
+        traits.pattern = .plain
+        traits.ears = .pointed
+        traits.tail = .curved
+        traits.cheekFluff = .light
+        traits.whiskers = 3
+        traits.expression = .content
+        return traits
+    }
+
+    private static let previewDay = "2025-03-14"
+
+    private static func preview(_ configure: (inout PawpetTraits) -> Void) -> PawpetTraits {
+        var traits = baseCat
+        configure(&traits)
+        return traits
     }
 
     struct Group: Identifiable {
-        let id = UUID()
+        var id: String { title }
         let title: String
         let icon: String
         /// How the axis works, and — where it scores — what it is worth.
@@ -47,8 +83,9 @@ enum PawpetItemCatalog {
 
     private static var frames: Group {
         func item(_ frame: PawpetTraits.Frame, _ condition: String) -> Item {
-            Item(name: PawpetTraits.frameName(frame), condition: condition,
-                 points: Int(PawpetTraits.framePoints(frame)))
+            Item(group: "frame", name: PawpetTraits.frameName(frame), condition: condition,
+                 points: Int(PawpetTraits.framePoints(frame)),
+                 preview: preview { $0.frame = frame })
         }
         return Group(
             title: L10n.t("itemCatalog.frames"), icon: "square.dashed",
@@ -67,8 +104,9 @@ enum PawpetItemCatalog {
         return Group(
             title: L10n.t("itemCatalog.charms"), icon: "sparkles",
             summary: L10n.t("itemCatalog.charms.summary"), maximum: 20,
-            items: PawpetTraits.PawCharm.allCases.filter { $0 != .none }.map {
-                Item(name: PawpetTraits.pawCharmName($0), condition: condition, points: 20)
+            items: PawpetTraits.PawCharm.allCases.filter { $0 != .none }.map { charm in
+                Item(group: "charm", name: PawpetTraits.pawCharmName(charm), condition: condition, points: 20,
+                     preview: preview { $0.pawCharm = charm })
             },
             isEarned: true)
     }
@@ -78,16 +116,18 @@ enum PawpetItemCatalog {
         return Group(
             title: L10n.t("itemCatalog.wings"), icon: "wind",
             summary: L10n.t("itemCatalog.wings.summary"), maximum: 16,
-            items: PawpetTraits.Wings.allCases.filter { $0 != .none }.map {
-                Item(name: PawpetTraits.wingsName($0), condition: condition, points: 16)
+            items: PawpetTraits.Wings.allCases.filter { $0 != .none }.map { wings in
+                Item(group: "wings", name: PawpetTraits.wingsName(wings), condition: condition, points: 16,
+                     preview: preview { $0.wings = wings })
             },
             isEarned: true)
     }
 
     private static var backdrops: Group {
         func item(_ backdrop: PawpetTraits.Backdrop, _ condition: String) -> Item {
-            Item(name: PawpetTraits.backdropName(backdrop), condition: condition,
-                 points: Int(PawpetTraits.backdropPoints(backdrop)))
+            Item(group: "backdrop", name: PawpetTraits.backdropName(backdrop), condition: condition,
+                 points: Int(PawpetTraits.backdropPoints(backdrop)),
+                 preview: preview { $0.backdrop = backdrop })
         }
         return Group(
             title: L10n.t("itemCatalog.backdrops"), icon: "rays",
@@ -102,8 +142,9 @@ enum PawpetItemCatalog {
 
     private static var collars: Group {
         func item(_ collar: PawpetTraits.Collar, _ condition: String) -> Item {
-            Item(name: PawpetTraits.collarName(collar), condition: condition,
-                 points: Int(PawpetTraits.collarPoints(collar)))
+            Item(group: "collar", name: PawpetTraits.collarName(collar), condition: condition,
+                 points: Int(PawpetTraits.collarPoints(collar)),
+                 preview: preview { $0.collar = collar })
         }
         return Group(
             title: L10n.t("itemCatalog.collars"), icon: "circle.hexagongrid",
@@ -120,8 +161,9 @@ enum PawpetItemCatalog {
 
     private static var headwear: Group {
         func item(_ headwear: PawpetTraits.Headwear, _ condition: String) -> Item {
-            Item(name: PawpetTraits.headwearName(headwear), condition: condition,
-                 points: Int(PawpetTraits.headwearPoints(headwear)))
+            Item(group: "headwear", name: PawpetTraits.headwearName(headwear), condition: condition,
+                 points: Int(PawpetTraits.headwearPoints(headwear)),
+                 preview: preview { $0.headwear = headwear })
         }
         return Group(
             title: L10n.t("itemCatalog.headwear"), icon: "crown",
@@ -140,8 +182,9 @@ enum PawpetItemCatalog {
 
     private static var expressions: Group {
         func item(_ expression: PawpetTraits.Expression, _ condition: String) -> Item {
-            Item(name: PawpetTraits.expressionName(expression), condition: condition,
-                 points: Int(PawpetTraits.expressionPoints(expression)))
+            Item(group: "expression", name: PawpetTraits.expressionName(expression), condition: condition,
+                 points: Int(PawpetTraits.expressionPoints(expression)),
+                 preview: preview { $0.expression = expression })
         }
         return Group(
             title: L10n.t("itemCatalog.expressions"), icon: "face.smiling",
@@ -165,7 +208,8 @@ enum PawpetItemCatalog {
 
     private static var floaters: Group {
         func item(_ floaters: PawpetTraits.Floaters, _ condition: String) -> Item {
-            Item(name: PawpetTraits.floatersName(floaters), condition: condition, points: 2)
+            Item(group: "floaters", name: PawpetTraits.floatersName(floaters), condition: condition, points: 2,
+                 preview: preview { $0.floaters = floaters })
         }
         return Group(
             title: L10n.t("itemCatalog.floaters"), icon: "sparkle",
@@ -186,18 +230,21 @@ enum PawpetItemCatalog {
             title: L10n.t("itemCatalog.eyewear"), icon: "eyeglasses",
             summary: L10n.t("itemCatalog.noPoints"), maximum: nil,
             items: [
-                Item(name: PawpetTraits.eyewearName(.sunglasses),
-                     condition: L10n.t("itemCatalog.eye.sunglasses", 8), points: nil),
-                Item(name: PawpetTraits.eyewearName(.readingGlasses),
+                Item(group: "eyewear", name: PawpetTraits.eyewearName(.sunglasses),
+                     condition: L10n.t("itemCatalog.eye.sunglasses", 8), points: nil,
+                     preview: preview { $0.eyewear = .sunglasses }),
+                Item(group: "eyewear", name: PawpetTraits.eyewearName(.readingGlasses),
                      condition: L10n.t("itemCatalog.eye.reading", Formatters.groupedNumber(8_000)),
-                     points: nil)
+                     points: nil,
+                     preview: preview { $0.eyewear = .readingGlasses })
             ],
             isEarned: false)
     }
 
     private static var props: Group {
         func item(_ prop: PawpetTraits.Prop, _ condition: String) -> Item {
-            Item(name: PawpetTraits.propName(prop), condition: condition, points: nil)
+            Item(group: "prop", name: PawpetTraits.propName(prop), condition: condition, points: nil,
+                 preview: preview { $0.prop = prop })
         }
         return Group(
             title: L10n.t("itemCatalog.props"), icon: "shippingbox",
@@ -216,7 +263,8 @@ enum PawpetItemCatalog {
 
     private static var cheeks: Group {
         func item(_ cheek: PawpetTraits.CheekMark, _ condition: String) -> Item {
-            Item(name: PawpetTraits.cheekMarkName(cheek), condition: condition, points: nil)
+            Item(group: "cheek", name: PawpetTraits.cheekMarkName(cheek), condition: condition, points: nil,
+                 preview: preview { $0.cheekMark = cheek })
         }
         return Group(
             title: L10n.t("itemCatalog.cheeks"), icon: "face.dashed",
@@ -233,27 +281,34 @@ enum PawpetItemCatalog {
         Group(
             title: L10n.t("itemCatalog.auras"), icon: "sun.horizon",
             summary: L10n.t("itemCatalog.auras.summary"), maximum: nil,
-            items: [Item(name: L10n.t("itemCatalog.aura.name"),
-                         condition: L10n.t("itemCatalog.aura.condition"), points: nil)],
+            items: [(PawpetTraits.Aura.dawn, 5, 8), (.morning, 8, 12), (.afternoon, 12, 17),
+                    (.evening, 17, 21), (.night, 21, 24), (.deepNight, 0, 5)].map { aura, from, to in
+                Item(group: "aura", name: PawpetTraits.auraName(aura),
+                     condition: L10n.t("itemCatalog.aura.condition", from, to), points: nil,
+                     preview: preview { $0.aura = aura })
+            },
             isEarned: false)
     }
 
     /// The date-seeded axes, summarised by count rather than listed — they aren't earned, and
     /// fourteen coat colours as fourteen rows would bury the parts you can actually influence.
     private static var coat: Group {
-        func item(_ nameKey: String, _ count: Int) -> Item {
-            Item(name: L10n.t(nameKey),
-                 condition: L10n.t("itemCatalog.coat.count", count), points: nil)
+        func item(_ nameKey: String, _ count: Int, _ day: String) -> Item {
+            var traits = PawpetTraits(day: day, summary: DailySummary(day: day))
+            traits.expression = .content
+            return Item(group: "coat", name: L10n.t(nameKey),
+                        condition: L10n.t("itemCatalog.coat.count", count), points: nil,
+                        preview: traits)
         }
         return Group(
             title: L10n.t("itemCatalog.coat"), icon: "paintpalette",
             summary: L10n.t("itemCatalog.coat.summary"), maximum: nil,
             items: [
-                item("itemCatalog.coat.colours", PawpetTraits.palettes.count),
-                item("itemCatalog.coat.patterns", PawpetTraits.Pattern.allCases.count),
-                item("itemCatalog.coat.eyes", PawpetTraits.eyeColors.count),
-                item("itemCatalog.coat.ears", PawpetTraits.EarShape.allCases.count),
-                item("itemCatalog.coat.tails", PawpetTraits.TailShape.allCases.count)
+                item("itemCatalog.coat.colours", PawpetTraits.palettes.count, "2025-01-07"),
+                item("itemCatalog.coat.patterns", PawpetTraits.Pattern.allCases.count, "2025-04-22"),
+                item("itemCatalog.coat.eyes", PawpetTraits.eyeColors.count, "2025-06-30"),
+                item("itemCatalog.coat.ears", PawpetTraits.EarShape.allCases.count, "2025-09-11"),
+                item("itemCatalog.coat.tails", PawpetTraits.TailShape.allCases.count, "2025-11-25")
             ],
             isEarned: false)
     }
@@ -263,6 +318,17 @@ enum PawpetItemCatalog {
 @MainActor
 struct PawpetItemCatalogView: View {
     var onClose: () -> Void
+
+    /// Which row's preview is magnified. One at a time, so running down the list doesn't leave a
+    /// trail of enlarged cats behind.
+    @State private var hovered: String?
+
+    /// Forces one row into its magnified state. Verification only: `ImageRenderer` has no pointer,
+    /// and posting a synthetic mouse-moved event needs an Accessibility grant.
+    var forcedHover: String?
+
+    /// Previews are driven entirely by `traitsOverride`; this only satisfies the initialiser.
+    private let emptyDay = DailySummary(day: "2025-03-14")
 
     var body: some View {
         VStack(spacing: 0) {
@@ -298,8 +364,56 @@ struct PawpetItemCatalogView: View {
         .padding(14)
     }
 
+    /// One item: what it looks like, what it's called, when it shows up, what it's worth.
+    ///
+    /// The thumbnail is a real cat wearing only this item, drawn by the same renderer as the
+    /// gallery — not a separate icon set that could quietly stop matching.
+    ///
+    /// At 46pt a collar or a cheek mark is only a few pixels, so hovering magnifies it in place.
+    /// Deliberately a `scaleEffect` and not a `.popover`: a popover is a real window, and one per
+    /// row means the list spawns and tears down windows every time the pointer crosses it.
     @ViewBuilder
-    private func groupCard(_ group: PawpetItemCatalog.Group) -> some View {
+    private func row(_ item: PawpetItemCatalog.Item) -> some View {
+        let isHovered = (forcedHover ?? hovered) == item.id
+        HStack(alignment: .center, spacing: 9) {
+            PawpetView(summary: emptyDay, size: 46, showsAura: true, traitsOverride: item.preview)
+                // An opaque plate under the magnified cat: it grows over the row's own text, and
+                // without this the two are painted on top of each other.
+                .background {
+                    RoundedRectangle(cornerRadius: 7, style: .continuous)
+                        .fill(.background)
+                        .opacity(isHovered ? 1 : 0)
+                }
+                .scaleEffect(isHovered ? 2.1 : 1, anchor: .leading)
+                .shadow(color: .black.opacity(isHovered ? 0.4 : 0), radius: 7, y: 3)
+                // Above its own row's text as well as the neighbouring rows: siblings in an
+                // HStack draw in order, so the label would otherwise sit on top of the cat.
+                .zIndex(isHovered ? 1 : 0)
+                .animation(.easeOut(duration: 0.14), value: isHovered)
+                .onHover { hovered = $0 ? item.id : (isHovered ? nil : hovered) }
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(item.name).font(.system(size: 11, weight: .medium))
+                Text(item.condition)
+                    .font(.system(size: 10)).foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            if let points = item.points {
+                Text("+\(points)")
+                    .font(.system(size: 10, weight: .semibold).monospacedDigit())
+                    .foregroundStyle(points > 0 ? Color.accentColor : Color.secondary)
+                    .frame(width: 24, alignment: .trailing)
+            }
+        }
+        .padding(.vertical, 5)
+        // Without this the magnified cat is painted under the rows that follow it.
+        .zIndex(isHovered ? 1 : 0)
+    }
+
+    @ViewBuilder
+    func groupCard(_ group: PawpetItemCatalog.Group) -> some View {
         VStack(alignment: .leading, spacing: 5) {
             HStack(spacing: 5) {
                 Image(systemName: group.icon)
@@ -327,23 +441,7 @@ struct PawpetItemCatalogView: View {
             VStack(spacing: 0) {
                 ForEach(Array(group.items.enumerated()), id: \.element.id) { index, item in
                     if index > 0 { Divider().opacity(0.3) }
-                    HStack(alignment: .firstTextBaseline, spacing: 8) {
-                        Text(item.name)
-                            .font(.system(size: 11, weight: .medium))
-                            .frame(width: 92, alignment: .leading)
-                            .fixedSize(horizontal: false, vertical: true)
-                        Text(item.condition)
-                            .font(.system(size: 10)).foregroundStyle(.secondary)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                        if let points = item.points {
-                            Text("+\(points)")
-                                .font(.system(size: 10, weight: .semibold).monospacedDigit())
-                                .foregroundStyle(points > 0 ? Color.accentColor : Color.secondary)
-                                .frame(width: 24, alignment: .trailing)
-                        }
-                    }
-                    .padding(.vertical, 5)
+                    row(item)
                 }
             }
             .padding(.horizontal, 9)
