@@ -344,6 +344,42 @@ enum DebugSnapshot {
         capture(background, name: "dmg_background", scale: 2, bare: true)
     }
 
+    // MARK: - Localization audit (PAWPRINT_L10N)
+
+    /// Walks every catalog and enum that renders text and reports anything that came back as a
+    /// raw key — the symptom of a translation resolved before its pack was loaded.
+    @MainActor
+    static func auditLocalization() {
+        func check(_ label: String, _ values: [String]) -> Int {
+            let broken = values.filter { $0.contains(".") && $0.range(of: "^[a-zA-Z]+\\.[0-9a-f]{8}$",
+                                                                     options: .regularExpression) != nil }
+            if !broken.isEmpty {
+                write("L10N BROKEN \(label): \(broken.joined(separator: ", "))\n")
+            }
+            return broken.count
+        }
+
+        var broken = 0
+        for language in [AppLanguage.korean, .english] {
+            LocalizationManager.shared.apply(language)
+            broken += check("metric titles", MetricCatalog.all.map(\.title))
+            broken += check("metric explanations", MetricCatalog.all.map(\.explanation))
+            broken += check("quest titles", QuestTrack.allCases.map(\.title))
+            broken += check("quest explanations", QuestTrack.allCases.map(\.explanation))
+            broken += check("ranks", QuestProgress.ranks.map(\.name))
+            broken += check("overall titles", OverallLevel.titles.map(\.name))
+            broken += check("excluded apps", AppSettings.defaultExcludedApps.map(\.displayName))
+            broken += check("palettes", (0..<PawpetTraits.palettes.count).map { PawpetTraits.paletteName($0) })
+            broken += check("eye colours", (0..<PawpetTraits.eyeColors.count).map { PawpetTraits.eyeColorName($0) })
+            broken += check("explanations", [MetricExplanations.regret.title, MetricExplanations.chaos.body,
+                                             MetricExplanations.score.detail, MetricExplanations.energy.body])
+            let sample = MetricCatalog.all.first(where: { $0.id == "totalKeys" })?.title ?? "?"
+            write("L10N \(language) totalKeys title = \(sample)\n")
+        }
+        write(broken == 0 ? "L10N OK — no raw keys\n" : "L10N \(broken) BROKEN\n")
+        exit(broken == 0 ? 0 : 1)
+    }
+
     // MARK: - Cat wall for the README (PAWPRINT_WALL)
 
     /// A dense wall of high-grade cats.
@@ -427,7 +463,7 @@ enum DebugSnapshot {
             )
         )
 
-        capture(wall, name: "catwall", scale: 2, bare: true)
+        capture(wall, name: "cat-wall", scale: 2, bare: true)
     }
 
     // MARK: - Best-combination showcase (PAWPRINT_SHOWCASE)
@@ -606,7 +642,7 @@ enum DebugSnapshot {
         write("PAWPET COMBINATIONS: \(Formatters.groupedNumber(PawpetTraits.combinationCount))\n")
         for (i, s) in summaries.enumerated() {
             let t = PawpetTraits(day: s.day, summary: s, streakDays: (i * 7) % 40)
-            write("  [\(i + 1)] \(t.caption) — \(t.patternName)/\(PawpetTraits.palettes[t.paletteIndex].name)"
+            write("  [\(i + 1)] \(t.caption) — \(t.patternName)/\(PawpetTraits.paletteName(t.paletteIndex))"
                   + " ears=\(t.ears) tail=\(t.tail) hat=\(t.headwear) eyewear=\(t.eyewear)"
                   + " prop=\(t.prop) collar=\(t.collar) cheek=\(t.cheekMark) aura=\(t.aura) float=\(t.floaters)\n")
         }

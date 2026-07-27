@@ -40,7 +40,7 @@ Pawprint는 메뉴 바에 조용히 앉아 Mac을 어떻게 쓰는지 기록합�
 동·은·금, 그리고 무지개.
 
 <div align="center">
-<img src="images/cats.png" alt="높은 등급 고양이 48마리" width="100%">
+<img src="images/cat-wall.png" alt="높은 등급 고양이 48마리" width="100%">
 <br>
 <sub>높은 등급의 하루 48개 — 동부터 무지개까지의 액자, 7가지 발 장식, 3가지 날개</sub>
 </div>

@@ -59,6 +59,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
 
+        if ProcessInfo.processInfo.environment["PAWPRINT_L10N"] != nil {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { DebugSnapshot.auditLocalization() }
+        }
+
         if ProcessInfo.processInfo.environment["PAWPRINT_WALL"] != nil {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                 DebugSnapshot.renderCatWall(); NSApp.terminate(nil)

@@ -284,7 +284,7 @@ struct AppSettings: Codable {
         try c.encode(hudShowsSessionClicks, forKey: .hudShowsSessionClicks)
     }
 
-    static let defaultExcludedApps: [ExcludedApp] = [
+    static var defaultExcludedApps: [ExcludedApp] { [
         ExcludedApp(bundleID: "com.apple.Terminal", displayName: L10n.t("appSettings.06acffcb"), isDefault: true),
         ExcludedApp(bundleID: "com.googlecode.iterm2", displayName: "iTerm2", isDefault: true),
         ExcludedApp(bundleID: "com.apple.RemoteDesktop", displayName: L10n.t("appSettings.612100b1"), isDefault: true),
@@ -293,5 +293,5 @@ struct AppSettings: Codable {
         ExcludedApp(bundleID: "com.1password.1password", displayName: "1Password", isDefault: true),
         ExcludedApp(bundleID: "com.lastpass.LastPass", displayName: "LastPass", isDefault: true),
         ExcludedApp(bundleID: "com.bitwarden.desktop", displayName: "Bitwarden", isDefault: true),
-    ]
+    ] }
 }

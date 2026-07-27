@@ -10,9 +10,15 @@ struct MetricDefinition: Identifiable, Hashable {
     /// Stable identifier persisted in settings. Never rename an existing one — old settings
     /// reference it by string.
     let id: String
-    let title: String
+    /// Localization keys, not resolved text. `all` is a `static let`, so anything resolved at
+    /// construction is frozen in whatever language was active then — and, if the pack hadn't
+    /// loaded yet, frozen as the raw key.
+    let titleKey: String
     let icon: String
-    let explanation: String
+    let explanationKey: String
+
+    var title: String { L10n.t(titleKey) }
+    var explanation: String { L10n.t(explanationKey) }
     /// Which collection toggle governs this metric. Used to hide metrics whose source is off.
     let category: CollectionCategory
 
@@ -45,9 +51,9 @@ enum MetricCatalog {
         // MARK: Time
         MetricDefinition(
             id: "activeTime",
-            title: L10n.t("metricCatalog.e6bdb45b"),
+            titleKey: "metricCatalog.e6bdb45b",
             icon: "clock.fill",
-            explanation: L10n.t("metricCatalog.dfb8fcab"),
+            explanationKey: "metricCatalog.dfb8fcab",
             category: .appUsage,
             value: { Double($0.activeSeconds) },
             display: { Formatters.compactDuration($0.activeSeconds) },
@@ -57,9 +63,9 @@ enum MetricCatalog {
         ),
         MetricDefinition(
             id: "screenOnTime",
-            title: L10n.t("metricCatalog.e5e7450c"),
+            titleKey: "metricCatalog.e5e7450c",
             icon: "display",
-            explanation: MetricExplanations.screenTime.body,
+            explanationKey: MetricExplanations.Keys.screenTime.body,
             category: .sleepWake,
             value: { Double($0.screenOnSeconds) },
             display: { Formatters.compactDuration($0.screenOnSeconds) },
@@ -69,9 +75,9 @@ enum MetricCatalog {
         ),
         MetricDefinition(
             id: "screenUtilization",
-            title: L10n.t("metricCatalog.a4db1d38"),
+            titleKey: "metricCatalog.a4db1d38",
             icon: "gauge.medium",
-            explanation: L10n.t("metricCatalog.e4702cd7"),
+            explanationKey: "metricCatalog.e4702cd7",
             category: .sleepWake,
             value: { Double($0.screenUtilizationPercent) },
             display: { $0.screenOnSeconds > 0 ? "\($0.screenUtilizationPercent)%" : "-" },
@@ -79,9 +85,9 @@ enum MetricCatalog {
         ),
         MetricDefinition(
             id: "focusTime",
-            title: L10n.t("metricCatalog.77bad0ab"),
+            titleKey: "metricCatalog.77bad0ab",
             icon: "target",
-            explanation: MetricExplanations.focus.body,
+            explanationKey: MetricExplanations.Keys.focus.body,
             category: .appUsage,
             value: { Double($0.totalFocusSeconds) },
             display: { Formatters.compactDuration($0.totalFocusSeconds) },
@@ -91,9 +97,9 @@ enum MetricCatalog {
         ),
         MetricDefinition(
             id: "longestFocus",
-            title: L10n.t("metricCatalog.57beed03"),
+            titleKey: "metricCatalog.57beed03",
             icon: "scope",
-            explanation: L10n.t("metricCatalog.df234c85"),
+            explanationKey: "metricCatalog.df234c85",
             category: .appUsage,
             value: { Double($0.longestFocusSeconds) },
             display: { $0.longestFocusSeconds > 0 ? Formatters.compactDuration($0.longestFocusSeconds) : "-" }
@@ -102,9 +108,9 @@ enum MetricCatalog {
         // MARK: Keyboard
         MetricDefinition(
             id: "totalKeys",
-            title: L10n.t("metricCatalog.ebcbe122"),
+            titleKey: "metricCatalog.ebcbe122",
             icon: "keyboard",
-            explanation: L10n.t("metricCatalog.8b6bf2d3"),
+            explanationKey: "metricCatalog.8b6bf2d3",
             category: .keyboard,
             value: { Double($0.totalKeyPresses) },
             display: { Formatters.compactNumber($0.totalKeyPresses) },
@@ -114,9 +120,9 @@ enum MetricCatalog {
         ),
         MetricDefinition(
             id: "maxWPM",
-            title: L10n.t("metricCatalog.99e3df8c"),
+            titleKey: "metricCatalog.99e3df8c",
             icon: "bolt.fill",
-            explanation: L10n.t("metricCatalog.b26c159f"),
+            explanationKey: "metricCatalog.b26c159f",
             category: .keyboard,
             value: { $0.maxWPM },
             display: { $0.maxWPM > 0 ? Formatters.wpm($0.maxWPM) : "-" },
@@ -125,9 +131,9 @@ enum MetricCatalog {
         ),
         MetricDefinition(
             id: "typingConsistency",
-            title: L10n.t("metricCatalog.99bb387e"),
+            titleKey: "metricCatalog.99bb387e",
             icon: "waveform.path",
-            explanation: L10n.t("metricCatalog.2a4a07dc"),
+            explanationKey: "metricCatalog.2a4a07dc",
             category: .keyboard,
             value: { Double($0.typingConsistency) },
             display: { $0.typingConsistency > 0 ? "\($0.typingConsistency)%" : "-" },
@@ -135,9 +141,9 @@ enum MetricCatalog {
         ),
         MetricDefinition(
             id: "shortcuts",
-            title: L10n.t("metricCatalog.4ca8229c"),
+            titleKey: "metricCatalog.4ca8229c",
             icon: "command",
-            explanation: L10n.t("metricCatalog.b0fcd9e3"),
+            explanationKey: "metricCatalog.b0fcd9e3",
             category: .keyboard,
             value: { Double($0.shortcutCounts.values.reduce(0, +)) },
             display: { Formatters.groupedNumber($0.shortcutCounts.values.reduce(0, +)) },
@@ -148,9 +154,9 @@ enum MetricCatalog {
         // MARK: Pointer
         MetricDefinition(
             id: "totalClicks",
-            title: L10n.t("metricCatalog.900f26cb"),
+            titleKey: "metricCatalog.900f26cb",
             icon: "cursorarrow.click",
-            explanation: L10n.t("metricCatalog.ae86bdaf"),
+            explanationKey: "metricCatalog.ae86bdaf",
             category: .mouse,
             value: { Double($0.totalClicks) },
             display: { Formatters.compactNumber($0.totalClicks) },
@@ -160,9 +166,9 @@ enum MetricCatalog {
         ),
         MetricDefinition(
             id: "cursorDistance",
-            title: L10n.t("metricCatalog.314017fc"),
+            titleKey: "metricCatalog.314017fc",
             icon: "figure.run",
-            explanation: L10n.t("metricCatalog.560ab027"),
+            explanationKey: "metricCatalog.560ab027",
             category: .mouse,
             value: { $0.cursorDistanceMeters },
             display: { Formatters.compactDistance(meters: $0.cursorDistanceMeters) },
@@ -171,9 +177,9 @@ enum MetricCatalog {
         ),
         MetricDefinition(
             id: "scrollAmount",
-            title: L10n.t("metricCatalog.00adcaf0"),
+            titleKey: "metricCatalog.00adcaf0",
             icon: "scroll",
-            explanation: L10n.t("metricCatalog.472edd57"),
+            explanationKey: "metricCatalog.472edd57",
             category: .mouse,
             value: { $0.scrollScreens },
             display: { Formatters.compactNumber(Int($0.scrollScreens.rounded())) + L10n.t("metricCatalog.43c786f1") },
@@ -184,9 +190,9 @@ enum MetricCatalog {
         // MARK: Apps
         MetricDefinition(
             id: "appSwitches",
-            title: L10n.t("metricCatalog.f77d9ebb"),
+            titleKey: "metricCatalog.f77d9ebb",
             icon: "arrow.left.arrow.right",
-            explanation: L10n.t("metricCatalog.96bcdc56"),
+            explanationKey: "metricCatalog.96bcdc56",
             category: .appUsage,
             value: { Double($0.totalAppSwitches) },
             display: { Formatters.groupedNumber($0.totalAppSwitches) },
@@ -195,9 +201,9 @@ enum MetricCatalog {
         ),
         MetricDefinition(
             id: "appConcentration",
-            title: L10n.t("metricCatalog.c8d17c79"),
+            titleKey: "metricCatalog.c8d17c79",
             icon: "chart.pie.fill",
-            explanation: MetricExplanations.appConcentration.body,
+            explanationKey: MetricExplanations.Keys.appConcentration.body,
             category: .appUsage,
             value: { Double($0.appConcentration) },
             display: { $0.appConcentration > 0 ? "\($0.appConcentration)/100" : "-" },
@@ -207,9 +213,9 @@ enum MetricCatalog {
         // MARK: Clipboard
         MetricDefinition(
             id: "clipboard",
-            title: L10n.t("metricCatalog.00b3e1ca"),
+            titleKey: "metricCatalog.00b3e1ca",
             icon: "doc.on.clipboard",
-            explanation: L10n.t("metricCatalog.dafd6e9c"),
+            explanationKey: "metricCatalog.dafd6e9c",
             category: .clipboard,
             value: { Double($0.clipboardCopyCount + $0.clipboardPasteCount) },
             display: { "\($0.clipboardCopyCount) / \($0.clipboardPasteCount)" },
@@ -220,36 +226,36 @@ enum MetricCatalog {
         // MARK: Power
         MetricDefinition(
             id: "batteryUsed",
-            title: L10n.t("metricCatalog.81bdc1fb"),
+            titleKey: "metricCatalog.81bdc1fb",
             icon: "battery.25",
-            explanation: MetricExplanations.energy.body,
+            explanationKey: MetricExplanations.Keys.energy.body,
             category: .powerPeripherals,
             value: { Double($0.batteryDrainedPercent) },
             display: { $0.batteryDrainedPercent > 0 ? "\($0.batteryDrainedPercent)%" : "-" }
         ),
         MetricDefinition(
             id: "batteryTime",
-            title: L10n.t("metricCatalog.4cbcb836"),
+            titleKey: "metricCatalog.4cbcb836",
             icon: "battery.100.bolt",
-            explanation: L10n.t("metricCatalog.70017495"),
+            explanationKey: "metricCatalog.70017495",
             category: .powerPeripherals,
             value: { Double($0.secondsOnBattery) },
             display: { Formatters.compactDuration($0.secondsOnBattery) }
         ),
         MetricDefinition(
             id: "sleepCount",
-            title: L10n.t("metricCatalog.642e4659"),
+            titleKey: "metricCatalog.642e4659",
             icon: "moon.zzz",
-            explanation: L10n.t("metricCatalog.3cc2c92e"),
+            explanationKey: "metricCatalog.3cc2c92e",
             category: .sleepWake,
             value: { Double($0.sleepCount) },
             display: { L10n.t("metricCatalog.cf3d71b3", $0.sleepCount) }
         ),
         MetricDefinition(
             id: "lidCloses",
-            title: L10n.t("metricCatalog.e5723771"),
+            titleKey: "metricCatalog.e5723771",
             icon: "laptopcomputer.and.arrow.down",
-            explanation: L10n.t("metricCatalog.52d7858e"),
+            explanationKey: "metricCatalog.52d7858e",
             category: .powerPeripherals,
             value: { Double($0.lidCloseCount) },
             display: { L10n.t("metricCatalog.cf3d71b3", $0.lidCloseCount) }
@@ -258,9 +264,9 @@ enum MetricCatalog {
         // MARK: Network
         MetricDefinition(
             id: "networkTotal",
-            title: L10n.t("metricCatalog.d182eb6a"),
+            titleKey: "metricCatalog.d182eb6a",
             icon: "network",
-            explanation: MetricExplanations.network.body,
+            explanationKey: MetricExplanations.Keys.network.body,
             category: .powerPeripherals,
             value: { Double($0.networkTotalBytes) },
             display: { Formatters.bytes($0.networkTotalBytes) },
@@ -270,9 +276,9 @@ enum MetricCatalog {
         ),
         MetricDefinition(
             id: "networkDownload",
-            title: L10n.t("metricCatalog.5c5095ab"),
+            titleKey: "metricCatalog.5c5095ab",
             icon: "arrow.down.circle",
-            explanation: L10n.t("metricCatalog.fff554f2"),
+            explanationKey: "metricCatalog.fff554f2",
             category: .powerPeripherals,
             value: { Double($0.networkDownloadBytes) },
             display: { Formatters.bytes($0.networkDownloadBytes) },
@@ -281,9 +287,9 @@ enum MetricCatalog {
         ),
         MetricDefinition(
             id: "networkUpload",
-            title: L10n.t("metricCatalog.51672ccd"),
+            titleKey: "metricCatalog.51672ccd",
             icon: "arrow.up.circle",
-            explanation: L10n.t("metricCatalog.456156da"),
+            explanationKey: "metricCatalog.456156da",
             category: .powerPeripherals,
             value: { Double($0.networkUploadBytes) },
             display: { Formatters.bytes($0.networkUploadBytes) },

@@ -234,12 +234,12 @@ struct QuestProgress: Identifiable {
     ///
     /// Kept as a table rather than a switch so adding a rank is a one-line change and
     /// `rankCount` stays correct on its own.
-    static let ranks: [(upTo: Int, name: String)] = [
+    static var ranks: [(upTo: Int, name: String)] { [
         (1, L10n.t("levelSystem.7f536d0d")), (2, L10n.t("levelSystem.c178a70d")), (3, L10n.t("levelSystem.806e4e54")), (4, L10n.t("levelSystem.e2adc854")),
         (5, L10n.t("levelSystem.b69efb2a")), (6, L10n.t("levelSystem.44bd2ea1")), (7, L10n.t("levelSystem.dc306dbb")), (8, L10n.t("levelSystem.25c2859f")),
         (9, L10n.t("levelSystem.97836f1c")), (10, L10n.t("levelSystem.881454cf")), (11, L10n.t("levelSystem.5f6cf8e4")), (12, L10n.t("levelSystem.433762c7")),
         (14, L10n.t("levelSystem.a3255cc7")), (16, L10n.t("levelSystem.72041dd0")), (19, L10n.t("levelSystem.46ab9b66")), (24, L10n.t("levelSystem.4e790ceb"))
-    ]
+    ] }
 
     static var rankCount: Int { ranks.count }
 
@@ -326,7 +326,7 @@ struct OverallLevel {
 
     /// Headline titles, coarsest-to-finest. Unlike the per-track ranks these are whole phrases,
     /// since nothing gets appended to them.
-    static let titles: [(upTo: Int, name: String)] = [
+    static var titles: [(upTo: Int, name: String)] { [
         (2, L10n.t("levelSystem.e10505c5")),
         (4, L10n.t("levelSystem.3bbe0f93")),
         (6, L10n.t("levelSystem.535a38ab")),
@@ -340,7 +340,7 @@ struct OverallLevel {
         (29, L10n.t("levelSystem.df4abe86")),
         (34, L10n.t("levelSystem.a8717cba")),
         (39, L10n.t("levelSystem.13f62bf5"))
-    ]
+    ] }
 
     private static func titleFor(_ level: Int) -> String {
         for entry in titles where level <= entry.upTo { return entry.name }

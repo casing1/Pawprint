@@ -322,9 +322,9 @@ struct PawpetDetailView: View {
             }
             .frame(height: 6)
 
-            Text(L10n.t("pawpetGalleryView.e8492bce", PawpetTraits.palettes[t.paletteIndex].name, t.patternName))
+            Text(L10n.t("pawpetGalleryView.e8492bce", PawpetTraits.paletteName(t.paletteIndex), t.patternName))
                 .font(.caption2).foregroundStyle(.secondary)
-            Text(L10n.t("pawpetGalleryView.25d72384", PawpetTraits.eyeColors[t.eyeColorIndex].name, t.whiskers))
+            Text(L10n.t("pawpetGalleryView.25d72384", PawpetTraits.eyeColorName(t.eyeColorIndex), t.whiskers))
                 .font(.caption2).foregroundStyle(.tertiary)
             Spacer(minLength: 0)
         }

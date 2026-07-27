@@ -92,34 +92,38 @@ struct PawpetTraits {
     // MARK: - Palettes
 
     /// Fur palettes, chosen to stay readable against both light and dark popover backgrounds.
-    static let palettes: [(name: String, body: Color, accent: Color)] = [
-        (L10n.t("pawpetTraits.7d880b36"), Color(red: 0.98, green: 0.76, blue: 0.42), Color(red: 0.86, green: 0.55, blue: 0.22)),
-        (L10n.t("pawpetTraits.95aff2e2"), Color(red: 0.65, green: 0.70, blue: 0.80), Color(red: 0.42, green: 0.47, blue: 0.60)),
-        (L10n.t("pawpetTraits.4edf416c"), Color(red: 0.38, green: 0.36, blue: 0.44), Color(red: 0.24, green: 0.22, blue: 0.30)),
-        (L10n.t("pawpetTraits.5ee50d64"), Color(red: 0.96, green: 0.93, blue: 0.87), Color(red: 0.80, green: 0.74, blue: 0.66)),
-        (L10n.t("pawpetTraits.1e1a1de3"), Color(red: 0.72, green: 0.58, blue: 0.88), Color(red: 0.55, green: 0.42, blue: 0.72)),
-        (L10n.t("pawpetTraits.325c68c5"), Color(red: 0.52, green: 0.78, blue: 0.72), Color(red: 0.32, green: 0.58, blue: 0.54)),
-        (L10n.t("pawpetTraits.adf31fb3"), Color(red: 0.95, green: 0.66, blue: 0.62), Color(red: 0.80, green: 0.46, blue: 0.44)),
-        (L10n.t("pawpetTraits.b2efa911"), Color(red: 0.78, green: 0.56, blue: 0.36), Color(red: 0.56, green: 0.38, blue: 0.22)),
-        (L10n.t("pawpetTraits.6ef10536"), Color(red: 0.55, green: 0.56, blue: 0.62), Color(red: 0.36, green: 0.37, blue: 0.43)),
-        (L10n.t("pawpetTraits.c3d78839"), Color(red: 0.60, green: 0.76, blue: 0.92), Color(red: 0.38, green: 0.56, blue: 0.76)),
-        (L10n.t("pawpetTraits.9186d609"), Color(red: 0.72, green: 0.76, blue: 0.52), Color(red: 0.50, green: 0.55, blue: 0.32)),
-        (L10n.t("pawpetTraits.dec12dfa"), Color(red: 0.90, green: 0.58, blue: 0.70), Color(red: 0.72, green: 0.38, blue: 0.52)),
-        (L10n.t("pawpetTraits.a601624f"), Color(red: 0.90, green: 0.82, blue: 0.66), Color(red: 0.70, green: 0.60, blue: 0.44)),
-        (L10n.t("pawpetTraits.a68347a4"), Color(red: 0.48, green: 0.54, blue: 0.86), Color(red: 0.32, green: 0.36, blue: 0.66)),
+    static let palettes: [(nameKey: String, body: Color, accent: Color)] = [
+        ("pawpetTraits.7d880b36", Color(red: 0.98, green: 0.76, blue: 0.42), Color(red: 0.86, green: 0.55, blue: 0.22)),
+        ("pawpetTraits.95aff2e2", Color(red: 0.65, green: 0.70, blue: 0.80), Color(red: 0.42, green: 0.47, blue: 0.60)),
+        ("pawpetTraits.4edf416c", Color(red: 0.38, green: 0.36, blue: 0.44), Color(red: 0.24, green: 0.22, blue: 0.30)),
+        ("pawpetTraits.5ee50d64", Color(red: 0.96, green: 0.93, blue: 0.87), Color(red: 0.80, green: 0.74, blue: 0.66)),
+        ("pawpetTraits.1e1a1de3", Color(red: 0.72, green: 0.58, blue: 0.88), Color(red: 0.55, green: 0.42, blue: 0.72)),
+        ("pawpetTraits.325c68c5", Color(red: 0.52, green: 0.78, blue: 0.72), Color(red: 0.32, green: 0.58, blue: 0.54)),
+        ("pawpetTraits.adf31fb3", Color(red: 0.95, green: 0.66, blue: 0.62), Color(red: 0.80, green: 0.46, blue: 0.44)),
+        ("pawpetTraits.b2efa911", Color(red: 0.78, green: 0.56, blue: 0.36), Color(red: 0.56, green: 0.38, blue: 0.22)),
+        ("pawpetTraits.6ef10536", Color(red: 0.55, green: 0.56, blue: 0.62), Color(red: 0.36, green: 0.37, blue: 0.43)),
+        ("pawpetTraits.c3d78839", Color(red: 0.60, green: 0.76, blue: 0.92), Color(red: 0.38, green: 0.56, blue: 0.76)),
+        ("pawpetTraits.9186d609", Color(red: 0.72, green: 0.76, blue: 0.52), Color(red: 0.50, green: 0.55, blue: 0.32)),
+        ("pawpetTraits.dec12dfa", Color(red: 0.90, green: 0.58, blue: 0.70), Color(red: 0.72, green: 0.38, blue: 0.52)),
+        ("pawpetTraits.a601624f", Color(red: 0.90, green: 0.82, blue: 0.66), Color(red: 0.70, green: 0.60, blue: 0.44)),
+        ("pawpetTraits.a68347a4", Color(red: 0.48, green: 0.54, blue: 0.86), Color(red: 0.32, green: 0.36, blue: 0.66)),
     ]
 
     /// Iris colours. Real cats have a narrow range; these stretch it a little for variety.
-    static let eyeColors: [(name: String, color: Color)] = [
-        (L10n.t("pawpetTraits.f68d8bf7"), Color(red: 0.95, green: 0.70, blue: 0.20)),
-        (L10n.t("pawpetTraits.52c235b4"), Color(red: 0.24, green: 0.72, blue: 0.48)),
-        (L10n.t("pawpetTraits.07b29498"), Color(red: 0.30, green: 0.52, blue: 0.92)),
-        (L10n.t("pawpetTraits.7f43f859"), Color(red: 0.82, green: 0.45, blue: 0.18)),
-        (L10n.t("pawpetTraits.cf5632c7"), Color(red: 0.98, green: 0.84, blue: 0.36)),
-        (L10n.t("pawpetTraits.4829c30d"), Color(red: 0.62, green: 0.82, blue: 0.36)),
-        (L10n.t("pawpetTraits.f4559417"), Color(red: 0.62, green: 0.66, blue: 0.72)),
-        (L10n.t("pawpetTraits.917f54a7"), Color(red: 0.68, green: 0.44, blue: 0.86)),
+    static let eyeColors: [(nameKey: String, color: Color)] = [
+        ("pawpetTraits.f68d8bf7", Color(red: 0.95, green: 0.70, blue: 0.20)),
+        ("pawpetTraits.52c235b4", Color(red: 0.24, green: 0.72, blue: 0.48)),
+        ("pawpetTraits.07b29498", Color(red: 0.30, green: 0.52, blue: 0.92)),
+        ("pawpetTraits.7f43f859", Color(red: 0.82, green: 0.45, blue: 0.18)),
+        ("pawpetTraits.cf5632c7", Color(red: 0.98, green: 0.84, blue: 0.36)),
+        ("pawpetTraits.4829c30d", Color(red: 0.62, green: 0.82, blue: 0.36)),
+        ("pawpetTraits.f4559417", Color(red: 0.62, green: 0.66, blue: 0.72)),
+        ("pawpetTraits.917f54a7", Color(red: 0.68, green: 0.44, blue: 0.86)),
     ]
+
+    /// Resolved on read, so switching language renames the coats too.
+    static func paletteName(_ index: Int) -> String { L10n.t(palettes[index].nameKey) }
+    static func eyeColorName(_ index: Int) -> String { L10n.t(eyeColors[index].nameKey) }
 
     static let whiskerChoices = [2, 3, 4]
 
@@ -547,7 +551,7 @@ struct PawpetTraits {
         if frame != .none { out.append((L10n.t("pawpetTraits.7ad40d7f"), frameReason)) }
         if backdrop != .none { out.append((L10n.t("pawpetTraits.5f74c72f"), backdropReason)) }
         out.append((L10n.t("pawpetTraits.a323dbfd"), auraReason))
-        out.append((L10n.t("pawpetTraits.ac57252c"), L10n.t("pawpetTraits.6cfc18bd", Self.palettes[paletteIndex].name, patternName, Self.eyeColors[eyeColorIndex].name)))
+        out.append((L10n.t("pawpetTraits.ac57252c"), L10n.t("pawpetTraits.6cfc18bd", Self.paletteName(paletteIndex), patternName, Self.eyeColorName(eyeColorIndex))))
         return out
     }
 

@@ -27,7 +27,7 @@ final class LocalizationManager {
     private(set) var languageCode: String = LocalizationManager.baseLanguage
 
     private init() {
-        Tables.setBase(Self.loadPack(Self.baseLanguage))
+        Tables.setBase(Self.loadPackFile(Self.baseLanguage))
         Tables.setActive(Tables.base, code: Self.baseLanguage)
     }
 
@@ -44,7 +44,7 @@ final class LocalizationManager {
             resolved = "en"
         }
         guard resolved != Tables.activeCode else { return }
-        Tables.setActive(resolved == Self.baseLanguage ? Tables.base : Self.loadPack(resolved),
+        Tables.setActive(resolved == Self.baseLanguage ? Tables.base : Self.loadPackFile(resolved),
                          code: resolved)
         // The observable properties exist only to nudge SwiftUI, so they are touched on the main
         // actor while the lookup tables themselves are already swapped and lock-protected.
@@ -74,7 +74,7 @@ final class LocalizationManager {
         return nil
     }
 
-    nonisolated private static func loadPack(_ code: String) -> [String: String] {
+    nonisolated static func loadPackFile(_ code: String) -> [String: String] {
         guard let url = Bundle.module.url(forResource: code, withExtension: "json",
                                           subdirectory: "Localization")
                 ?? Bundle.module.url(forResource: code, withExtension: "json"),
@@ -107,10 +107,24 @@ enum Tables {
     private static let lock = NSLock()
     nonisolated(unsafe) private static var activeTable: [String: String] = [:]
     nonisolated(unsafe) private static var baseTable: [String: String] = [:]
+    nonisolated(unsafe) private static var loadedBase = false
+
+    /// Loads the base pack on first lookup rather than relying on `LocalizationManager.shared`
+    /// having been touched first. Static initialisers run in whatever order the app happens to
+    /// reach them: `MetricCatalog.all` is built while decoding settings, which is *before* the
+    /// manager exists, and it used to bake the raw keys in permanently.
+    private static func ensureBaseLoaded() {
+        guard !loadedBase else { return }
+        loadedBase = true
+        baseTable = LocalizationManager.loadPackFile(LocalizationManager.baseLanguage)
+        if activeTable.isEmpty { activeTable = baseTable }
+    }
 
     static var base: [String: String] { lock.withLock { baseTable } }
 
-    static func setBase(_ table: [String: String]) { lock.withLock { baseTable = table } }
+    static func setBase(_ table: [String: String]) {
+        lock.withLock { baseTable = table; loadedBase = true }
+    }
     nonisolated(unsafe) private static var code: String = ""
 
     static var activeCode: String { lock.withLock { code } }
@@ -121,7 +135,10 @@ enum Tables {
 
     /// Falls back to the base pack so a partial translation degrades to Korean, never to a raw key.
     static func lookup(_ key: String) -> String {
-        lock.withLock { activeTable[key] ?? baseTable[key] } ?? key
+        lock.withLock {
+            ensureBaseLoaded()
+            return activeTable[key] ?? baseTable[key]
+        } ?? key
     }
 }
 
