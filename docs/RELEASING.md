@@ -73,19 +73,36 @@ Gatekeeper 경고는 남지만 권한 유지 문제는 해결됩니다. 로컬�
 내보내서 저장소 시크릿에 넣으세요.
 
 ```bash
-# 1. 인증서 + 개인키를 .p12로 내보내기 (내보내기 암호를 물어봅니다)
+# 1. 내보내기 암호를 직접 정해서 .p12로 내보내기.
+#    -P 를 쓰면 GUI 암호 창이 뜨지 않아, 암호가 정확히 무엇인지 확실해집니다.
+P12PASS=$(openssl rand -base64 24 | tr -d '\n')
 security export -k ~/Library/Keychains/login.keychain-db \
-  -t identities -f pkcs12 -o /tmp/pawprint-signing.p12
+  -t identities -f pkcs12 -P "$P12PASS" -o /tmp/pawprint-signing.p12
 
-# 2. base64로 인코딩해서 시크릿에 등록
+# 2. 두 시크릿을 등록. 암호는 위에서 만든 $P12PASS 이지,
+#    업데이트 서명키(PAWPRINT_UPDATE_PRIVATE_KEY)가 아닙니다 — 셋은 서로 다른 값입니다.
 base64 -i /tmp/pawprint-signing.p12 | gh secret set MACOS_CERTIFICATE_P12 --repo yhcho0405/Pawprint
-gh secret set MACOS_CERTIFICATE_PASSWORD --repo yhcho0405/Pawprint   # 위에서 정한 내보내기 암호
+printf '%s' "$P12PASS" | gh secret set MACOS_CERTIFICATE_PASSWORD --repo yhcho0405/Pawprint
 
-# 3. 흔적 지우기
+# 3. 흔적 지우기 (암호는 .secrets/update-keys.txt 에 보관해두세요)
 rm -f /tmp/pawprint-signing.p12
 ```
 
-시크릿이 있으면 워크플로가 자동으로 인증서를 가져와 서명합니다. 없으면 ad-hoc으로 넘어갑니다.
+### 시크릿 세 개의 역할
+
+| 시크릿 | 정체 | 역할 |
+|---|---|---|
+| `PAWPRINT_UPDATE_PRIVATE_KEY` | Ed25519 개인키 | 업데이트 아카이브 서명 — 앱이 진짜인지 판단하는 기준 |
+| `MACOS_CERTIFICATE_P12` | 코드 서명 인증서 + 키 (base64) | 앱 코드 서명 — 권한 유지 |
+| `MACOS_CERTIFICATE_PASSWORD` | 위 .p12의 **내보내기 암호** | .p12를 여는 데만 쓰임 |
+
+시크릿이 있으면 워크플로가 자동으로 인증서를 가져와 서명하고, 결과가 ad-hoc이면 릴리즈를
+**실패시킵니다**. 조용히 ad-hoc으로 넘어가면 사용자가 업데이트할 때마다 권한이 초기화되는데,
+릴리즈 자체는 멀쩡히 발행되어서 한참 뒤에야 드러나기 때문입니다.
+
+자체 서명 인증서는 새 키체인에서 신뢰 설정이 없어 `security find-identity -v`에 잡히지 않습니다.
+서명을 *만드는* 데는 신뢰가 필요 없고 *검증*할 때만 필요하므로, 워크플로는 인증서 레이블을 읽어
+`PAWPRINT_SIGN_IDENTITY`로 넘겨줍니다.
 
 ### 방법 B — Apple Developer ID ($99/년)
 
