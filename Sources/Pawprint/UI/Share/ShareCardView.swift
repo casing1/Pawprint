@@ -66,9 +66,9 @@ struct ShareCardView: View {
         case .today(let s):
             return Formatters.dayLabel(s.day)
         case .lifetime(let stats, _, _):
-            return "\(stats.daysRecorded)일 동안의 기록"
+            return L10n.t("shareCardView.92a837a4", stats.daysRecorded)
         case .wrapped(let report):
-            return "\(report.title) · \(report.dayCount)일의 기록"
+            return L10n.t("shareCardView.60145ef6", report.title, report.dayCount)
         }
     }
 
@@ -163,7 +163,7 @@ struct ShareCardView: View {
                     Text(overall.title)
                         .font(.system(size: 17, weight: .bold))
                         .foregroundStyle(.white)
-                    Text("누적 레벨 \(overall.totalLevels) · \(stats.daysRecorded)일 기록")
+                    Text(L10n.t("shareCardView.d64b5670", overall.totalLevels, stats.daysRecorded))
                         .font(.system(size: 11))
                         .foregroundStyle(.white.opacity(0.6))
                 }
@@ -200,7 +200,7 @@ struct ShareCardView: View {
                     Text(report.title)
                         .font(.system(size: 20, weight: .heavy, design: .rounded))
                         .foregroundStyle(.white)
-                    Text("\(report.dayCount)일 동안의 발자국")
+                    Text(L10n.t("shareCardView.d8f0be56", report.dayCount))
                         .font(.system(size: 11))
                         .foregroundStyle(.white.opacity(0.6))
                 }
@@ -216,13 +216,13 @@ struct ShareCardView: View {
     private func lifetimeItems(_ stats: LifetimeStats) -> [(String, String)] {
         var items: [(String, String)] = metrics.compactMap { metric in
             guard let display = metric.lifetimeDisplay else { return nil }
-            return ("총 " + metric.title, display(stats))
+            return (L10n.t("shareCardView.6b0aa197") + metric.title, display(stats))
         }
         let extras: [(String, String)] = [
-            ("최고 타자 속도", stats.bestWPM > 0 ? Formatters.wpm(stats.bestWPM) : "-"),
-            ("하루 최대 키", Formatters.groupedNumber(stats.bestKeysInDay)),
-            ("최장 집중", Formatters.compactDuration(stats.bestFocusSeconds)),
-            ("기록한 날", "\(stats.daysRecorded)일"),
+            (L10n.t("shareCardView.99e3df8c"), stats.bestWPM > 0 ? Formatters.wpm(stats.bestWPM) : "-"),
+            (L10n.t("shareCardView.67ae7b10"), Formatters.groupedNumber(stats.bestKeysInDay)),
+            (L10n.t("shareCardView.068c9e05"), Formatters.compactDuration(stats.bestFocusSeconds)),
+            (L10n.t("shareCardView.79df15ef"), L10n.t("shareCardView.cec3694e", stats.daysRecorded)),
         ]
         for extra in extras where items.count < AppSettings.maxShareCardMetrics {
             if !items.contains(where: { $0.0 == extra.0 }) { items.append(extra) }
@@ -260,7 +260,7 @@ struct ShareCardView: View {
                 .font(.system(size: 9, weight: .medium))
                 .foregroundStyle(.white.opacity(0.35))
             Spacer()
-            Text("모든 데이터는 이 Mac에만 저장됩니다")
+            Text(L10n.t("shareCardView.5d13df42"))
                 .font(.system(size: 9))
                 .foregroundStyle(.white.opacity(0.35))
         }

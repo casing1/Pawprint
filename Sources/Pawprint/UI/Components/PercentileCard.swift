@@ -18,12 +18,12 @@ struct PercentileCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 9) {
             HStack(spacing: 4) {
-                Label("전체 기록 중 오늘", systemImage: "chart.bar.doc.horizontal")
+                Label(L10n.t("percentileCard.520d52e3"), systemImage: "chart.bar.doc.horizontal")
                     .font(.caption).foregroundStyle(.secondary)
                 InfoBadge(
-                    title: "전체 기록 중 오늘",
-                    explanation: "지금까지 기록한 모든 날과 오늘을 비교해 순위를 매겨요. '상위 8%'는 기록된 날들 중 상위 8% 안에 든다는 뜻이에요.",
-                    detail: "활동이 없던 날은 비교에서 제외해요. 기록이 10일 미만이면 백분율 대신 등수로 보여줍니다."
+                    title: L10n.t("percentileCard.520d52e3"),
+                    explanation: L10n.t("percentileCard.38566ede"),
+                    detail: L10n.t("percentileCard.3f7ec145")
                 )
                 Spacer()
                 if rankings.count > 3 {
@@ -55,10 +55,10 @@ struct PercentileCard: View {
     private func headlineRow(_ ranking: PercentileRanking) -> some View {
         HStack(alignment: .center, spacing: 10) {
             VStack(spacing: -2) {
-                Text(ranking.totalDays >= 10 ? "\(ranking.topPercent)%" : "\(ranking.rank)위")
+                Text(ranking.totalDays >= 10 ? "\(ranking.topPercent)%" : L10n.t("percentileCard.8b8afdb8", ranking.rank))
                     .font(.system(size: 24, weight: .heavy, design: .rounded))
                     .foregroundStyle(tint(for: ranking))
-                Text(ranking.totalDays >= 10 ? "상위" : "\(ranking.totalDays)일 중")
+                Text(ranking.totalDays >= 10 ? L10n.t("percentileCard.b4a3f353") : L10n.t("percentileCard.62f08909", ranking.totalDays))
                     .font(.system(size: 8))
                     .foregroundStyle(.secondary)
             }
@@ -68,7 +68,7 @@ struct PercentileCard: View {
                 Text(PercentileEngine.headline(for: ranking))
                     .font(.callout.weight(.semibold))
                     .fixedSize(horizontal: false, vertical: true)
-                Text("기록한 \(ranking.totalDays)일 중 \(ranking.rank)번째")
+                Text(L10n.t("percentileCard.51e1e06a", ranking.totalDays, ranking.rank))
                     .font(.caption2).foregroundStyle(.secondary)
             }
             Spacer(minLength: 0)

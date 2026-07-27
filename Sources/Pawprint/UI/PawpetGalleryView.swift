@@ -23,11 +23,11 @@ struct PawpetGalleryView: View {
         var id: String { rawValue }
         var label: String {
             switch self {
-            case .all: return "전체"
-            case .legendary: return "S·A급"
-            case .framed: return "액자"
-            case .charmed: return "장식"
-            case .winged: return "날개"
+            case .all: return L10n.t("pawpetGalleryView.934dd25e")
+            case .legendary: return L10n.t("pawpetGalleryView.f90dedc0")
+            case .framed: return L10n.t("pawpetGalleryView.7ad40d7f")
+            case .charmed: return L10n.t("pawpetGalleryView.169ac9d5")
+            case .winged: return L10n.t("pawpetGalleryView.01a400a4")
             }
         }
     }
@@ -37,9 +37,9 @@ struct PawpetGalleryView: View {
         var id: String { rawValue }
         var label: String {
             switch self {
-            case .rarity: return "희귀도"
-            case .date: return "날짜"
-            case .score: return "점수"
+            case .rarity: return L10n.t("pawpetGalleryView.d4ebe9b6")
+            case .date: return L10n.t("pawpetGalleryView.5caa75a8")
+            case .score: return L10n.t("pawpetGalleryView.67d2cf6b")
             }
         }
     }
@@ -120,10 +120,10 @@ struct PawpetGalleryView: View {
         let legendary = days.filter { traits(for: $0).rarityGrade == "S" }.count
         let average = days.isEmpty ? 0 : days.map { traits(for: $0).rarity }.reduce(0, +) / days.count
         return HStack(spacing: 8) {
-            stat("모은 고양이", "\(days.count)마리")
-            stat("최고 희귀도", "\(best)")
-            stat("S급", "\(legendary)마리")
-            stat("평균 희귀도", "\(average)")
+            stat(L10n.t("pawpetGalleryView.c0047d97"), L10n.t("pawpetGalleryView.31f12a97", days.count))
+            stat(L10n.t("pawpetGalleryView.bae34d90"), "\(best)")
+            stat(L10n.t("pawpetGalleryView.d4ed0f37"), L10n.t("pawpetGalleryView.31f12a97", legendary))
+            stat(L10n.t("pawpetGalleryView.b2dc3724"), "\(average)")
         }
     }
 
@@ -167,7 +167,7 @@ struct PawpetGalleryView: View {
 
     private var sortBar: some View {
         HStack(spacing: 5) {
-            Text("정렬").font(.system(size: 9)).foregroundStyle(.tertiary)
+            Text(L10n.t("pawpetGalleryView.7745cc5a")).font(.system(size: 9)).foregroundStyle(.tertiary)
             ForEach(SortField.allCases) { field in
                 Button {
                     withAnimation(.easeInOut(duration: 0.15)) {
@@ -193,7 +193,7 @@ struct PawpetGalleryView: View {
                 .buttonStyle(.plain)
             }
             Spacer(minLength: 0)
-            Text(descending ? "높은 순" : "낮은 순")
+            Text(descending ? L10n.t("pawpetGalleryView.522d7a9a") : L10n.t("pawpetGalleryView.ba68909d"))
                 .font(.system(size: 9)).foregroundStyle(.tertiary)
         }
     }
@@ -201,10 +201,10 @@ struct PawpetGalleryView: View {
     private var emptyState: some View {
         VStack(spacing: 6) {
             Text("🐾").font(.largeTitle)
-            Text(filter == .all ? "아직 모은 고양이가 없어요" : "이 조건에 맞는 고양이가 아직 없어요")
+            Text(filter == .all ? L10n.t("pawpetGalleryView.8f4ea687") : L10n.t("pawpetGalleryView.daa4d86f"))
                 .font(.caption).foregroundStyle(.secondary)
             if filter != .all {
-                Text("기록이 쌓이면 액자와 장식이 붙기 시작해요")
+                Text(L10n.t("pawpetGalleryView.e7e9605e"))
                     .font(.caption2).foregroundStyle(.tertiary)
             }
         }
@@ -309,7 +309,7 @@ struct PawpetDetailView: View {
                     .foregroundStyle(t.rarityColor)
                 VStack(alignment: .leading, spacing: 0) {
                     Text(t.rarityLabel).font(.callout.weight(.semibold))
-                    Text("희귀도 \(t.rarity) / 100")
+                    Text(L10n.t("pawpetGalleryView.67c51b91", t.rarity))
                         .font(.caption2.monospacedDigit()).foregroundStyle(.secondary)
                 }
             }
@@ -322,9 +322,9 @@ struct PawpetDetailView: View {
             }
             .frame(height: 6)
 
-            Text("\(PawpetTraits.palettes[t.paletteIndex].name)색 \(t.patternName)")
+            Text(L10n.t("pawpetGalleryView.e8492bce", PawpetTraits.palettes[t.paletteIndex].name, t.patternName))
                 .font(.caption2).foregroundStyle(.secondary)
-            Text("\(PawpetTraits.eyeColors[t.eyeColorIndex].name)빛 눈 · 수염 \(t.whiskers)쌍")
+            Text(L10n.t("pawpetGalleryView.25d72384", PawpetTraits.eyeColors[t.eyeColorIndex].name, t.whiskers))
                 .font(.caption2).foregroundStyle(.tertiary)
             Spacer(minLength: 0)
         }
@@ -333,11 +333,11 @@ struct PawpetDetailView: View {
     private func breakdownSection(_ t: PawpetTraits) -> some View {
         VStack(alignment: .leading, spacing: 5) {
             HStack(spacing: 4) {
-                Text("희귀도 구성").font(.caption).foregroundStyle(.secondary)
+                Text(L10n.t("pawpetGalleryView.b6e2a401")).font(.caption).foregroundStyle(.secondary)
                 InfoBadge(
-                    title: "희귀도",
-                    explanation: "얻기 어려운 요소일수록 높은 점수예요. 액자·발 장식·날개·배경이 80점, 목걸이·머리·표정·주변 효과가 20점을 차지해요.",
-                    detail: "털색과 무늬는 날짜로 무작위 결정되니 점수에 넣지 않아요 — 노력으로 바꿀 수 없는 값이니까요."
+                    title: L10n.t("pawpetGalleryView.d4ebe9b6"),
+                    explanation: L10n.t("pawpetGalleryView.bd28db1a"),
+                    detail: L10n.t("pawpetGalleryView.90fb2a97")
                 )
                 Spacer()
             }
@@ -373,7 +373,7 @@ struct PawpetDetailView: View {
     private var statsSection: some View {
         let metrics = MetricCatalog.all.filter { $0.availableAsCard }.prefix(8)
         return VStack(alignment: .leading, spacing: 5) {
-            Text("그날의 기록").font(.caption).foregroundStyle(.secondary)
+            Text(L10n.t("pawpetGalleryView.0ea540b7")).font(.caption).foregroundStyle(.secondary)
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 5) {
                 ForEach(Array(metrics)) { metric in
                     HStack(spacing: 5) {
@@ -393,7 +393,7 @@ struct PawpetDetailView: View {
                 }
             }
             if let score = summary.score {
-                Text("그날의 점수 \(score.total)점 (\(score.grade)등급) — 액자 등급을 결정해요")
+                Text(L10n.t("pawpetGalleryView.b202d32b", score.total, score.grade))
                     .font(.caption2).foregroundStyle(.tertiary)
             }
         }
@@ -401,7 +401,7 @@ struct PawpetDetailView: View {
 
     private func notesSection(_ t: PawpetTraits) -> some View {
         VStack(alignment: .leading, spacing: 5) {
-            Text("왜 이렇게 생겼나요").font(.caption).foregroundStyle(.secondary)
+            Text(L10n.t("pawpetGalleryView.e287756b")).font(.caption).foregroundStyle(.secondary)
             ForEach(t.notes, id: \.trait) { note in
                 HStack(alignment: .top, spacing: 6) {
                     Text(note.trait)

@@ -6,7 +6,7 @@ struct WeeklySummaryCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Label("이번 주", systemImage: "calendar")
+                Label(L10n.t("weeklySummaryCard.89ea2d72"), systemImage: "calendar")
                     .font(.caption).foregroundStyle(.secondary)
                 Spacer()
                 if let delta = rollup.activeTimeDeltaPercent, abs(delta) >= 5 {
@@ -16,29 +16,29 @@ struct WeeklySummaryCard: View {
                     }
                     .font(.caption2.weight(.semibold))
                     .foregroundStyle(delta > 0 ? .orange : .blue)
-                    .help("지난주 활성 사용시간 대비")
+                    .help(L10n.t("weeklySummaryCard.5f5e69c6"))
                 }
             }
 
             Grid(alignment: .leading, horizontalSpacing: 14, verticalSpacing: 6) {
                 GridRow {
-                    metric("활성 사용", Formatters.compactDuration(rollup.totalActiveSeconds))
-                    metric("키 입력", Formatters.groupedNumber(rollup.totalKeyPresses))
+                    metric(L10n.t("weeklySummaryCard.0cb473d3"), Formatters.compactDuration(rollup.totalActiveSeconds))
+                    metric(L10n.t("weeklySummaryCard.59ca8aa6"), Formatters.groupedNumber(rollup.totalKeyPresses))
                 }
                 GridRow {
-                    metric("집중시간", Formatters.compactDuration(rollup.totalFocusSeconds))
-                    metric("최고 속도", rollup.maxWPM > 0 ? Formatters.wpm(rollup.maxWPM) : "-")
+                    metric(L10n.t("weeklySummaryCard.77bad0ab"), Formatters.compactDuration(rollup.totalFocusSeconds))
+                    metric(L10n.t("weeklySummaryCard.50922e57"), rollup.maxWPM > 0 ? Formatters.wpm(rollup.maxWPM) : "-")
                 }
             }
 
             if let tag = rollup.dominantTag {
-                Text("이번 주 대표 유형: \(tag.emoji) \(tag.label)")
+                Text(L10n.t("weeklySummaryCard.1588db9c", tag.emoji, tag.label))
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             }
 
             if let busiest = rollup.busiestWeekday {
-                Text("가장 활동량이 높았던 날: \(WeeklyRollup.weekdayName(busiest))")
+                Text(L10n.t("weeklySummaryCard.31c1cf7c", WeeklyRollup.weekdayName(busiest)))
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
             }

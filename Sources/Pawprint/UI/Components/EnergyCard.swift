@@ -28,11 +28,11 @@ struct EnergyCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 4) {
-                Label("오늘 쓴 전력", systemImage: "bolt.batteryblock.fill")
+                Label(L10n.t("energyCard.1ecc19ad"), systemImage: "bolt.batteryblock.fill")
                     .font(.caption).foregroundStyle(.secondary)
                 Spacer()
                 if lines.count > 1 {
-                    Text("\(lines.count)가지 비유")
+                    Text(L10n.t("energyCard.839fa6d7", lines.count))
                         .font(.system(size: 9)).foregroundStyle(.tertiary)
                     Button {
                         withAnimation(.easeInOut(duration: 0.25)) { offset += 1 }
@@ -40,7 +40,7 @@ struct EnergyCard: View {
                         Image(systemName: "shuffle").font(.system(size: 10))
                     }
                     .buttonStyle(.plain)
-                    .help("다른 비유 보기")
+                    .help(L10n.t("energyCard.2b3d69c1"))
                 }
                 Image(systemName: expanded ? "chevron.up" : "chevron.down")
                     .font(.caption2).foregroundStyle(.tertiary)
@@ -68,7 +68,7 @@ struct EnergyCard: View {
                                 .fixedSize(horizontal: false, vertical: true)
                         }
                     }
-                    Text("배터리로 사용한 전력만 계산했어요 (충전 중 소비는 OS가 알려주지 않아요). 모두 근사치예요.")
+                    Text(L10n.t("energyCard.c9b28598"))
                         .font(.caption2)
                         .foregroundStyle(.tertiary)
                         .padding(.top, 2)

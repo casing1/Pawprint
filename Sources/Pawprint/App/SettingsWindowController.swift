@@ -29,7 +29,7 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
 
         let hosting = NSHostingController(rootView: SettingsRootView())
         let window = NSWindow(contentViewController: hosting)
-        window.title = "Pawprint 설정"
+        window.title = L10n.t("settingsWindowController.4e8f752d")
         window.styleMask = [.titled, .closable, .miniaturizable]
         window.isReleasedWhenClosed = false
         window.delegate = self

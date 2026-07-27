@@ -25,7 +25,7 @@ struct TodayView: View {
 
             ShareButton(
                 mode: .today(summary),
-                label: "오늘 카드",
+                label: L10n.t("todayView.9f2ea5d8"),
                 suggestedFileName: "pawprint_\(summary.day).png"
             )
 
@@ -71,7 +71,7 @@ struct TodayView: View {
 
             if !summary.highlights.isEmpty {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("오늘의 하이라이트").font(.caption).foregroundStyle(.secondary)
+                    Text(L10n.t("todayView.8a44ca6e")).font(.caption).foregroundStyle(.secondary)
                     ForEach(summary.highlights) { highlight in
                         HighlightRow(highlight: highlight)
                     }
@@ -112,12 +112,12 @@ struct TodayView: View {
             if !standings.isEmpty {
                 VStack(alignment: .leading, spacing: 7) {
                     HStack(spacing: 4) {
-                        Label("개인 기록 추격", systemImage: "flag.checkered")
+                        Label(L10n.t("todayView.8605982f"), systemImage: "flag.checkered")
                             .font(.caption).foregroundStyle(.secondary)
                         InfoBadge(
-                            title: "개인 기록 추격",
-                            explanation: "오늘 값이 지금까지의 개인 최고 기록에 얼마나 근접했는지 보여줘요.",
-                            detail: "비교 대상은 오늘을 제외한 과거 기록이에요."
+                            title: L10n.t("todayView.8605982f"),
+                            explanation: L10n.t("todayView.9234fafa"),
+                            detail: L10n.t("todayView.ba83ad47")
                         )
                         Spacer()
                     }
@@ -139,9 +139,9 @@ struct TodayView: View {
             if !summary.funFacts.isEmpty {
                 VStack(alignment: .leading, spacing: 6) {
                     HStack(spacing: 4) {
-                        Text("오늘의 재미있는 사실").font(.caption).foregroundStyle(.secondary)
+                        Text(L10n.t("todayView.f04f7e9b")).font(.caption).foregroundStyle(.secondary)
                         Spacer()
-                        Text("\(summary.funFacts.count)개 중 5개")
+                        Text(L10n.t("todayView.69d55f85", summary.funFacts.count))
                             .font(.system(size: 9)).foregroundStyle(.tertiary)
                         Button {
                             withAnimation(.easeInOut(duration: 0.25)) { factOffset += 1 }
@@ -149,7 +149,7 @@ struct TodayView: View {
                             Image(systemName: "shuffle").font(.system(size: 10))
                         }
                         .buttonStyle(.plain)
-                        .help("다른 사실 보기")
+                        .help(L10n.t("todayView.00005fd3"))
                     }
                     ForEach(pickedFunFacts) { fact in
                         HStack(alignment: .top, spacing: 6) {
@@ -161,7 +161,7 @@ struct TodayView: View {
                         }
                         .transition(.opacity)
                     }
-                    Text("환산값은 모두 근사치예요")
+                    Text(L10n.t("todayView.d066a442"))
                         .font(.caption2).foregroundStyle(.tertiary)
                 }
                 .padding(10)
@@ -217,7 +217,7 @@ struct TodayView: View {
 
         let keysToday = Double(summary.totalKeyPresses)
         result.append(MetricComparison(
-            label: "키 입력",
+            label: L10n.t("todayView.59ca8aa6"),
             todayValue: keysToday,
             averageValue: average { Double($0.totalKeyPresses) },
             display: Formatters.groupedNumber(summary.totalKeyPresses),
@@ -226,7 +226,7 @@ struct TodayView: View {
 
         let activeToday = Double(summary.activeSeconds)
         result.append(MetricComparison(
-            label: "활성 사용시간",
+            label: L10n.t("todayView.e6bdb45b"),
             todayValue: activeToday,
             averageValue: average { Double($0.activeSeconds) },
             display: Formatters.compactDuration(summary.activeSeconds),
@@ -235,7 +235,7 @@ struct TodayView: View {
 
         let focusToday = Double(summary.totalFocusSeconds)
         result.append(MetricComparison(
-            label: "집중시간",
+            label: L10n.t("todayView.77bad0ab"),
             todayValue: focusToday,
             averageValue: average { Double($0.totalFocusSeconds) },
             display: Formatters.compactDuration(summary.totalFocusSeconds),
@@ -244,7 +244,7 @@ struct TodayView: View {
 
         if summary.maxWPM > 0 {
             result.append(MetricComparison(
-                label: "최고 타자 속도",
+                label: L10n.t("todayView.99e3df8c"),
                 todayValue: summary.maxWPM,
                 averageValue: average { $0.maxWPM },
                 display: Formatters.wpm(summary.maxWPM),
@@ -257,87 +257,87 @@ struct TodayView: View {
 
     private var breakdowns: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("자세히 보기").font(.caption).foregroundStyle(.secondary)
+            Text(L10n.t("todayView.918f5d1c")).font(.caption).foregroundStyle(.secondary)
 
             BreakdownCard(
-                title: "키보드",
+                title: L10n.t("todayView.f1d4069c"),
                 icon: "keyboard",
                 headline: Formatters.groupedNumber(summary.totalKeyPresses)
             ) {
-                BreakdownRow(label: "문자 키", value: Formatters.groupedNumber(summary.characterKeyPresses))
-                BreakdownRow(label: "평균 타자 속도", value: summary.avgWPM > 0 ? Formatters.wpm(summary.avgWPM) : "-")
+                BreakdownRow(label: L10n.t("todayView.50dceb8f"), value: Formatters.groupedNumber(summary.characterKeyPresses))
+                BreakdownRow(label: L10n.t("todayView.70cb98a7"), value: summary.avgWPM > 0 ? Formatters.wpm(summary.avgWPM) : "-")
                 BreakdownRow(label: "Backspace", value: Formatters.groupedNumber(summary.keyCategoryCounts[.backspace] ?? 0))
-                BreakdownRow(label: "입력 대비 Backspace 비율", value: String(format: "%.1f%%", summary.backspaceRatio * 100))
+                BreakdownRow(label: L10n.t("todayView.b1145a2d"), value: String(format: "%.1f%%", summary.backspaceRatio * 100))
                 BreakdownRow(label: "Escape", value: Formatters.groupedNumber(summary.keyCategoryCounts[.escape] ?? 0))
                 BreakdownRow(label: "Space", value: Formatters.groupedNumber(summary.keyCategoryCounts[.space] ?? 0))
                 BreakdownRow(label: "Enter", value: Formatters.groupedNumber(summary.keyCategoryCounts[.enter] ?? 0))
-                BreakdownRow(label: "방향키", value: Formatters.groupedNumber(summary.keyCategoryCounts[.arrow] ?? 0))
-                BreakdownRow(label: "한영 전환", value: Formatters.groupedNumber(summary.keyCategoryCounts[.hangulSwitch] ?? 0))
+                BreakdownRow(label: L10n.t("todayView.820ab339"), value: Formatters.groupedNumber(summary.keyCategoryCounts[.arrow] ?? 0))
+                BreakdownRow(label: L10n.t("todayView.0ad7f68d"), value: Formatters.groupedNumber(summary.keyCategoryCounts[.hangulSwitch] ?? 0))
                 Divider().padding(.vertical, 2)
-                BreakdownRow(label: "복사 / 붙여넣기", value: "\(summary.shortcutCounts[.copy] ?? 0) / \(summary.shortcutCounts[.paste] ?? 0)")
-                BreakdownRow(label: "잘라내기", value: Formatters.groupedNumber(summary.shortcutCounts[.cut] ?? 0))
+                BreakdownRow(label: L10n.t("todayView.7db54c52"), value: "\(summary.shortcutCounts[.copy] ?? 0) / \(summary.shortcutCounts[.paste] ?? 0)")
+                BreakdownRow(label: L10n.t("todayView.799f28ec"), value: Formatters.groupedNumber(summary.shortcutCounts[.cut] ?? 0))
                 BreakdownRow(label: "Undo / Redo", value: "\(summary.shortcutCounts[.undo] ?? 0) / \(summary.shortcutCounts[.redo] ?? 0)")
-                BreakdownRow(label: "전체 선택", value: Formatters.groupedNumber(summary.shortcutCounts[.selectAll] ?? 0))
+                BreakdownRow(label: L10n.t("todayView.0aa04a70"), value: Formatters.groupedNumber(summary.shortcutCounts[.selectAll] ?? 0))
                 BreakdownRow(label: "Spotlight", value: Formatters.groupedNumber(summary.shortcutCounts[.spotlight] ?? 0))
-                BreakdownRow(label: "스크린샷", value: Formatters.groupedNumber(summary.shortcutCounts[.screenshot] ?? 0))
-                BreakdownRow(label: "Cmd+Tab 앱 전환", value: Formatters.groupedNumber(summary.shortcutCounts[.appSwitch] ?? 0))
-                BreakdownRow(label: "최장 연속 타이핑", value: Formatters.compactDuration(summary.longestTypingStreakSeconds))
-                BreakdownRow(label: "타이핑 세션 수", value: "\(summary.typingSessionCount)")
+                BreakdownRow(label: L10n.t("todayView.df482b99"), value: Formatters.groupedNumber(summary.shortcutCounts[.screenshot] ?? 0))
+                BreakdownRow(label: L10n.t("todayView.8b22d2c9"), value: Formatters.groupedNumber(summary.shortcutCounts[.appSwitch] ?? 0))
+                BreakdownRow(label: L10n.t("todayView.84e4f978"), value: Formatters.compactDuration(summary.longestTypingStreakSeconds))
+                BreakdownRow(label: L10n.t("todayView.5d0cde8c"), value: "\(summary.typingSessionCount)")
                 if summary.fingerTravelMeters >= 1 {
-                    BreakdownRow(label: "손가락 이동 거리", value: String(format: "약 %.0fm", summary.fingerTravelMeters))
+                    BreakdownRow(label: L10n.t("todayView.dcae5bdf"), value: String(format: L10n.t("todayView.e6541eb0"), summary.fingerTravelMeters))
                 }
                 if let persona = summary.persona {
-                    BreakdownRow(label: "키보드 의존도", value: "\(persona.keyboardAffinity)%")
+                    BreakdownRow(label: L10n.t("todayView.7206e047"), value: "\(persona.keyboardAffinity)%")
                 }
                 if summary.typingConsistency > 0 {
-                    BreakdownRow(label: "타이핑 일관성", value: "\(summary.typingConsistency)%")
+                    BreakdownRow(label: L10n.t("todayView.99bb387e"), value: "\(summary.typingConsistency)%")
                 }
                 if let hour = summary.goldenHour {
-                    BreakdownRow(label: "황금 시간대", value: String(format: "%@ (%.0f WPM)", Formatters.hourLabel(hour), summary.goldenHourWPM))
+                    BreakdownRow(label: L10n.t("todayView.34fdf6d2"), value: String(format: "%@ (%.0f WPM)", Formatters.hourLabel(hour), summary.goldenHourWPM))
                 }
                 if summary.distinctShortcutsUsed > 0 {
-                    BreakdownRow(label: "사용한 단축키 종류", value: "\(summary.distinctShortcutsUsed)종")
+                    BreakdownRow(label: L10n.t("todayView.7efd4acf"), value: L10n.t("todayView.59f07901", summary.distinctShortcutsUsed))
                 }
             }
 
             BreakdownCard(
-                title: "마우스 / 트랙패드",
+                title: L10n.t("todayView.e53bb75b"),
                 icon: "cursorarrow.click",
                 headline: Formatters.groupedNumber(summary.totalClicks)
             ) {
-                BreakdownRow(label: "왼쪽 클릭", value: Formatters.groupedNumber(summary.leftClicks))
-                BreakdownRow(label: "오른쪽 클릭", value: Formatters.groupedNumber(summary.rightClicks))
-                BreakdownRow(label: "더블클릭", value: Formatters.groupedNumber(summary.doubleClicks))
-                BreakdownRow(label: "드래그", value: Formatters.groupedNumber(summary.dragCount))
+                BreakdownRow(label: L10n.t("todayView.71bb002c"), value: Formatters.groupedNumber(summary.leftClicks))
+                BreakdownRow(label: L10n.t("todayView.bef8caad"), value: Formatters.groupedNumber(summary.rightClicks))
+                BreakdownRow(label: L10n.t("todayView.991f1b13"), value: Formatters.groupedNumber(summary.doubleClicks))
+                BreakdownRow(label: L10n.t("todayView.ff52db1b"), value: Formatters.groupedNumber(summary.dragCount))
                 if summary.dragDistanceMeters >= 1 {
-                    BreakdownRow(label: "드래그 거리", value: String(format: "약 %.0fm", summary.dragDistanceMeters))
+                    BreakdownRow(label: L10n.t("todayView.b446b41f"), value: String(format: L10n.t("todayView.e6541eb0"), summary.dragDistanceMeters))
                 }
                 if summary.doubleClickRatio > 0 {
-                    BreakdownRow(label: "더블클릭 비율", value: String(format: "%.0f%%", summary.doubleClickRatio * 100))
+                    BreakdownRow(label: L10n.t("todayView.efe8fbe8"), value: String(format: "%.0f%%", summary.doubleClickRatio * 100))
                 }
-                BreakdownRow(label: "분당 최고 클릭", value: "\(summary.maxClicksPerMinute)")
+                BreakdownRow(label: L10n.t("todayView.c753318c"), value: "\(summary.maxClicksPerMinute)")
                 Divider().padding(.vertical, 2)
-                BreakdownRow(label: "커서 이동 거리", value: String(format: "약 %.2fkm", summary.cursorDistanceMeters / 1000))
-                BreakdownRow(label: "스크롤 (화면 높이 기준)", value: String(format: "약 %.1f화면", summary.scrollScreens))
-                BreakdownRow(label: "위 / 아래 스크롤", value: String(format: "%.0f / %.0f pt", summary.scrollUpPoints, summary.scrollDownPoints))
-                BreakdownRow(label: "스크롤 방향 전환", value: Formatters.groupedNumber(summary.scrollDirectionChanges))
+                BreakdownRow(label: L10n.t("todayView.314017fc"), value: String(format: L10n.t("todayView.fafa7c2e"), summary.cursorDistanceMeters / 1000))
+                BreakdownRow(label: L10n.t("todayView.30212b03"), value: String(format: L10n.t("todayView.6afaa89a"), summary.scrollScreens))
+                BreakdownRow(label: L10n.t("todayView.f6262cbb"), value: String(format: "%.0f / %.0f pt", summary.scrollUpPoints, summary.scrollDownPoints))
+                BreakdownRow(label: L10n.t("todayView.8bdb5ceb"), value: Formatters.groupedNumber(summary.scrollDirectionChanges))
             }
 
             BreakdownCard(
-                title: "앱과 집중",
+                title: L10n.t("todayView.c1569865"),
                 icon: "square.stack.3d.up",
                 headline: summary.topApp?.appName ?? "-"
             ) {
-                BreakdownRow(label: "앱 전환 횟수", value: Formatters.groupedNumber(summary.totalAppSwitches))
-                BreakdownRow(label: "평균 체류시간", value: Formatters.compactDuration(Int(summary.avgAppDwellSeconds)))
-                BreakdownRow(label: "5초 미만 체류", value: Formatters.groupedNumber(summary.shortDwellCount))
-                BreakdownRow(label: "집중 세션 수", value: "\(summary.focusSessionCount)")
-                BreakdownRow(label: "전체 집중시간", value: Formatters.compactDuration(summary.totalFocusSeconds))
+                BreakdownRow(label: L10n.t("todayView.f77d9ebb"), value: Formatters.groupedNumber(summary.totalAppSwitches))
+                BreakdownRow(label: L10n.t("todayView.e5e0442d"), value: Formatters.compactDuration(Int(summary.avgAppDwellSeconds)))
+                BreakdownRow(label: L10n.t("todayView.b1ae9ae3"), value: Formatters.groupedNumber(summary.shortDwellCount))
+                BreakdownRow(label: L10n.t("todayView.9aef2c73"), value: "\(summary.focusSessionCount)")
+                BreakdownRow(label: L10n.t("todayView.3eff78d8"), value: Formatters.compactDuration(summary.totalFocusSeconds))
                 if let hour = summary.bestFocusHour {
-                    BreakdownRow(label: "집중이 잘된 시간대", value: Formatters.hourLabel(hour))
+                    BreakdownRow(label: L10n.t("todayView.55bde4f5"), value: Formatters.hourLabel(hour))
                 }
                 if let interrupter = summary.topInterruptingApp {
-                    BreakdownRow(label: "집중을 자주 끊은 앱", value: interrupter)
+                    BreakdownRow(label: L10n.t("todayView.089588de"), value: interrupter)
                 }
                 if !summary.appUsage.isEmpty {
                     Divider().padding(.vertical, 2)
@@ -350,70 +350,70 @@ struct TodayView: View {
             }
 
             BreakdownCard(
-                title: "시간과 Mac 상태",
+                title: L10n.t("todayView.ccae3101"),
                 icon: "clock",
                 headline: Formatters.compactDuration(summary.activeSeconds)
             ) {
                 if let first = summary.firstActivity {
-                    BreakdownRow(label: "첫 활동", value: Formatters.time(first))
+                    BreakdownRow(label: L10n.t("todayView.24e8d287"), value: Formatters.time(first))
                 }
                 if let last = summary.lastActivity {
-                    BreakdownRow(label: "마지막 활동", value: Formatters.time(last))
+                    BreakdownRow(label: L10n.t("todayView.42ce99e0"), value: Formatters.time(last))
                 }
-                BreakdownRow(label: "화면 켜짐 시간", value: Formatters.compactDuration(summary.screenOnSeconds))
+                BreakdownRow(label: L10n.t("todayView.e5e7450c"), value: Formatters.compactDuration(summary.screenOnSeconds))
                 if summary.screenOnSeconds > 0 {
-                    BreakdownRow(label: "화면 켜두고 안 쓴 시간", value: Formatters.compactDuration(summary.screenIdleSeconds))
-                    BreakdownRow(label: "화면 활용도", value: "\(summary.screenUtilizationPercent)%")
+                    BreakdownRow(label: L10n.t("todayView.82962f06"), value: Formatters.compactDuration(summary.screenIdleSeconds))
+                    BreakdownRow(label: L10n.t("todayView.a4db1d38"), value: "\(summary.screenUtilizationPercent)%")
                 }
-                BreakdownRow(label: "유휴시간", value: Formatters.compactDuration(summary.idleSeconds))
+                BreakdownRow(label: L10n.t("todayView.4e954746"), value: Formatters.compactDuration(summary.idleSeconds))
                 if summary.longestBreakSeconds > 0 {
-                    BreakdownRow(label: "가장 긴 휴식", value: Formatters.compactDuration(summary.longestBreakSeconds))
+                    BreakdownRow(label: L10n.t("todayView.5c9dc383"), value: Formatters.compactDuration(summary.longestBreakSeconds))
                 }
-                BreakdownRow(label: "활동 세션 수", value: "\(summary.activitySessionCount)")
-                BreakdownRow(label: "평균 세션 길이", value: Formatters.compactDuration(Int(summary.avgSessionSeconds)))
+                BreakdownRow(label: L10n.t("todayView.198b4500"), value: "\(summary.activitySessionCount)")
+                BreakdownRow(label: L10n.t("todayView.a1249b1f"), value: Formatters.compactDuration(Int(summary.avgSessionSeconds)))
                 Divider().padding(.vertical, 2)
-                BreakdownRow(label: "잠자기 / 깨우기", value: "\(summary.sleepCount) / \(summary.wakeCount)")
+                BreakdownRow(label: L10n.t("todayView.474fe719"), value: "\(summary.sleepCount) / \(summary.wakeCount)")
                 if summary.totalSleepSeconds > 0 {
-                    BreakdownRow(label: "잠들어 있던 시간", value: Formatters.compactDuration(summary.totalSleepSeconds))
-                    BreakdownRow(label: "가장 긴 잠자기", value: Formatters.compactDuration(summary.longestSleepSeconds))
+                    BreakdownRow(label: L10n.t("todayView.d628cf08"), value: Formatters.compactDuration(summary.totalSleepSeconds))
+                    BreakdownRow(label: L10n.t("todayView.0c314faf"), value: Formatters.compactDuration(summary.longestSleepSeconds))
                 }
-                BreakdownRow(label: "화면 잠금 / 해제", value: "\(summary.lockCount) / \(summary.unlockCount)")
-                BreakdownRow(label: "화면 꺼짐", value: "\(summary.displaySleepCount)회")
+                BreakdownRow(label: L10n.t("todayView.317076ea"), value: "\(summary.lockCount) / \(summary.unlockCount)")
+                BreakdownRow(label: L10n.t("todayView.e742f8c0"), value: L10n.t("todayView.cf3d71b3", summary.displaySleepCount))
             }
 
             BreakdownCard(
-                title: "배터리와 전원",
+                title: L10n.t("todayView.1a66f4e1"),
                 icon: "battery.100.bolt",
                 headline: summary.currentBatteryLevel.map { "\($0)%" } ?? "-"
             ) {
                 if let min = summary.minBatteryLevel, let max = summary.maxBatteryLevel {
-                    BreakdownRow(label: "최저 / 최고 배터리", value: "\(min)% / \(max)%")
+                    BreakdownRow(label: L10n.t("todayView.9958eb00"), value: "\(min)% / \(max)%")
                 }
                 if summary.batteryDrainedPercent > 0 {
-                    BreakdownRow(label: "사용한 배터리", value: "\(summary.batteryDrainedPercent)%")
+                    BreakdownRow(label: L10n.t("todayView.81bdc1fb"), value: "\(summary.batteryDrainedPercent)%")
                 }
-                BreakdownRow(label: "충전기 연결 / 분리", value: "\(summary.chargerConnectCount) / \(summary.chargerDisconnectCount)")
+                BreakdownRow(label: L10n.t("todayView.f6fe026e"), value: "\(summary.chargerConnectCount) / \(summary.chargerDisconnectCount)")
                 if summary.chargeSessionCount > 0 {
-                    BreakdownRow(label: "충전 세션", value: "\(summary.chargeSessionCount)회")
-                    BreakdownRow(label: "충전한 총량", value: "+\(summary.totalChargedPercent)%")
+                    BreakdownRow(label: L10n.t("todayView.791dc165"), value: L10n.t("todayView.cf3d71b3", summary.chargeSessionCount))
+                    BreakdownRow(label: L10n.t("todayView.1ba5cbbf"), value: "+\(summary.totalChargedPercent)%")
                 }
-                BreakdownRow(label: "배터리 사용시간", value: Formatters.compactDuration(summary.secondsOnBattery))
-                BreakdownRow(label: "외부 전원 사용시간", value: Formatters.compactDuration(summary.secondsOnAC))
+                BreakdownRow(label: L10n.t("todayView.4cbcb836"), value: Formatters.compactDuration(summary.secondsOnBattery))
+                BreakdownRow(label: L10n.t("todayView.bbb312c1"), value: Formatters.compactDuration(summary.secondsOnAC))
                 if summary.lowPowerModeSeconds > 0 {
-                    BreakdownRow(label: "저전력 모드", value: Formatters.compactDuration(summary.lowPowerModeSeconds))
+                    BreakdownRow(label: L10n.t("todayView.6225d89a"), value: Formatters.compactDuration(summary.lowPowerModeSeconds))
                 }
                 if summary.elevatedThermalSeconds > 0 {
-                    BreakdownRow(label: "발열 상승 상태", value: Formatters.compactDuration(summary.elevatedThermalSeconds))
+                    BreakdownRow(label: L10n.t("todayView.ebc270ac"), value: Formatters.compactDuration(summary.elevatedThermalSeconds))
                 }
                 if let wh = BatteryHardware.shared.fullChargeWattHours {
                     Divider().padding(.vertical, 2)
-                    BreakdownRow(label: "배터리 총 용량", value: String(format: "%.1fWh", wh))
+                    BreakdownRow(label: L10n.t("todayView.bb770076"), value: String(format: "%.1fWh", wh))
                 }
                 if let cycles = summary.batteryCycleCount {
-                    BreakdownRow(label: "충전 사이클", value: "\(cycles)회")
+                    BreakdownRow(label: L10n.t("todayView.d3f1a005"), value: L10n.t("todayView.cf3d71b3", cycles))
                 }
                 if let health = summary.batteryHealthPercent {
-                    BreakdownRow(label: "배터리 건강도", value: "\(health)%")
+                    BreakdownRow(label: L10n.t("todayView.dd60e8af"), value: "\(health)%")
                 }
                 if summary.batteryTimeline.count >= 2 {
                     BatteryTimelineView(
@@ -426,50 +426,50 @@ struct TodayView: View {
             }
 
             BreakdownCard(
-                title: "뚜껑과 장치",
+                title: L10n.t("todayView.010910ad"),
                 icon: "laptopcomputer.and.arrow.down",
-                headline: summary.lidCloseCount > 0 ? "\(summary.lidCloseCount)번 닫음" : "-"
+                headline: summary.lidCloseCount > 0 ? L10n.t("todayView.0963ab49", summary.lidCloseCount) : "-"
             ) {
-                BreakdownRow(label: "뚜껑 닫음 / 열음", value: "\(summary.lidCloseCount) / \(summary.lidOpenCount)")
+                BreakdownRow(label: L10n.t("todayView.4905bfcf"), value: "\(summary.lidCloseCount) / \(summary.lidOpenCount)")
                 if summary.lidClosedSeconds > 0 {
-                    BreakdownRow(label: "닫혀 있던 시간", value: Formatters.compactDuration(summary.lidClosedSeconds))
+                    BreakdownRow(label: L10n.t("todayView.13322d1a"), value: Formatters.compactDuration(summary.lidClosedSeconds))
                 }
-                Text("뚜껑을 닫아도 Mac이 깨어 있는 경우(외장 모니터 연결 등)만 집계돼요.")
+                Text(L10n.t("todayView.52d7858e"))
                     .font(.caption2).foregroundStyle(.tertiary)
                 Divider().padding(.vertical, 2)
-                BreakdownRow(label: "외장 디스플레이 연결 / 해제", value: "\(summary.externalDisplayConnectCount) / \(summary.externalDisplayDisconnectCount)")
-                BreakdownRow(label: "최대 동시 디스플레이", value: "\(summary.maxSimultaneousDisplays)개")
-                BreakdownRow(label: "오디오 출력 변경", value: "\(summary.audioOutputDeviceChangeCount)회")
+                BreakdownRow(label: L10n.t("todayView.a829f60b"), value: "\(summary.externalDisplayConnectCount) / \(summary.externalDisplayDisconnectCount)")
+                BreakdownRow(label: L10n.t("todayView.1853f54e"), value: L10n.t("todayView.817fc9a0", summary.maxSimultaneousDisplays))
+                BreakdownRow(label: L10n.t("todayView.e4d2449e"), value: L10n.t("todayView.cf3d71b3", summary.audioOutputDeviceChangeCount))
             }
 
             if summary.networkTotalBytes > 0 {
                 BreakdownCard(
-                    title: "네트워크",
+                    title: L10n.t("todayView.5fcc05cf"),
                     icon: "network",
                     headline: Formatters.bytes(summary.networkTotalBytes),
                     explanation: MetricExplanations.network.body,
                     explanationDetail: MetricExplanations.network.detail
                 ) {
-                    BreakdownRow(label: "다운로드", value: Formatters.bytes(summary.networkDownloadBytes))
-                    BreakdownRow(label: "업로드", value: Formatters.bytes(summary.networkUploadBytes))
+                    BreakdownRow(label: L10n.t("todayView.5c5095ab"), value: Formatters.bytes(summary.networkDownloadBytes))
+                    BreakdownRow(label: L10n.t("todayView.51672ccd"), value: Formatters.bytes(summary.networkUploadBytes))
                     if summary.peakDownloadBytesPerSec > 0 {
-                        BreakdownRow(label: "최고 다운로드 속도", value: Formatters.bytesPerSecond(summary.peakDownloadBytesPerSec))
+                        BreakdownRow(label: L10n.t("todayView.6bbd0fd4"), value: Formatters.bytesPerSecond(summary.peakDownloadBytesPerSec))
                     }
                     if summary.peakUploadBytesPerSec > 0 {
-                        BreakdownRow(label: "최고 업로드 속도", value: Formatters.bytesPerSecond(summary.peakUploadBytesPerSec))
+                        BreakdownRow(label: L10n.t("todayView.201aa265"), value: Formatters.bytesPerSecond(summary.peakUploadBytesPerSec))
                     }
                 }
             }
 
             if !summary.clipboardTypeCounts.isEmpty || summary.clipboardCopyCount > 0 {
                 BreakdownCard(
-                    title: "클립보드",
+                    title: L10n.t("todayView.9ace854b"),
                     icon: "doc.on.clipboard",
                     headline: "\(summary.clipboardCopyCount) / \(summary.clipboardPasteCount)"
                 ) {
-                    BreakdownRow(label: "복사", value: Formatters.groupedNumber(summary.clipboardCopyCount))
-                    BreakdownRow(label: "붙여넣기", value: Formatters.groupedNumber(summary.clipboardPasteCount))
-                    BreakdownRow(label: "잘라내기", value: Formatters.groupedNumber(summary.clipboardCutCount))
+                    BreakdownRow(label: L10n.t("todayView.a55b1ecb"), value: Formatters.groupedNumber(summary.clipboardCopyCount))
+                    BreakdownRow(label: L10n.t("todayView.245c1c44"), value: Formatters.groupedNumber(summary.clipboardPasteCount))
+                    BreakdownRow(label: L10n.t("todayView.799f28ec"), value: Formatters.groupedNumber(summary.clipboardCutCount))
                     if !summary.clipboardTypeCounts.isEmpty {
                         Divider().padding(.vertical, 2)
                         ForEach(ClipboardDataType.allCases, id: \.self) { type in
@@ -478,7 +478,7 @@ struct TodayView: View {
                             }
                         }
                     }
-                    Text("내용은 저장하지 않고 유형만 분류합니다.")
+                    Text(L10n.t("todayView.260c07c2"))
                         .font(.caption2).foregroundStyle(.tertiary).padding(.top, 2)
                 }
             }
@@ -551,7 +551,7 @@ private struct RecordingStatusLabel: View {
             Circle()
                 .fill(activityCenter.isRecordingActive ? .green : .secondary)
                 .frame(width: 6, height: 6)
-            Text(activityCenter.isRecordingActive ? "기록 중" : (activityCenter.settings.isPaused ? "일시정지됨" : "이 앱은 제외됨"))
+            Text(activityCenter.isRecordingActive ? L10n.t("todayView.20f5a114") : (activityCenter.settings.isPaused ? L10n.t("todayView.2c992a87") : L10n.t("todayView.69b3a3dc")))
                 .font(.caption2)
                 .foregroundStyle(.secondary)
         }

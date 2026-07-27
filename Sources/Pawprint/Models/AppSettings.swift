@@ -10,12 +10,12 @@ enum MenuBarMetric: String, Codable, CaseIterable {
 
     var label: String {
         switch self {
-        case .iconOnly: return "아이콘만"
-        case .wpm: return "최고 타자 속도"
-        case .totalKeys: return "전체 키 입력"
-        case .focusTime: return "최장 집중시간"
-        case .activeTime: return "활성 사용시간"
-        case .undoCount: return "Undo 횟수"
+        case .iconOnly: return L10n.t("appSettings.563bc61d")
+        case .wpm: return L10n.t("appSettings.99e3df8c")
+        case .totalKeys: return L10n.t("appSettings.ebcbe122")
+        case .focusTime: return L10n.t("appSettings.57beed03")
+        case .activeTime: return L10n.t("appSettings.e6bdb45b")
+        case .undoCount: return L10n.t("appSettings.46535615")
         }
     }
 }
@@ -25,9 +25,9 @@ enum AppTheme: String, Codable, CaseIterable {
 
     var label: String {
         switch self {
-        case .system: return "시스템"
-        case .light: return "라이트"
-        case .dark: return "다크"
+        case .system: return L10n.t("appSettings.155e2ccf")
+        case .light: return L10n.t("appSettings.a9933e17")
+        case .dark: return L10n.t("appSettings.1a260e92")
         }
     }
 }
@@ -51,6 +51,9 @@ struct AppSettings: Codable {
     var menuBarMetric: MenuBarMetric = .wpm
     var dayStartHour: Int = 0
     var theme: AppTheme = .system
+    /// `.system` follows the Mac's preferred languages, falling back to Korean when none of them
+    /// has a pack.
+    var language: AppLanguage = .system
 
     var collectKeyboard: Bool = true
     var collectMouse: Bool = true
@@ -163,7 +166,7 @@ struct AppSettings: Codable {
         case notifiedQuestLevels, notificationDay, notificationCountToday, celebratedRecords
         case hasCompletedOnboarding
         case updateCheckEnabled, updateFeedURL, updateCheckAutomatically, updateDefaultsMigrated
-        case launchAtLogin, showDockIcon, menuBarMetric, dayStartHour, theme
+        case launchAtLogin, showDockIcon, menuBarMetric, dayStartHour, theme, language
         case collectKeyboard, collectMouse, collectAppUsage, collectClipboard
         case collectSleepWake, collectPowerPeripherals
         case isPaused, excludedApps, focusThresholdSeconds, retentionDays
@@ -189,6 +192,7 @@ struct AppSettings: Codable {
         updateFeedURL = try c.decodeIfPresent(String.self, forKey: .updateFeedURL) ?? fallback.updateFeedURL
         updateCheckAutomatically = try c.decodeIfPresent(Bool.self, forKey: .updateCheckAutomatically) ?? fallback.updateCheckAutomatically
         updateDefaultsMigrated = try c.decodeIfPresent(Bool.self, forKey: .updateDefaultsMigrated) ?? false
+        language = try c.decodeIfPresent(AppLanguage.self, forKey: .language) ?? fallback.language
         launchAtLogin = try c.decodeIfPresent(Bool.self, forKey: .launchAtLogin) ?? fallback.launchAtLogin
         showDockIcon = try c.decodeIfPresent(Bool.self, forKey: .showDockIcon) ?? fallback.showDockIcon
         menuBarMetric = try c.decodeIfPresent(MenuBarMetric.self, forKey: .menuBarMetric) ?? fallback.menuBarMetric
@@ -249,6 +253,7 @@ struct AppSettings: Codable {
         try c.encode(updateFeedURL, forKey: .updateFeedURL)
         try c.encode(updateCheckAutomatically, forKey: .updateCheckAutomatically)
         try c.encode(updateDefaultsMigrated, forKey: .updateDefaultsMigrated)
+        try c.encode(language, forKey: .language)
         try c.encode(launchAtLogin, forKey: .launchAtLogin)
         try c.encode(showDockIcon, forKey: .showDockIcon)
         try c.encode(menuBarMetric, forKey: .menuBarMetric)
@@ -280,10 +285,10 @@ struct AppSettings: Codable {
     }
 
     static let defaultExcludedApps: [ExcludedApp] = [
-        ExcludedApp(bundleID: "com.apple.Terminal", displayName: "터미널", isDefault: true),
+        ExcludedApp(bundleID: "com.apple.Terminal", displayName: L10n.t("appSettings.06acffcb"), isDefault: true),
         ExcludedApp(bundleID: "com.googlecode.iterm2", displayName: "iTerm2", isDefault: true),
-        ExcludedApp(bundleID: "com.apple.RemoteDesktop", displayName: "원격 데스크톱 (호스트)", isDefault: true),
-        ExcludedApp(bundleID: "com.apple.ScreenSharing", displayName: "화면 공유", isDefault: true),
+        ExcludedApp(bundleID: "com.apple.RemoteDesktop", displayName: L10n.t("appSettings.612100b1"), isDefault: true),
+        ExcludedApp(bundleID: "com.apple.ScreenSharing", displayName: L10n.t("appSettings.5a8b44f4"), isDefault: true),
         ExcludedApp(bundleID: "com.agilebits.onepassword7", displayName: "1Password 7", isDefault: true),
         ExcludedApp(bundleID: "com.1password.1password", displayName: "1Password", isDefault: true),
         ExcludedApp(bundleID: "com.lastpass.LastPass", displayName: "LastPass", isDefault: true),

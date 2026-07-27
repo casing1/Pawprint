@@ -187,7 +187,7 @@ extension UpdateChecker {
     /// while a check the user asked for should say "최신 버전이에요" so the button doesn't feel dead.
     func check(feedURL: String, manual: Bool) async {
         guard let url = URL(string: feedURL), url.scheme == "https" || url.scheme == "file" else {
-            state = .failed("업데이트 주소가 올바르지 않아요 (https 주소가 필요해요)")
+            state = .failed(L10n.t("updateChecker.0cf8ad1b"))
             return
         }
 
@@ -201,18 +201,18 @@ extension UpdateChecker {
 
             let (data, response) = try await URLSession.shared.data(for: request)
             if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
-                state = .failed("업데이트 서버가 \(http.statusCode)를 반환했어요")
+                state = .failed(L10n.t("updateChecker.1bece787", http.statusCode))
                 return
             }
 
             let release: UpdateRelease
             if let github = try? JSONDecoder().decode(GitHubRelease.self, from: data) {
                 if github.draft == true {
-                    state = .failed("최신 릴리즈가 아직 초안 상태예요")
+                    state = .failed(L10n.t("updateChecker.0c63ecbb"))
                     return
                 }
                 guard let mapped = github.asUpdateRelease() else {
-                    state = .failed("릴리즈에 업데이트용 .zip 파일이 없어요")
+                    state = .failed(L10n.t("updateChecker.f065798f"))
                     return
                 }
                 release = mapped
@@ -222,11 +222,11 @@ extension UpdateChecker {
             lastCheckedAt = Date()
 
             guard release.downloadLink != nil else {
-                state = .failed("업데이트 정보에 다운로드 주소가 없어요")
+                state = .failed(L10n.t("updateChecker.b6ebf2ae"))
                 return
             }
             if let minimum = release.minimumSystemVersion, !systemMeets(minimum) {
-                state = .failed("이 업데이트는 macOS \(minimum) 이상이 필요해요")
+                state = .failed(L10n.t("updateChecker.0d8b1254", minimum))
                 return
             }
             if isNewer(release) {
@@ -236,7 +236,7 @@ extension UpdateChecker {
                 if !manual { state = .idle }
             }
         } catch {
-            state = .failed("업데이트를 확인하지 못했어요 — \(error.localizedDescription)")
+            state = .failed(L10n.t("updateChecker.c3a641cc", error.localizedDescription))
         }
     }
 
@@ -273,7 +273,7 @@ extension UpdateChecker {
 
     func download(_ release: UpdateRelease) async {
         guard let link = release.downloadLink else {
-            state = .failed("다운로드 주소가 올바르지 않아요")
+            state = .failed(L10n.t("updateChecker.d9383631"))
             return
         }
         state = .downloading(progress: 0)
@@ -282,7 +282,7 @@ extension UpdateChecker {
         do {
             let (temporaryFile, response) = try await URLSession.shared.download(from: link)
             if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
-                state = .failed("다운로드에 실패했어요 (\(http.statusCode))")
+                state = .failed(L10n.t("updateChecker.f0ce876e", http.statusCode))
                 return
             }
             state = .downloading(progress: 0.7)
@@ -305,7 +305,7 @@ extension UpdateChecker {
             state = .downloading(progress: 0.9)
 
             guard let app = findApp(in: unpacked) else {
-                state = .failed("내려받은 파일에서 Pawprint.app을 찾지 못했어요")
+                state = .failed(L10n.t("updateChecker.857994c9"))
                 return
             }
             try verifySignature(of: app)
@@ -317,7 +317,7 @@ extension UpdateChecker {
             state = .failed(error.message)
         } catch {
             cleanUpStaging()
-            state = .failed("업데이트를 준비하지 못했어요 — \(error.localizedDescription)")
+            state = .failed(L10n.t("updateChecker.11fd7315", error.localizedDescription))
         }
     }
 
@@ -329,13 +329,13 @@ extension UpdateChecker {
     /// field for arbitrary metadata, so the workflow uploads it as an asset and this fetches it.
     private func verifyArchiveSignature(_ archive: URL, release: UpdateRelease) async throws {
         guard let reference = release.signature, !reference.isEmpty else {
-            throw UpdateError(message: "이 릴리즈에는 서명이 없어요. 자동 설치를 중단했어요 — 브라우저로 직접 받아주세요.")
+            throw UpdateError(message: L10n.t("updateChecker.2add0994"))
         }
 
         let encodedSignature: String
         if reference.hasPrefix("https://") {
             guard let url = URL(string: reference) else {
-                throw UpdateError(message: "서명 주소가 올바르지 않아요")
+                throw UpdateError(message: L10n.t("updateChecker.6635b1c3"))
             }
             var request = URLRequest(url: url)
             request.httpShouldHandleCookies = false
@@ -349,13 +349,13 @@ extension UpdateChecker {
         guard let signature = Data(base64Encoded: encodedSignature.trimmingCharacters(in: .whitespacesAndNewlines)),
               let rawKey = Data(base64Encoded: Self.updatePublicKey),
               let key = try? Curve25519.Signing.PublicKey(rawRepresentation: rawKey) else {
-            throw UpdateError(message: "서명 형식을 읽을 수 없어요")
+            throw UpdateError(message: L10n.t("updateChecker.6156b73b"))
         }
         guard let payload = FileManager.default.contents(atPath: archive.path) else {
-            throw UpdateError(message: "내려받은 파일을 읽을 수 없어요")
+            throw UpdateError(message: L10n.t("updateChecker.e50e9207"))
         }
         guard key.isValidSignature(signature, for: payload) else {
-            throw UpdateError(message: "서명이 일치하지 않아요. 파일이 변조되었을 수 있어 설치를 중단했어요.")
+            throw UpdateError(message: L10n.t("updateChecker.79d0bb3f"))
         }
     }
 
@@ -382,7 +382,7 @@ extension UpdateChecker {
         try process.run()
         process.waitUntilExit()
         guard process.terminationStatus == 0 else {
-            throw UpdateError(message: "압축을 푸는 데 실패했어요")
+            throw UpdateError(message: L10n.t("updateChecker.6eb64361"))
         }
     }
 
@@ -412,27 +412,27 @@ extension UpdateChecker {
 
         var selfCode: SecCode?
         guard SecCodeCopySelf([], &selfCode) == errSecSuccess, let selfCode else {
-            throw UpdateError(message: "현재 앱의 서명을 확인할 수 없어요")
+            throw UpdateError(message: L10n.t("updateChecker.134c2360"))
         }
         var selfStatic: SecStaticCode?
         guard SecCodeCopyStaticCode(selfCode, [], &selfStatic) == errSecSuccess, let selfStatic else {
-            throw UpdateError(message: "현재 앱의 서명을 확인할 수 없어요")
+            throw UpdateError(message: L10n.t("updateChecker.134c2360"))
         }
         var requirement: SecRequirement?
         guard SecCodeCopyDesignatedRequirement(selfStatic, [], &requirement) == errSecSuccess,
               let requirement else {
-            throw UpdateError(message: "현재 앱의 서명 요구사항을 읽을 수 없어요")
+            throw UpdateError(message: L10n.t("updateChecker.d7cab622"))
         }
 
         var candidate: SecStaticCode?
         guard SecStaticCodeCreateWithPath(app as CFURL, [], &candidate) == errSecSuccess,
               let candidate else {
-            throw UpdateError(message: "내려받은 앱의 서명을 읽을 수 없어요")
+            throw UpdateError(message: L10n.t("updateChecker.dae64861"))
         }
         let status = SecStaticCodeCheckValidity(candidate, SecCSFlags(rawValue: kSecCSCheckAllArchitectures), requirement)
         guard status == errSecSuccess else {
             throw UpdateError(
-                message: "내려받은 앱이 현재 앱과 같은 서명이 아니에요. 설치를 중단했어요 (코드 \(status))"
+                message: L10n.t("updateChecker.6e00548a", status)
             )
         }
     }
@@ -445,12 +445,12 @@ extension UpdateChecker {
     /// replaced is the one doing the replacing — it has to be gone before its bundle can move.
     func install() {
         guard let staged = stagedAppURL else {
-            state = .failed("설치할 업데이트가 준비되지 않았어요")
+            state = .failed(L10n.t("updateChecker.3576a9f7"))
             return
         }
         let destination = Bundle.main.bundleURL
         guard destination.pathExtension == "app" else {
-            state = .failed("설치 위치를 확인할 수 없어요")
+            state = .failed(L10n.t("updateChecker.85af4b0c"))
             return
         }
 
@@ -474,7 +474,7 @@ extension UpdateChecker {
         """
 
         guard let root = stagingRoot else {
-            state = .failed("설치 준비 폴더를 찾지 못했어요")
+            state = .failed(L10n.t("updateChecker.8b79e3fd"))
             return
         }
         let scriptURL = root.appendingPathComponent("install.sh")
@@ -486,7 +486,7 @@ extension UpdateChecker {
             process.arguments = [scriptURL.path]
             try process.run()
         } catch {
-            state = .failed("설치를 시작하지 못했어요 — \(error.localizedDescription)")
+            state = .failed(L10n.t("updateChecker.634bd356", error.localizedDescription))
             return
         }
         NSApp.terminate(nil)

@@ -30,7 +30,7 @@ struct ShareButton: View {
             Button {
                 copy()
             } label: {
-                Label("이미지 복사", systemImage: "doc.on.doc")
+                Label(L10n.t("shareButton.133105d3"), systemImage: "doc.on.doc")
                     .font(.caption)
             }
             .buttonStyle(.borderedProminent)
@@ -53,7 +53,7 @@ struct ShareButton: View {
         let result = ShareCardRenderer.copyToPasteboard(mode, metrics: metrics)
         withAnimation {
             switch result {
-            case .copied: statusMessage = "복사됨!"
+            case .copied: statusMessage = L10n.t("shareButton.91de2617")
             case .failed(let message): statusMessage = message
             }
         }
@@ -82,16 +82,16 @@ private struct SharePreview: View {
 
             HStack(spacing: 8) {
                 Button {
-                    apply(ShareCardRenderer.copyToPasteboard(mode, metrics: metrics), success: "클립보드에 복사했어요")
+                    apply(ShareCardRenderer.copyToPasteboard(mode, metrics: metrics), success: L10n.t("shareButton.8a7e1e6b"))
                 } label: {
-                    Label("클립보드에 복사", systemImage: "doc.on.doc")
+                    Label(L10n.t("shareButton.86d50d54"), systemImage: "doc.on.doc")
                 }
                 .buttonStyle(.borderedProminent)
 
                 Button {
-                    apply(ShareCardRenderer.saveToFile(mode, metrics: metrics, suggestedName: suggestedFileName), success: "저장했어요")
+                    apply(ShareCardRenderer.saveToFile(mode, metrics: metrics, suggestedName: suggestedFileName), success: L10n.t("shareButton.9a5d1478"))
                 } label: {
-                    Label("PNG로 저장", systemImage: "arrow.down.circle")
+                    Label(L10n.t("shareButton.8f23fa96"), systemImage: "arrow.down.circle")
                 }
                 .buttonStyle(.bordered)
             }
@@ -99,7 +99,7 @@ private struct SharePreview: View {
             if let statusMessage {
                 Text(statusMessage).font(.caption).foregroundStyle(.secondary)
             } else {
-                Text("앱 이름과 정확한 시각은 카드에 담기지 않아요")
+                Text(L10n.t("shareButton.24691176"))
                     .font(.caption2).foregroundStyle(.tertiary)
             }
         }

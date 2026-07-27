@@ -24,12 +24,12 @@ struct KeyboardKey: Identifiable {
 
         var label: String {
             switch self {
-            case .number: return "숫자열"
-            case .top: return "윗줄"
-            case .home: return "홈로우"
-            case .bottom: return "아랫줄"
-            case .modifier: return "수정키"
-            case .function: return "기능키"
+            case .number: return L10n.t("keyboardLayout.382df18b")
+            case .top: return L10n.t("keyboardLayout.b57c685e")
+            case .home: return L10n.t("keyboardLayout.79c2aafd")
+            case .bottom: return L10n.t("keyboardLayout.9c54d341")
+            case .modifier: return L10n.t("keyboardLayout.3104b91a")
+            case .function: return L10n.t("keyboardLayout.05500807")
             }
         }
     }

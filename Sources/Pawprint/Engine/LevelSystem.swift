@@ -35,34 +35,34 @@ enum QuestTrack: String, CaseIterable, Identifiable {
     /// `QuestProgress.displayTitle` appends the rank: "스크롤 등반 전문가".
     var title: String {
         switch self {
-        case .keys: return "타건"
-        case .clicks: return "클릭"
-        case .cursor: return "커서 질주"
-        case .scroll: return "스크롤 등반"
-        case .focus: return "집중"
-        case .screenTime: return "화면 지킴"
-        case .appSwitches: return "앱 전환"
-        case .clipboard: return "복붙"
-        case .shortcuts: return "단축키"
-        case .days: return "개근"
-        case .energy: return "전력 소비"
+        case .keys: return L10n.t("levelSystem.a8053bb2")
+        case .clicks: return L10n.t("levelSystem.6e3b1fc9")
+        case .cursor: return L10n.t("levelSystem.1547ff52")
+        case .scroll: return L10n.t("levelSystem.ebd0a3f2")
+        case .focus: return L10n.t("levelSystem.56fb8019")
+        case .screenTime: return L10n.t("levelSystem.613e4fe2")
+        case .appSwitches: return L10n.t("levelSystem.359d66ba")
+        case .clipboard: return L10n.t("levelSystem.06d761f3")
+        case .shortcuts: return L10n.t("levelSystem.ba856e2a")
+        case .days: return L10n.t("levelSystem.ef3f476b")
+        case .energy: return L10n.t("levelSystem.b98bd486")
         }
     }
 
     /// Shown in the info popover so each track's meaning is explicit.
     var explanation: String {
         switch self {
-        case .keys: return "지금까지 누른 모든 키의 합계예요. 어떤 키를 눌렀는지는 저장하지 않고 횟수만 셉니다."
-        case .clicks: return "좌클릭·우클릭·더블클릭을 모두 더한 누적 클릭 수예요."
-        case .cursor: return "커서가 화면 위를 움직인 총 거리를 이 Mac 화면의 실제 물리 크기 기준으로 환산했어요."
-        case .scroll: return "스크롤한 양을 화면 높이 단위로 환산한 누적값이에요."
-        case .focus: return "한 앱에서 방해 없이 이어서 작업한 시간의 누적 합계예요."
-        case .screenTime: return "화면이 실제로 켜져 있던 시간의 누적 합계예요 (잠금·절전 시간은 제외)."
-        case .appSwitches: return "다른 앱으로 전환한 횟수의 누적 합계예요."
-        case .clipboard: return "복사와 붙여넣기 횟수의 합계예요. 클립보드 내용은 저장하지 않습니다."
-        case .shortcuts: return "복사·붙여넣기·실행취소 등 OS 전역 단축키를 누른 누적 횟수예요."
-        case .days: return "활동이 기록된 날의 수예요. 연속일이 아니라 총 일수라서 쉬어도 줄지 않아요."
-        case .energy: return "배터리로 사용한 전력을 이 Mac 배터리의 실제 용량 기준으로 Wh 환산한 누적값이에요."
+        case .keys: return L10n.t("levelSystem.b9c971e7")
+        case .clicks: return L10n.t("levelSystem.5f299b8f")
+        case .cursor: return L10n.t("levelSystem.44cb5b77")
+        case .scroll: return L10n.t("levelSystem.dbac1d26")
+        case .focus: return L10n.t("levelSystem.af3b179d")
+        case .screenTime: return L10n.t("levelSystem.b202cb01")
+        case .appSwitches: return L10n.t("levelSystem.e81db37e")
+        case .clipboard: return L10n.t("levelSystem.dbd85c85")
+        case .shortcuts: return L10n.t("levelSystem.95684ce0")
+        case .days: return L10n.t("levelSystem.7fa718d6")
+        case .energy: return L10n.t("levelSystem.fd4c2fd0")
         }
     }
 
@@ -100,16 +100,16 @@ enum QuestTrack: String, CaseIterable, Identifiable {
 
     var unit: String {
         switch self {
-        case .keys: return "키"
-        case .clicks: return "클릭"
+        case .keys: return L10n.t("levelSystem.31618a08")
+        case .clicks: return L10n.t("levelSystem.6e3b1fc9")
         case .cursor: return "m"
-        case .scroll: return "화면"
-        case .focus: return "시간"
-        case .screenTime: return "시간"
-        case .appSwitches: return "회"
-        case .clipboard: return "회"
-        case .shortcuts: return "회"
-        case .days: return "일"
+        case .scroll: return L10n.t("levelSystem.43c786f1")
+        case .focus: return L10n.t("levelSystem.6c35133c")
+        case .screenTime: return L10n.t("levelSystem.6c35133c")
+        case .appSwitches: return L10n.t("levelSystem.2fc05c02")
+        case .clipboard: return L10n.t("levelSystem.2fc05c02")
+        case .shortcuts: return L10n.t("levelSystem.2fc05c02")
+        case .days: return L10n.t("levelSystem.06cf3e90")
         case .energy: return "Wh"
         }
     }
@@ -199,7 +199,7 @@ enum QuestTrack: String, CaseIterable, Identifiable {
         case .cursor:
             return Formatters.compactDistance(meters: value)
         case .scroll:
-            return Formatters.compactNumber(Int(value.rounded())) + "화면"
+            return Formatters.compactNumber(Int(value.rounded())) + L10n.t("levelSystem.43c786f1")
         case .energy:
             return value >= 1000
                 ? String(format: "%.1fkWh", value / 1000)
@@ -235,10 +235,10 @@ struct QuestProgress: Identifiable {
     /// Kept as a table rather than a switch so adding a rank is a one-line change and
     /// `rankCount` stays correct on its own.
     static let ranks: [(upTo: Int, name: String)] = [
-        (1, "입문자"), (2, "견습생"), (3, "수련생"), (4, "숙련자"),
-        (5, "상급자"), (6, "전문가"), (7, "장인"), (8, "달인"),
-        (9, "명인"), (10, "대가"), (11, "마스터"), (12, "그랜드마스터"),
-        (14, "현자"), (16, "전설"), (19, "신화"), (24, "초월자")
+        (1, L10n.t("levelSystem.7f536d0d")), (2, L10n.t("levelSystem.c178a70d")), (3, L10n.t("levelSystem.806e4e54")), (4, L10n.t("levelSystem.e2adc854")),
+        (5, L10n.t("levelSystem.b69efb2a")), (6, L10n.t("levelSystem.44bd2ea1")), (7, L10n.t("levelSystem.dc306dbb")), (8, L10n.t("levelSystem.25c2859f")),
+        (9, L10n.t("levelSystem.97836f1c")), (10, L10n.t("levelSystem.881454cf")), (11, L10n.t("levelSystem.5f6cf8e4")), (12, L10n.t("levelSystem.433762c7")),
+        (14, L10n.t("levelSystem.a3255cc7")), (16, L10n.t("levelSystem.72041dd0")), (19, L10n.t("levelSystem.46ab9b66")), (24, L10n.t("levelSystem.4e790ceb"))
     ]
 
     static var rankCount: Int { ranks.count }
@@ -247,9 +247,9 @@ struct QuestProgress: Identifiable {
     /// alone — an infinite track shouldn't run out of things to call you, but inventing ever more
     /// grandiose words past "초월자" stops meaning anything.
     var tierName: String {
-        guard level > 0 else { return "시작 전" }
+        guard level > 0 else { return L10n.t("levelSystem.bcfe1cbb") }
         for rank in Self.ranks where level <= rank.upTo { return rank.name }
-        return "초월자"
+        return L10n.t("levelSystem.4e790ceb")
     }
 
     /// "스크롤 등반 전문가" — activity first, rank last.
@@ -327,23 +327,23 @@ struct OverallLevel {
     /// Headline titles, coarsest-to-finest. Unlike the per-track ranks these are whole phrases,
     /// since nothing gets appended to them.
     static let titles: [(upTo: Int, name: String)] = [
-        (2, "갓 태어난 발자국"),
-        (4, "아장아장 탐험가"),
-        (6, "호기심 많은 발자국"),
-        (8, "손에 익은 탐험가"),
-        (10, "익숙한 사용자"),
-        (12, "노련한 사용자"),
-        (15, "베테랑"),
-        (18, "Mac 마스터"),
-        (21, "키보드의 지배자"),
-        (25, "화면 너머의 현자"),
-        (29, "발자국의 대가"),
-        (34, "전설의 발자국"),
-        (39, "신화가 된 발자국")
+        (2, L10n.t("levelSystem.e10505c5")),
+        (4, L10n.t("levelSystem.3bbe0f93")),
+        (6, L10n.t("levelSystem.535a38ab")),
+        (8, L10n.t("levelSystem.5ee8a80c")),
+        (10, L10n.t("levelSystem.d7ba9586")),
+        (12, L10n.t("levelSystem.21e46cf5")),
+        (15, L10n.t("levelSystem.d1c8ac63")),
+        (18, L10n.t("levelSystem.0cef9292")),
+        (21, L10n.t("levelSystem.5eb1044a")),
+        (25, L10n.t("levelSystem.1cb92e61")),
+        (29, L10n.t("levelSystem.df4abe86")),
+        (34, L10n.t("levelSystem.a8717cba")),
+        (39, L10n.t("levelSystem.13f62bf5"))
     ]
 
     private static func titleFor(_ level: Int) -> String {
         for entry in titles where level <= entry.upTo { return entry.name }
-        return "발자국 그 자체"
+        return L10n.t("levelSystem.a3df0773")
     }
 }

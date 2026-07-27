@@ -36,11 +36,11 @@ struct AppInputProfile: Identifiable, Hashable {
     /// A short label for the app's interaction style.
     var styleLabel: String {
         switch keyboardSharePercent {
-        case 80...: return "키보드 중심"
-        case 60..<80: return "키보드 위주"
-        case 40..<60: return "혼합"
-        case 20..<40: return "마우스 위주"
-        default: return "마우스 중심"
+        case 80...: return L10n.t("dailySummary.ac5ff6f8")
+        case 60..<80: return L10n.t("dailySummary.b9a745bb")
+        case 40..<60: return L10n.t("dailySummary.70b75ce7")
+        case 20..<40: return L10n.t("dailySummary.010711c4")
+        default: return L10n.t("dailySummary.53745d5c")
         }
     }
 }

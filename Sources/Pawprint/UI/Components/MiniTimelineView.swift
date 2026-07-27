@@ -16,7 +16,7 @@ struct MiniTimelineView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Label("미니 타임라인", systemImage: "waveform.path.ecg")
+                Label(L10n.t("miniTimelineView.43d59c5d"), systemImage: "waveform.path.ecg")
                     .font(.caption).foregroundStyle(.secondary)
                 Spacer()
                 Image(systemName: expanded ? "chevron.up" : "chevron.down")
@@ -54,11 +54,11 @@ struct MiniTimelineView: View {
 
     private var hourLabels: some View {
         HStack {
-            Text("00시").font(.caption2).foregroundStyle(.tertiary)
+            Text(L10n.t("miniTimelineView.7a242d5a")).font(.caption2).foregroundStyle(.tertiary)
             Spacer()
-            Text("12시").font(.caption2).foregroundStyle(.tertiary)
+            Text(L10n.t("miniTimelineView.6b33071a")).font(.caption2).foregroundStyle(.tertiary)
             Spacer()
-            Text("24시").font(.caption2).foregroundStyle(.tertiary)
+            Text(L10n.t("miniTimelineView.74f80536")).font(.caption2).foregroundStyle(.tertiary)
         }
     }
 }

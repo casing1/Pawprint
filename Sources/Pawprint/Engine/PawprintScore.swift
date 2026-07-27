@@ -45,10 +45,10 @@ struct PawprintScore {
             gradeColorHint: tone,
             headline: headlineFor(total: total, summary: summary),
             components: [
-                Component(label: "활동량", earned: activity, maximum: 30),
-                Component(label: "집중", earned: focus, maximum: 30),
-                Component(label: "타이핑", earned: typing, maximum: 20),
-                Component(label: "속도", earned: speed, maximum: 20),
+                Component(label: L10n.t("pawprintScore.2a22907d"), earned: activity, maximum: 30),
+                Component(label: L10n.t("pawprintScore.56fb8019"), earned: focus, maximum: 30),
+                Component(label: L10n.t("pawprintScore.24ad1fbd"), earned: typing, maximum: 20),
+                Component(label: L10n.t("pawprintScore.e8a20d8c"), earned: speed, maximum: 20),
             ]
         )
     }
@@ -73,14 +73,14 @@ struct PawprintScore {
 
     private static func headlineFor(total: Int, summary: DailySummary) -> String {
         if summary.activeSeconds < 300 {
-            return "아직 오늘이 시작되는 중이에요"
+            return L10n.t("pawprintScore.70b72769")
         }
         switch total {
-        case 85...: return "폭발적인 하루였어요"
-        case 70..<85: return "알차게 보낸 하루예요"
-        case 50..<70: return "적당히 바빴던 하루예요"
-        case 30..<50: return "여유로운 하루였어요"
-        default: return "조용한 하루였어요. 그것도 좋죠"
+        case 85...: return L10n.t("pawprintScore.be012852")
+        case 70..<85: return L10n.t("pawprintScore.98ef8834")
+        case 50..<70: return L10n.t("pawprintScore.9dc07c42")
+        case 30..<50: return L10n.t("pawprintScore.2fd8a546")
+        default: return L10n.t("pawprintScore.38297634")
         }
     }
 }
@@ -149,110 +149,110 @@ struct DailyPersona {
 
         // --- Schedule ---
         if let endHour, (0...4).contains(endHour) {
-            consider("야행성 올빼미", "🦉", "새벽까지 불이 꺼지지 않았어요",
+            consider(L10n.t("pawprintScore.ebd1a951"), "🦉", L10n.t("pawprintScore.b72fba8a"),
                      value: Double(5 - endHour), from: 1, to: 5)
         }
         if let startHour, startHour < 8 {
-            consider("새벽 개척자", "🌅", "남들보다 먼저 하루를 열었어요",
+            consider(L10n.t("pawprintScore.4c8260c4"), "🌅", L10n.t("pawprintScore.603c580d"),
                      value: Double(8 - startHour), from: 1, to: 4)
         }
         if let golden = summary.goldenHour, (11...14).contains(golden), activeHours >= 1 {
-            consider("점심시간 전사", "🍱", "한낮에 가장 활발했어요",
+            consider(L10n.t("pawprintScore.ef9dd803"), "🍱", L10n.t("pawprintScore.f4081e52"),
                      value: activeHours, from: 1, to: 5, weight: 0.85)
         }
         if let golden = summary.goldenHour, (18...23).contains(golden), activeHours >= 1 {
-            consider("저녁형 러너", "🌆", "해가 진 뒤에 속도가 붙었어요",
+            consider(L10n.t("pawprintScore.4ec85785"), "🌆", L10n.t("pawprintScore.c0763f52"),
                      value: activeHours, from: 1, to: 5, weight: 0.85)
         }
 
         // --- Focus & attention ---
-        consider("몰입 장인", "🎯", "한 번 시작하면 오래 붙잡고 있었어요",
+        consider(L10n.t("pawprintScore.49847c4e"), "🎯", L10n.t("pawprintScore.e5dd2b7b"),
                  value: Double(summary.longestFocusSeconds), from: 45 * 60, to: 120 * 60)
         if summary.activeSeconds > 1800 {
-            consider("딥워크 수행자", "🧘", "쓴 시간의 대부분이 집중 시간이었어요",
+            consider(L10n.t("pawprintScore.8d6d1765"), "🧘", L10n.t("pawprintScore.48c82b75"),
                      value: Double(summary.totalFocusSeconds) / Double(summary.activeSeconds),
                      from: 0.45, to: 0.8)
         }
         if activeHours >= 1 {
-            consider("산만한 다람쥐", "🐿️", "이 앱 저 앱 부지런히 옮겨 다녔어요",
+            consider(L10n.t("pawprintScore.516ddea4"), "🐿️", L10n.t("pawprintScore.e484776a"),
                      value: Double(summary.totalAppSwitches) / activeHours, from: 60, to: 200)
         }
-        consider("쉼표가 많은 하루", "☕️", "길게 쉬어가며 일했어요",
+        consider(L10n.t("pawprintScore.d8ef444f"), "☕️", L10n.t("pawprintScore.8fe68e0e"),
                  value: Double(summary.longestBreakSeconds), from: 2 * 3600, to: 6 * 3600,
                  weight: 0.85)
 
         // --- Typing quality ---
         if summary.totalKeyPresses >= 500 {
-            consider("오타 지우개", "🩹", "쓰고 지우기를 반복한 하루였어요",
+            consider(L10n.t("pawprintScore.2d5610d6"), "🩹", L10n.t("pawprintScore.19eb4873"),
                      value: summary.backspaceRatio, from: 0.22, to: 0.42)
-            consider("무결점 타이피스트", "✨", "거의 지우지 않고 써 내려갔어요",
+            consider(L10n.t("pawprintScore.dc61d857"), "✨", L10n.t("pawprintScore.92df5aef"),
                      value: 0.06 - summary.backspaceRatio, from: 0.002, to: 0.05)
-            consider("꾸준한 리듬", "🎼", "타이핑 속도가 흔들림 없이 일정했어요",
+            consider(L10n.t("pawprintScore.4c59bd46"), "🎼", L10n.t("pawprintScore.0495e393"),
                      value: Double(summary.typingConsistency), from: 72, to: 95)
         }
-        consider("폭풍 타자", "🌪️", "순간 타속이 아주 빨랐어요",
+        consider(L10n.t("pawprintScore.56bed287"), "🌪️", L10n.t("pawprintScore.8198e627"),
                  value: summary.maxWPM, from: 95, to: 150)
         if summary.totalKeyPresses > 0 {
             let shortcuts = Double(summary.shortcutCounts.values.reduce(0, +))
-            consider("단축키 닌자", "🥷", "마우스 대신 단축키로 해결했어요",
+            consider(L10n.t("pawprintScore.840373c3"), "🥷", L10n.t("pawprintScore.77200230"),
                      value: shortcuts / Double(summary.totalKeyPresses), from: 0.08, to: 0.25)
         }
-        consider("단축키 수집가", "🗝️", "서로 다른 단축키를 두루 썼어요",
+        consider(L10n.t("pawprintScore.6cb7d9e0"), "🗝️", L10n.t("pawprintScore.3a98dba8"),
                  value: Double(summary.distinctShortcutsUsed), from: 10, to: 20)
 
         // --- Pointer habits ---
-        consider("스크롤 무한동력", "🌀", "화면을 끝없이 내렸어요",
+        consider(L10n.t("pawprintScore.f9b9b332"), "🌀", L10n.t("pawprintScore.29b4326d"),
                  value: summary.scrollScreens, from: 250, to: 800)
-        consider("클릭 연타왕", "👆", "한때 클릭이 폭발했어요",
+        consider(L10n.t("pawprintScore.3b30ff2d"), "👆", L10n.t("pawprintScore.6e9be967"),
                  value: Double(summary.maxClicksPerMinute), from: 55, to: 120)
-        consider("드래그 장인", "✋", "끌어다 놓는 작업이 많았어요",
+        consider(L10n.t("pawprintScore.c26a9f99"), "✋", L10n.t("pawprintScore.c24269bf"),
                  value: summary.dragDistanceMeters, from: 25, to: 100)
-        consider("커서 마라토너", "🏃", "커서가 아주 먼 거리를 달렸어요",
+        consider(L10n.t("pawprintScore.5c5e4fba"), "🏃", L10n.t("pawprintScore.6530a49b"),
                  value: summary.cursorDistanceMeters, from: 400, to: 1500)
-        consider("복붙 연금술사", "🧪", "복사와 붙여넣기로 옮겨 담은 하루예요",
+        consider(L10n.t("pawprintScore.f61aa37a"), "🧪", L10n.t("pawprintScore.0c2c69a3"),
                  value: Double(summary.clipboardCopyCount + summary.clipboardPasteCount),
                  from: 80, to: 300)
 
         // --- App spread ---
-        consider("한 우물 파는 사람", "📌", "거의 한 앱에서만 지냈어요",
+        consider(L10n.t("pawprintScore.f08717e0"), "📌", L10n.t("pawprintScore.06db64eb"),
                  value: Double(summary.appConcentration), from: 70, to: 95)
-        consider("탭 유목민", "🏕️", "여러 앱을 옮겨 다니며 지냈어요",
+        consider(L10n.t("pawprintScore.d5944196"), "🏕️", L10n.t("pawprintScore.7b10494c"),
                  value: Double(summary.appUsage.count), from: 12, to: 30, weight: 0.9)
 
         // --- Power & device ---
         let poweredSeconds = summary.secondsOnBattery + summary.secondsOnAC
         if poweredSeconds > 3600 {
-            consider("배터리 마라토너", "🔋", "충전기 없이 오래 버텼어요",
+            consider(L10n.t("pawprintScore.16f20990"), "🔋", L10n.t("pawprintScore.a751e5ca"),
                      value: Double(summary.secondsOnBattery), from: 5 * 3600, to: 12 * 3600)
-            consider("콘센트 붙박이", "🔌", "거의 내내 충전기에 꽂혀 있었어요",
+            consider(L10n.t("pawprintScore.65c812b9"), "🔌", L10n.t("pawprintScore.e14f0f7d"),
                      value: Double(summary.secondsOnAC) / Double(poweredSeconds),
                      from: 0.85, to: 1.0, weight: 0.85)
         }
-        consider("노트북 유목민", "🎒", "뚜껑을 여닫으며 이동이 잦았어요",
+        consider(L10n.t("pawprintScore.57ce1579"), "🎒", L10n.t("pawprintScore.e1b72caf"),
                  value: Double(summary.lidOpenCount), from: 4, to: 12)
-        consider("멀티 스크린 지휘자", "🖥️", "외부 디스플레이를 함께 썼어요",
+        consider(L10n.t("pawprintScore.54b98485"), "🖥️", L10n.t("pawprintScore.f35c3212"),
                  value: Double(summary.maxSimultaneousDisplays), from: 2, to: 4, weight: 0.75)
 
         // --- Network ---
-        consider("데이터 폭식가", "📡", "인터넷 데이터를 아주 많이 주고받았어요",
+        consider(L10n.t("pawprintScore.fee55427"), "📡", L10n.t("pawprintScore.8ab86f72"),
                  value: Double(summary.networkTotalBytes), from: 8 * gigabyte, to: 40 * gigabyte)
-        consider("스트리밍 순례자", "📺", "내려받은 양이 영상 시청에 가까웠어요",
+        consider(L10n.t("pawprintScore.fd8d57fd"), "📺", L10n.t("pawprintScore.bbe77f79"),
                  value: Double(summary.networkDownloadBytes), from: 4 * gigabyte, to: 20 * gigabyte,
                  weight: 0.9)
 
         // --- Session shape ---
-        consider("장거리 주자", "🛣️", "아주 긴 하루를 보냈어요",
+        consider(L10n.t("pawprintScore.8daa0fd2"), "🛣️", L10n.t("pawprintScore.49044460"),
                  value: activeHours, from: 7, to: 12)
         if activeHours < 1.5 {
-            consider("짧고 굵게", "⚡️", "짧게 앉아 많은 걸 해치웠어요",
+            consider(L10n.t("pawprintScore.fea99619"), "⚡️", L10n.t("pawprintScore.626b26ef"),
                      value: summary.avgWPM, from: 45, to: 90)
         }
         if summary.screenOnSeconds > 2 * 3600 {
-            consider("화면만 켜둔 사람", "💤", "화면은 켜져 있었지만 자리를 자주 비웠어요",
+            consider(L10n.t("pawprintScore.70d0e0a7"), "💤", L10n.t("pawprintScore.a36e059e"),
                      value: Double(100 - summary.screenUtilizationPercent), from: 70, to: 95,
                      weight: 0.85)
         }
-        consider("혼돈의 지휘자", "🎢", "정신없이 몰아친 하루였어요",
+        consider(L10n.t("pawprintScore.070be460"), "🎢", L10n.t("pawprintScore.f7b12ea0"),
                  value: summary.chaosIndex, from: 72, to: 95, weight: 0.9)
 
         // --- Floor: the keyboard/pointer axis, so there is always an answer ---
@@ -272,20 +272,20 @@ struct DailyPersona {
     private static func keyboardPointerFallback(affinity: Int) -> Candidate {
         switch affinity {
         case 90...:
-            return Candidate(title: "키보드 순수주의자", emoji: "⌨️",
-                             detail: "마우스는 거의 쳐다보지도 않았어요", strength: 0.5)
+            return Candidate(title: L10n.t("pawprintScore.85b9389d"), emoji: "⌨️",
+                             detail: L10n.t("pawprintScore.112bfc05"), strength: 0.5)
         case 70..<90:
-            return Candidate(title: "키보드파", emoji: "⌨️",
-                             detail: "손이 자판 위에 오래 머물렀어요", strength: 0.5)
+            return Candidate(title: L10n.t("pawprintScore.abeed745"), emoji: "⌨️",
+                             detail: L10n.t("pawprintScore.9a31a976"), strength: 0.5)
         case 45..<70:
-            return Candidate(title: "균형잡힌 사용자", emoji: "⚖️",
-                             detail: "키보드와 포인터를 골고루 썼어요", strength: 0.5)
+            return Candidate(title: L10n.t("pawprintScore.c782142d"), emoji: "⚖️",
+                             detail: L10n.t("pawprintScore.cbe5de46"), strength: 0.5)
         case 20..<45:
-            return Candidate(title: "마우스파", emoji: "🖱️",
-                             detail: "포인터로 세상을 탐험했어요", strength: 0.5)
+            return Candidate(title: L10n.t("pawprintScore.7c58c46d"), emoji: "🖱️",
+                             detail: L10n.t("pawprintScore.a2f763d6"), strength: 0.5)
         default:
-            return Candidate(title: "마우스 탐험가", emoji: "🧭",
-                             detail: "오늘은 거의 클릭과 스크롤로 보냈어요", strength: 0.5)
+            return Candidate(title: L10n.t("pawprintScore.38e3c4ab"), emoji: "🧭",
+                             detail: L10n.t("pawprintScore.0111a2ee"), strength: 0.5)
         }
     }
 }

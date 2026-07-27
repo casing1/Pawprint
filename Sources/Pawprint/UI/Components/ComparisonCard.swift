@@ -7,7 +7,7 @@ struct ComparisonCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Label("오늘 vs 평소", systemImage: "chart.bar.xaxis")
+            Label(L10n.t("comparisonCard.fad830af"), systemImage: "chart.bar.xaxis")
                 .font(.caption).foregroundStyle(.secondary)
 
             ForEach(comparisons) { comparison in
@@ -56,7 +56,7 @@ private struct ComparisonRow: View {
             HStack(spacing: 4) {
                 Text(comparison.label).font(.caption)
                 if comparison.isRecord {
-                    Text("신기록")
+                    Text(L10n.t("comparisonCard.0823fce9"))
                         .font(.system(size: 8, weight: .bold))
                         .padding(.horizontal, 4).padding(.vertical, 1)
                         .background(Capsule().fill(Color.orange.opacity(0.25)))

@@ -93,32 +93,32 @@ struct PawpetTraits {
 
     /// Fur palettes, chosen to stay readable against both light and dark popover backgrounds.
     static let palettes: [(name: String, body: Color, accent: Color)] = [
-        ("치즈", Color(red: 0.98, green: 0.76, blue: 0.42), Color(red: 0.86, green: 0.55, blue: 0.22)),
-        ("고등어", Color(red: 0.65, green: 0.70, blue: 0.80), Color(red: 0.42, green: 0.47, blue: 0.60)),
-        ("먹눈", Color(red: 0.38, green: 0.36, blue: 0.44), Color(red: 0.24, green: 0.22, blue: 0.30)),
-        ("크림", Color(red: 0.96, green: 0.93, blue: 0.87), Color(red: 0.80, green: 0.74, blue: 0.66)),
-        ("라일락", Color(red: 0.72, green: 0.58, blue: 0.88), Color(red: 0.55, green: 0.42, blue: 0.72)),
-        ("민트", Color(red: 0.52, green: 0.78, blue: 0.72), Color(red: 0.32, green: 0.58, blue: 0.54)),
-        ("복숭아", Color(red: 0.95, green: 0.66, blue: 0.62), Color(red: 0.80, green: 0.46, blue: 0.44)),
-        ("카라멜", Color(red: 0.78, green: 0.56, blue: 0.36), Color(red: 0.56, green: 0.38, blue: 0.22)),
-        ("스모크", Color(red: 0.55, green: 0.56, blue: 0.62), Color(red: 0.36, green: 0.37, blue: 0.43)),
-        ("하늘", Color(red: 0.60, green: 0.76, blue: 0.92), Color(red: 0.38, green: 0.56, blue: 0.76)),
-        ("올리브", Color(red: 0.72, green: 0.76, blue: 0.52), Color(red: 0.50, green: 0.55, blue: 0.32)),
-        ("장미", Color(red: 0.90, green: 0.58, blue: 0.70), Color(red: 0.72, green: 0.38, blue: 0.52)),
-        ("모래", Color(red: 0.90, green: 0.82, blue: 0.66), Color(red: 0.70, green: 0.60, blue: 0.44)),
-        ("코발트", Color(red: 0.48, green: 0.54, blue: 0.86), Color(red: 0.32, green: 0.36, blue: 0.66)),
+        (L10n.t("pawpetTraits.7d880b36"), Color(red: 0.98, green: 0.76, blue: 0.42), Color(red: 0.86, green: 0.55, blue: 0.22)),
+        (L10n.t("pawpetTraits.95aff2e2"), Color(red: 0.65, green: 0.70, blue: 0.80), Color(red: 0.42, green: 0.47, blue: 0.60)),
+        (L10n.t("pawpetTraits.4edf416c"), Color(red: 0.38, green: 0.36, blue: 0.44), Color(red: 0.24, green: 0.22, blue: 0.30)),
+        (L10n.t("pawpetTraits.5ee50d64"), Color(red: 0.96, green: 0.93, blue: 0.87), Color(red: 0.80, green: 0.74, blue: 0.66)),
+        (L10n.t("pawpetTraits.1e1a1de3"), Color(red: 0.72, green: 0.58, blue: 0.88), Color(red: 0.55, green: 0.42, blue: 0.72)),
+        (L10n.t("pawpetTraits.325c68c5"), Color(red: 0.52, green: 0.78, blue: 0.72), Color(red: 0.32, green: 0.58, blue: 0.54)),
+        (L10n.t("pawpetTraits.adf31fb3"), Color(red: 0.95, green: 0.66, blue: 0.62), Color(red: 0.80, green: 0.46, blue: 0.44)),
+        (L10n.t("pawpetTraits.b2efa911"), Color(red: 0.78, green: 0.56, blue: 0.36), Color(red: 0.56, green: 0.38, blue: 0.22)),
+        (L10n.t("pawpetTraits.6ef10536"), Color(red: 0.55, green: 0.56, blue: 0.62), Color(red: 0.36, green: 0.37, blue: 0.43)),
+        (L10n.t("pawpetTraits.c3d78839"), Color(red: 0.60, green: 0.76, blue: 0.92), Color(red: 0.38, green: 0.56, blue: 0.76)),
+        (L10n.t("pawpetTraits.9186d609"), Color(red: 0.72, green: 0.76, blue: 0.52), Color(red: 0.50, green: 0.55, blue: 0.32)),
+        (L10n.t("pawpetTraits.dec12dfa"), Color(red: 0.90, green: 0.58, blue: 0.70), Color(red: 0.72, green: 0.38, blue: 0.52)),
+        (L10n.t("pawpetTraits.a601624f"), Color(red: 0.90, green: 0.82, blue: 0.66), Color(red: 0.70, green: 0.60, blue: 0.44)),
+        (L10n.t("pawpetTraits.a68347a4"), Color(red: 0.48, green: 0.54, blue: 0.86), Color(red: 0.32, green: 0.36, blue: 0.66)),
     ]
 
     /// Iris colours. Real cats have a narrow range; these stretch it a little for variety.
     static let eyeColors: [(name: String, color: Color)] = [
-        ("호박", Color(red: 0.95, green: 0.70, blue: 0.20)),
-        ("에메랄드", Color(red: 0.24, green: 0.72, blue: 0.48)),
-        ("사파이어", Color(red: 0.30, green: 0.52, blue: 0.92)),
-        ("구리", Color(red: 0.82, green: 0.45, blue: 0.18)),
-        ("금", Color(red: 0.98, green: 0.84, blue: 0.36)),
-        ("연둣빛", Color(red: 0.62, green: 0.82, blue: 0.36)),
-        ("잿빛", Color(red: 0.62, green: 0.66, blue: 0.72)),
-        ("자수정", Color(red: 0.68, green: 0.44, blue: 0.86)),
+        (L10n.t("pawpetTraits.f68d8bf7"), Color(red: 0.95, green: 0.70, blue: 0.20)),
+        (L10n.t("pawpetTraits.52c235b4"), Color(red: 0.24, green: 0.72, blue: 0.48)),
+        (L10n.t("pawpetTraits.07b29498"), Color(red: 0.30, green: 0.52, blue: 0.92)),
+        (L10n.t("pawpetTraits.7f43f859"), Color(red: 0.82, green: 0.45, blue: 0.18)),
+        (L10n.t("pawpetTraits.cf5632c7"), Color(red: 0.98, green: 0.84, blue: 0.36)),
+        (L10n.t("pawpetTraits.4829c30d"), Color(red: 0.62, green: 0.82, blue: 0.36)),
+        (L10n.t("pawpetTraits.f4559417"), Color(red: 0.62, green: 0.66, blue: 0.72)),
+        (L10n.t("pawpetTraits.917f54a7"), Color(red: 0.68, green: 0.44, blue: 0.86)),
     ]
 
     static let whiskerChoices = [2, 3, 4]
@@ -342,14 +342,14 @@ struct PawpetTraits {
     /// Per-axis contribution, for the stat sheet. Ordered heaviest first.
     var rarityBreakdown: [(label: String, detail: String, earned: Double, maximum: Double)] {
         [
-            ("액자", frame == .none ? "없음" : frameName, framePoints, 32),
-            ("발 장식", pawCharm == .none ? "없음" : pawCharmName, pawCharm == .none ? 0 : 20, 20),
-            ("날개", wings == .none ? "없음" : wingsName, wings == .none ? 0 : 16, 16),
-            ("배경", backdropName, backdropPoints, 12),
-            ("목걸이", collar == .none ? "없음" : collarName, collarPoints, 8),
-            ("머리", headwear == .none ? "없음" : headwearName, headwearPoints, 6),
-            ("표정", caption, expressionPoints, 4),
-            ("주변", floaters == .none ? "없음" : floatersName, floaters == .none ? 0 : 2, 2)
+            (L10n.t("pawpetTraits.7ad40d7f"), frame == .none ? L10n.t("pawpetTraits.d58fa73a") : frameName, framePoints, 32),
+            (L10n.t("pawpetTraits.e47d8fb5"), pawCharm == .none ? L10n.t("pawpetTraits.d58fa73a") : pawCharmName, pawCharm == .none ? 0 : 20, 20),
+            (L10n.t("pawpetTraits.01a400a4"), wings == .none ? L10n.t("pawpetTraits.d58fa73a") : wingsName, wings == .none ? 0 : 16, 16),
+            (L10n.t("pawpetTraits.5f74c72f"), backdropName, backdropPoints, 12),
+            (L10n.t("pawpetTraits.5a60c868"), collar == .none ? L10n.t("pawpetTraits.d58fa73a") : collarName, collarPoints, 8),
+            (L10n.t("pawpetTraits.75b9f271"), headwear == .none ? L10n.t("pawpetTraits.d58fa73a") : headwearName, headwearPoints, 6),
+            (L10n.t("pawpetTraits.8fab9174"), caption, expressionPoints, 4),
+            (L10n.t("pawpetTraits.b7c049aa"), floaters == .none ? L10n.t("pawpetTraits.d58fa73a") : floatersName, floaters == .none ? 0 : 2, 2)
         ]
     }
 
@@ -428,11 +428,11 @@ struct PawpetTraits {
 
     var rarityLabel: String {
         switch rarityGrade {
-        case "S": return "전설"
-        case "A": return "희귀"
-        case "B": return "고급"
-        case "C": return "일반"
-        default: return "평범"
+        case "S": return L10n.t("pawpetTraits.72041dd0")
+        case "A": return L10n.t("pawpetTraits.40209554")
+        case "B": return L10n.t("pawpetTraits.1c208809")
+        case "C": return L10n.t("pawpetTraits.aef1a1e7")
+        default: return L10n.t("pawpetTraits.da76a730")
         }
     }
 
@@ -440,74 +440,74 @@ struct PawpetTraits {
 
     var wingsName: String {
         switch wings {
-        case .none: return "없음"
-        case .feathered: return "깃털 날개"
-        case .crystal: return "수정 날개"
-        case .ember: return "불꽃 날개"
+        case .none: return L10n.t("pawpetTraits.d58fa73a")
+        case .feathered: return L10n.t("pawpetTraits.e75e6f55")
+        case .crystal: return L10n.t("pawpetTraits.18aa0a59")
+        case .ember: return L10n.t("pawpetTraits.8fa35484")
         }
     }
 
     var backdropName: String {
         switch backdrop {
-        case .none: return "없음"
-        case .rays: return "빛줄기"
-        case .orbit: return "궤도"
-        case .constellation: return "별자리"
+        case .none: return L10n.t("pawpetTraits.d58fa73a")
+        case .rays: return L10n.t("pawpetTraits.d5b81e3a")
+        case .orbit: return L10n.t("pawpetTraits.f7108d6b")
+        case .constellation: return L10n.t("pawpetTraits.6d64da0b")
         }
     }
 
     var collarName: String {
         switch collar {
-        case .none: return "없음"
-        case .cloth: return "천 목걸이"
-        case .blue: return "파란 목걸이"
-        case .green: return "초록 목걸이"
-        case .gold: return "금 목걸이"
-        case .rainbow: return "무지개 목걸이"
+        case .none: return L10n.t("pawpetTraits.d58fa73a")
+        case .cloth: return L10n.t("pawpetTraits.a449c92e")
+        case .blue: return L10n.t("pawpetTraits.b3b21fe3")
+        case .green: return L10n.t("pawpetTraits.6d2d78d1")
+        case .gold: return L10n.t("pawpetTraits.b00df824")
+        case .rainbow: return L10n.t("pawpetTraits.65de09fa")
         }
     }
 
     var headwearName: String {
         switch headwear {
-        case .none: return "없음"
-        case .crown: return "왕관"
-        case .partyHat: return "파티모자"
-        case .halo: return "후광"
-        case .headphones: return "헤드폰"
-        case .nightcap: return "수면모자"
-        case .beanie: return "비니"
-        case .bandana: return "두건"
+        case .none: return L10n.t("pawpetTraits.d58fa73a")
+        case .crown: return L10n.t("pawpetTraits.06b5d92a")
+        case .partyHat: return L10n.t("pawpetTraits.792ef7d9")
+        case .halo: return L10n.t("pawpetTraits.144438cc")
+        case .headphones: return L10n.t("pawpetTraits.b9c8accf")
+        case .nightcap: return L10n.t("pawpetTraits.c0c9fb47")
+        case .beanie: return L10n.t("pawpetTraits.e742b4b6")
+        case .bandana: return L10n.t("pawpetTraits.7f3dac0c")
         }
     }
 
     var floatersName: String {
         switch floaters {
-        case .none: return "없음"
+        case .none: return L10n.t("pawpetTraits.d58fa73a")
         case .zzz: return "zzz"
-        case .sparkles: return "반짝임"
-        case .notes: return "음표"
-        case .bits: return "데이터"
+        case .sparkles: return L10n.t("pawpetTraits.298fcc03")
+        case .notes: return L10n.t("pawpetTraits.ee8efc43")
+        case .bits: return L10n.t("pawpetTraits.0c6de345")
         }
     }
 
     var eyewearName: String {
         switch eyewear {
-        case .none: return "없음"
-        case .readingGlasses: return "안경"
-        case .sunglasses: return "선글라스"
+        case .none: return L10n.t("pawpetTraits.d58fa73a")
+        case .readingGlasses: return L10n.t("pawpetTraits.36fd982f")
+        case .sunglasses: return L10n.t("pawpetTraits.4ba1da9d")
         }
     }
 
     var propName: String {
         switch prop {
-        case .none: return "없음"
-        case .coffee: return "커피"
-        case .mouse: return "마우스"
-        case .plug: return "충전"
-        case .yarn: return "실뭉치"
-        case .moon: return "달"
-        case .book: return "책"
-        case .fish: return "생선"
+        case .none: return L10n.t("pawpetTraits.d58fa73a")
+        case .coffee: return L10n.t("pawpetTraits.98bb79d2")
+        case .mouse: return L10n.t("pawpetTraits.fcf9e282")
+        case .plug: return L10n.t("pawpetTraits.b03617ef")
+        case .yarn: return L10n.t("pawpetTraits.48bdfdbd")
+        case .moon: return L10n.t("pawpetTraits.f743af38")
+        case .book: return L10n.t("pawpetTraits.62cc8ca8")
+        case .fish: return L10n.t("pawpetTraits.b6f5983b")
         }
     }
 
@@ -516,18 +516,18 @@ struct PawpetTraits {
     /// One-line headline for the card.
     var caption: String {
         switch expression {
-        case .sparkle: return "축하 중!"
-        case .sleepy: return "아직 졸려요"
-        case .dizzy: return "수정이 많은 하루"
-        case .chaotic: return "정신없는 하루"
-        case .surprised: return "깜짝 놀란 하루"
-        case .determined: return "질주하는 하루"
-        case .focused: return "집중하고 있어요"
-        case .mischief: return "여기저기 기웃거린 하루"
-        case .tired: return "화면만 오래 켜둔 하루"
-        case .zen: return "느긋한 하루"
-        case .wide: return "신나 보여요"
-        case .content: return "평범한 하루"
+        case .sparkle: return L10n.t("pawpetTraits.d201772a")
+        case .sleepy: return L10n.t("pawpetTraits.e8e833c8")
+        case .dizzy: return L10n.t("pawpetTraits.9f44dbf5")
+        case .chaotic: return L10n.t("pawpetTraits.b8c09a64")
+        case .surprised: return L10n.t("pawpetTraits.e99859a4")
+        case .determined: return L10n.t("pawpetTraits.c9aa57dc")
+        case .focused: return L10n.t("pawpetTraits.e4846006")
+        case .mischief: return L10n.t("pawpetTraits.514cc2e1")
+        case .tired: return L10n.t("pawpetTraits.b25986ba")
+        case .zen: return L10n.t("pawpetTraits.5abd0753")
+        case .wide: return L10n.t("pawpetTraits.1e528f48")
+        case .content: return L10n.t("pawpetTraits.d1d719fb")
         }
     }
 
@@ -535,112 +535,112 @@ struct PawpetTraits {
     /// it, so the card lists the ones that are actually showing.
     var notes: [(trait: String, reason: String)] {
         var out: [(String, String)] = []
-        out.append(("표정", expressionReason))
-        if headwear != .none { out.append(("머리", headwearReason)) }
-        if eyewear != .none { out.append(("안경", eyewearReason)) }
-        if prop != .none { out.append(("소품", propReason)) }
-        if collar != .none { out.append(("목걸이", collarReason)) }
-        if cheekMark != .none { out.append(("볼", cheekReason)) }
-        if floaters != .none { out.append(("주변", floatersReason)) }
-        if pawCharm != .none { out.append(("발", pawCharmReason)) }
-        if wings != .none { out.append(("날개", wingsReason)) }
-        if frame != .none { out.append(("액자", frameReason)) }
-        if backdrop != .none { out.append(("배경", backdropReason)) }
-        out.append(("분위기", auraReason))
-        out.append(("털", "\(Self.palettes[paletteIndex].name)색 \(patternName) · \(Self.eyeColors[eyeColorIndex].name)빛 눈 — 날짜로 정해져요"))
+        out.append((L10n.t("pawpetTraits.8fab9174"), expressionReason))
+        if headwear != .none { out.append((L10n.t("pawpetTraits.75b9f271"), headwearReason)) }
+        if eyewear != .none { out.append((L10n.t("pawpetTraits.36fd982f"), eyewearReason)) }
+        if prop != .none { out.append((L10n.t("pawpetTraits.6bf682a9"), propReason)) }
+        if collar != .none { out.append((L10n.t("pawpetTraits.5a60c868"), collarReason)) }
+        if cheekMark != .none { out.append((L10n.t("pawpetTraits.c72996aa"), cheekReason)) }
+        if floaters != .none { out.append((L10n.t("pawpetTraits.b7c049aa"), floatersReason)) }
+        if pawCharm != .none { out.append((L10n.t("pawpetTraits.5379d7a7"), pawCharmReason)) }
+        if wings != .none { out.append((L10n.t("pawpetTraits.01a400a4"), wingsReason)) }
+        if frame != .none { out.append((L10n.t("pawpetTraits.7ad40d7f"), frameReason)) }
+        if backdrop != .none { out.append((L10n.t("pawpetTraits.5f74c72f"), backdropReason)) }
+        out.append((L10n.t("pawpetTraits.a323dbfd"), auraReason))
+        out.append((L10n.t("pawpetTraits.ac57252c"), L10n.t("pawpetTraits.6cfc18bd", Self.palettes[paletteIndex].name, patternName, Self.eyeColors[eyeColorIndex].name)))
         return out
     }
 
     var patternName: String {
         switch pattern {
-        case .plain: return "민무늬"
-        case .tabby: return "줄무늬"
-        case .spotted: return "점박이"
-        case .tuxedo: return "턱시도"
-        case .calico: return "삼색"
-        case .colorpoint: return "포인트"
-        case .bicolor: return "바이컬러"
-        case .star: return "별무늬"
+        case .plain: return L10n.t("pawpetTraits.1889cf79")
+        case .tabby: return L10n.t("pawpetTraits.09f376eb")
+        case .spotted: return L10n.t("pawpetTraits.4d253937")
+        case .tuxedo: return L10n.t("pawpetTraits.99ea289c")
+        case .calico: return L10n.t("pawpetTraits.485a4b3c")
+        case .colorpoint: return L10n.t("pawpetTraits.8a14132f")
+        case .bicolor: return L10n.t("pawpetTraits.01b3c581")
+        case .star: return L10n.t("pawpetTraits.db64710e")
         }
     }
 
     private var expressionReason: String {
         switch expression {
-        case .sparkle: return "신기록이나 레벨업을 축하하는 중이에요"
-        case .sleepy: return "오늘 활동 시간이 5분도 안 됐어요"
-        case .dizzy: return "지운 키 비율이 30%를 넘었어요"
-        case .chaotic: return "혼돈 지수가 70 이상이에요"
-        case .surprised: return "1분에 60번 넘게 클릭한 순간이 있었어요"
-        case .determined: return "최고 타속이 100 WPM을 넘었어요"
-        case .focused: return "45분 넘게 한 앱에 집중했어요"
-        case .mischief: return "앱을 200번 넘게 전환했어요"
-        case .tired: return "화면은 오래 켜져 있었는데 실사용 비율이 낮아요"
-        case .zen: return "2시간 넘게 길게 쉬었어요"
-        case .wide: return "오늘 점수가 75점을 넘었어요"
-        case .content: return "특별히 튀는 지표 없이 무난한 하루예요"
+        case .sparkle: return L10n.t("pawpetTraits.2b14f345")
+        case .sleepy: return L10n.t("pawpetTraits.b36dbd4d")
+        case .dizzy: return L10n.t("pawpetTraits.4673129a")
+        case .chaotic: return L10n.t("pawpetTraits.1f4479f3")
+        case .surprised: return L10n.t("pawpetTraits.30f01847")
+        case .determined: return L10n.t("pawpetTraits.a40bf47d")
+        case .focused: return L10n.t("pawpetTraits.158ec44a")
+        case .mischief: return L10n.t("pawpetTraits.012b1cc7")
+        case .tired: return L10n.t("pawpetTraits.85b25476")
+        case .zen: return L10n.t("pawpetTraits.1c843556")
+        case .wide: return L10n.t("pawpetTraits.6220da3b")
+        case .content: return L10n.t("pawpetTraits.34cadd3a")
         }
     }
 
     private var headwearReason: String {
         switch headwear {
-        case .partyHat: return "축하할 일이 생겼어요"
-        case .crown: return "오늘 점수가 85점을 넘었어요"
-        case .halo: return "많이 쳤는데도 후회 지수가 낮아요"
-        case .headphones: return "오디오 출력 장치를 여러 번 바꿨어요"
-        case .nightcap: return "새벽까지 작업했어요"
-        case .beanie: return "노트북 뚜껑을 세 번 이상 여닫았어요"
-        case .bandana: return "서로 다른 단축키를 10종류 이상 썼어요"
+        case .partyHat: return L10n.t("pawpetTraits.0bf3a54a")
+        case .crown: return L10n.t("pawpetTraits.16653ea8")
+        case .halo: return L10n.t("pawpetTraits.99ec6a4c")
+        case .headphones: return L10n.t("pawpetTraits.af74af0b")
+        case .nightcap: return L10n.t("pawpetTraits.6347ec06")
+        case .beanie: return L10n.t("pawpetTraits.0ff6ba32")
+        case .bandana: return L10n.t("pawpetTraits.c34a242b")
         case .none: return ""
         }
     }
 
     private var eyewearReason: String {
         switch eyewear {
-        case .sunglasses: return "화면이 8시간 넘게 켜져 있었어요"
-        case .readingGlasses: return "문자 키를 8,000자 넘게 입력했어요"
+        case .sunglasses: return L10n.t("pawpetTraits.e6dd91c0")
+        case .readingGlasses: return L10n.t("pawpetTraits.0e3d5d79")
         case .none: return ""
         }
     }
 
     private var propReason: String {
         switch prop {
-        case .moon: return "자정을 넘겨 새벽까지 썼어요"
-        case .coffee: return "오전 8시 전에 하루를 시작했어요"
-        case .book: return "문자 입력이 20,000자를 넘었어요"
-        case .mouse: return "클릭이 2,000번을 넘었어요"
-        case .yarn: return "스크롤 방향을 300번 넘게 바꿨어요"
-        case .plug: return "대부분의 시간을 충전기에 꽂아둔 채로 썼어요"
-        case .fish: return "Mac이 2시간 넘게 잠들어 있었어요"
+        case .moon: return L10n.t("pawpetTraits.48effde9")
+        case .coffee: return L10n.t("pawpetTraits.62255bda")
+        case .book: return L10n.t("pawpetTraits.1ee8d168")
+        case .mouse: return L10n.t("pawpetTraits.6bb9ad8c")
+        case .yarn: return L10n.t("pawpetTraits.c48f66d6")
+        case .plug: return L10n.t("pawpetTraits.144bcb7a")
+        case .fish: return L10n.t("pawpetTraits.2044942e")
         case .none: return ""
         }
     }
 
     private var collarReason: String {
         switch collar {
-        case .cloth: return "연속 기록 1~2일째"
-        case .blue: return "연속 기록 3~6일째"
-        case .green: return "연속 기록 7~13일째"
-        case .gold: return "연속 기록 14~29일째"
-        case .rainbow: return "연속 기록 30일 이상"
+        case .cloth: return L10n.t("pawpetTraits.603207ea")
+        case .blue: return L10n.t("pawpetTraits.212655bb")
+        case .green: return L10n.t("pawpetTraits.6d324d14")
+        case .gold: return L10n.t("pawpetTraits.099788bb")
+        case .rainbow: return L10n.t("pawpetTraits.f66a34c9")
         case .none: return ""
         }
     }
 
     private var cheekReason: String {
         switch cheekMark {
-        case .flushed: return "Mac이 뜨거워진 시간이 있었어요"
-        case .sweat: return "최고 타속이 120 WPM을 넘었어요"
-        case .blush: return "오늘 점수가 60점을 넘었어요"
+        case .flushed: return L10n.t("pawpetTraits.066d5b9c")
+        case .sweat: return L10n.t("pawpetTraits.1daae206")
+        case .blush: return L10n.t("pawpetTraits.2bbfc2d9")
         case .none: return ""
         }
     }
 
     private var floatersReason: String {
         switch floaters {
-        case .sparkles: return "기록을 갱신했어요"
-        case .zzz: return "자리를 비운 시간이 사용 시간보다 훨씬 길어요"
-        case .bits: return "인터넷 데이터를 5GB 넘게 주고받았어요"
-        case .notes: return "오디오 장치를 세 번 이상 바꿨어요"
+        case .sparkles: return L10n.t("pawpetTraits.e202074d")
+        case .zzz: return L10n.t("pawpetTraits.bcf6b1d0")
+        case .bits: return L10n.t("pawpetTraits.128a9371")
+        case .notes: return L10n.t("pawpetTraits.24214c16")
         case .none: return ""
         }
     }
@@ -648,25 +648,25 @@ struct PawpetTraits {
     var pawCharmName: String {
         switch pawCharm {
         case .none: return ""
-        case .orb: return "빛의 구슬"
-        case .gauntlet: return "빛나는 건틀릿"
-        case .star: return "별빛 조각"
-        case .ring: return "고리 장식"
-        case .flame: return "타오르는 불꽃"
-        case .crystal: return "수정 결정"
-        case .feather: return "빛깃털"
+        case .orb: return L10n.t("pawpetTraits.6e85059f")
+        case .gauntlet: return L10n.t("pawpetTraits.3cbcba5c")
+        case .star: return L10n.t("pawpetTraits.566093b1")
+        case .ring: return L10n.t("pawpetTraits.8ab7ae6f")
+        case .flame: return L10n.t("pawpetTraits.0e3c33f1")
+        case .crystal: return L10n.t("pawpetTraits.c5fc25c2")
+        case .feather: return L10n.t("pawpetTraits.99d5a5fb")
         }
     }
 
     private var pawCharmReason: String {
-        "키를 4,000번 넘게 눌러 \(pawCharmName)을 얻었어요 (장식은 날마다 랜덤)"
+        L10n.t("pawpetTraits.d9687f00", pawCharmName)
     }
 
     private var wingsReason: String {
         switch wings {
-        case .feathered: return "아주 먼 거리를 스크롤·이동해 깃털 날개가 돋았어요"
-        case .crystal: return "아주 먼 거리를 스크롤·이동해 수정 날개가 돋았어요"
-        case .ember: return "아주 먼 거리를 스크롤·이동해 불꽃 날개가 돋았어요"
+        case .feathered: return L10n.t("pawpetTraits.2111b0a4")
+        case .crystal: return L10n.t("pawpetTraits.4d163bae")
+        case .ember: return L10n.t("pawpetTraits.14813c31")
         case .none: return ""
         }
     }
@@ -674,40 +674,40 @@ struct PawpetTraits {
     var frameName: String {
         switch frame {
         case .none: return ""
-        case .bronze: return "동 액자"
-        case .silver: return "은 액자"
-        case .gold: return "금 액자"
-        case .prismatic: return "무지개 액자"
+        case .bronze: return L10n.t("pawpetTraits.99dfaa5d")
+        case .silver: return L10n.t("pawpetTraits.6cc903d4")
+        case .gold: return L10n.t("pawpetTraits.3bc1d5a1")
+        case .prismatic: return L10n.t("pawpetTraits.327fbaba")
         }
     }
 
     private var frameReason: String {
         switch frame {
-        case .prismatic: return "S 등급 — 가장 높은 등급의 액자예요"
-        case .gold: return "A 등급 액자예요"
-        case .silver: return "B 등급 액자예요"
-        case .bronze: return "C 등급 액자예요"
+        case .prismatic: return L10n.t("pawpetTraits.99187284")
+        case .gold: return L10n.t("pawpetTraits.72b6677b")
+        case .silver: return L10n.t("pawpetTraits.966b9392")
+        case .bronze: return L10n.t("pawpetTraits.eae00398")
         case .none: return ""
         }
     }
 
     private var backdropReason: String {
         switch backdrop {
-        case .rays: return "점수 80점을 넘겨 뒤에서 빛이 뻗어나와요"
-        case .orbit: return "앱을 150번 넘게 전환해 궤도가 돌고 있어요"
-        case .constellation: return "새벽까지 이어진 하루라 별자리가 떴어요"
+        case .rays: return L10n.t("pawpetTraits.50c9a682")
+        case .orbit: return L10n.t("pawpetTraits.66fd5c7f")
+        case .constellation: return L10n.t("pawpetTraits.2f8a3350")
         case .none: return ""
         }
     }
 
     private var auraReason: String {
         switch aura {
-        case .dawn: return "하루의 정점이 이른 아침이었어요"
-        case .morning: return "하루의 정점이 오전이었어요"
-        case .afternoon: return "하루의 정점이 오후였어요"
-        case .evening: return "하루의 정점이 저녁이었어요"
-        case .night: return "하루의 정점이 밤이었어요"
-        case .deepNight: return "하루의 정점이 새벽이었어요"
+        case .dawn: return L10n.t("pawpetTraits.d13975ad")
+        case .morning: return L10n.t("pawpetTraits.c3c5cb9d")
+        case .afternoon: return L10n.t("pawpetTraits.ef048517")
+        case .evening: return L10n.t("pawpetTraits.b2b31286")
+        case .night: return L10n.t("pawpetTraits.0f5a4659")
+        case .deepNight: return L10n.t("pawpetTraits.6d5d8242")
         }
     }
 

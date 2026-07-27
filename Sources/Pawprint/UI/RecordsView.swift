@@ -48,7 +48,7 @@ struct RecordsView: View {
 
             ShareButton(
                 mode: .lifetime(stats, activityCenter.overallLevel, activityCenter.quests),
-                label: "누적 기록 카드",
+                label: L10n.t("recordsView.68c66928"),
                 suggestedFileName: "pawprint_lifetime.png"
             )
 
@@ -60,29 +60,29 @@ struct RecordsView: View {
 
             if allSummaries.count >= 2 {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("개인 최고 기록").font(.caption).foregroundStyle(.secondary)
+                    Text(L10n.t("recordsView.59f6bdb4")).font(.caption).foregroundStyle(.secondary)
                     if let day = stats.bestWPMDay, stats.bestWPM > 0 {
-                        recordRow(icon: "bolt.fill", title: "최고 타자 속도",
+                        recordRow(icon: "bolt.fill", title: L10n.t("recordsView.99e3df8c"),
                                   value: Formatters.wpm(stats.bestWPM),
                                   exact: String(format: "%.1f WPM", stats.bestWPM), day: day)
                     }
                     if let day = stats.bestKeysDay, stats.bestKeysInDay > 0 {
-                        recordRow(icon: "keyboard", title: "하루 최대 키 입력",
+                        recordRow(icon: "keyboard", title: L10n.t("recordsView.a82546d5"),
                                   value: Formatters.compactNumber(stats.bestKeysInDay),
                                   exact: Formatters.exactNumber(stats.bestKeysInDay), day: day)
                     }
                     if let day = stats.bestFocusDay, stats.bestFocusSeconds > 0 {
-                        recordRow(icon: "target", title: "최장 집중",
+                        recordRow(icon: "target", title: L10n.t("recordsView.068c9e05"),
                                   value: Formatters.compactDuration(stats.bestFocusSeconds),
                                   exact: Formatters.exactDuration(stats.bestFocusSeconds), day: day)
                     }
                     if let day = stats.bestActiveDay, stats.bestActiveSeconds > 0 {
-                        recordRow(icon: "clock.fill", title: "하루 최대 사용시간",
+                        recordRow(icon: "clock.fill", title: L10n.t("recordsView.3d3eb474"),
                                   value: Formatters.compactDuration(stats.bestActiveSeconds),
                                   exact: Formatters.exactDuration(stats.bestActiveSeconds), day: day)
                     }
                     if let day = stats.bestScoreDay, stats.bestScoreTotal > 0 {
-                        recordRow(icon: "star.fill", title: "최고 점수", value: "\(stats.bestScoreTotal)점", day: day)
+                        recordRow(icon: "star.fill", title: L10n.t("recordsView.dc2b17b1"), value: L10n.t("recordsView.f0b5b795", stats.bestScoreTotal), day: day)
                     }
                 }
             }
@@ -102,7 +102,7 @@ struct RecordsView: View {
                     HStack(spacing: 10) {
                         Text("🗓").font(.title3)
                         VStack(alignment: .leading, spacing: 1) {
-                            Text("\(WrappedReport.monthTitle(for: month)) 돌아보기")
+                            Text(L10n.t("recordsView.24352f0e", WrappedReport.monthTitle(for: month)))
                                 .font(.callout.weight(.semibold))
                             Text("Pawprint Wrapped")
                                 .font(.caption2).foregroundStyle(.secondary)
@@ -131,7 +131,7 @@ struct RecordsView: View {
                     ) {
                         WrappedView(report: report) { presentedMonth = nil }
                     } else {
-                        Text("아직 돌아볼 기록이 부족해요")
+                        Text(L10n.t("recordsView.fa2fd0cc"))
                             .font(.callout).padding(30)
                     }
                 }
@@ -145,33 +145,33 @@ struct RecordsView: View {
 
     private var lifetimeTotals: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("전체 누적").font(.caption).foregroundStyle(.secondary)
+            Text(L10n.t("recordsView.7a810d6d")).font(.caption).foregroundStyle(.secondary)
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
-                totalTile("총 키 입력", Formatters.compactNumber(stats.totalKeyPresses), "keyboard",
+                totalTile(L10n.t("recordsView.110bf3ae"), Formatters.compactNumber(stats.totalKeyPresses), "keyboard",
                           exact: Formatters.exactNumber(stats.totalKeyPresses))
-                totalTile("총 클릭", Formatters.compactNumber(stats.totalClicks), "cursorarrow.click",
+                totalTile(L10n.t("recordsView.866e0ee4"), Formatters.compactNumber(stats.totalClicks), "cursorarrow.click",
                           exact: Formatters.exactNumber(stats.totalClicks))
-                totalTile("커서 총 이동", Formatters.compactDistance(meters: stats.cursorDistanceMeters), "figure.run",
+                totalTile(L10n.t("recordsView.4a489ead"), Formatters.compactDistance(meters: stats.cursorDistanceMeters), "figure.run",
                           exact: Formatters.exactNumber(Int(stats.cursorDistanceMeters)) + "m")
-                totalTile("총 스크롤", Formatters.compactNumber(Int(stats.scrollScreens)) + "화면", "scroll",
-                          exact: Formatters.exactNumber(Int(stats.scrollScreens)) + "화면")
-                totalTile("총 사용시간", Formatters.longSpan(stats.totalActiveSeconds), "clock",
+                totalTile(L10n.t("recordsView.cf561eea"), Formatters.compactNumber(Int(stats.scrollScreens)) + L10n.t("recordsView.43c786f1"), "scroll",
+                          exact: Formatters.exactNumber(Int(stats.scrollScreens)) + L10n.t("recordsView.43c786f1"))
+                totalTile(L10n.t("recordsView.49d8f80b"), Formatters.longSpan(stats.totalActiveSeconds), "clock",
                           exact: Formatters.exactDuration(stats.totalActiveSeconds))
-                totalTile("총 화면 켜짐", Formatters.longSpan(stats.totalScreenOnSeconds), "display",
+                totalTile(L10n.t("recordsView.0c36eb4f"), Formatters.longSpan(stats.totalScreenOnSeconds), "display",
                           exact: Formatters.exactDuration(stats.totalScreenOnSeconds))
-                totalTile("총 집중시간", Formatters.longSpan(stats.totalFocusSeconds), "target",
+                totalTile(L10n.t("recordsView.da8dd921"), Formatters.longSpan(stats.totalFocusSeconds), "target",
                           exact: Formatters.exactDuration(stats.totalFocusSeconds))
-                totalTile("기록한 날", "\(stats.daysRecorded)일", "calendar")
-                totalTile("총 다운로드", Formatters.bytes(stats.networkDownloadBytes), "arrow.down.circle")
-                totalTile("총 업로드", Formatters.bytes(stats.networkUploadBytes), "arrow.up.circle")
+                totalTile(L10n.t("recordsView.79df15ef"), L10n.t("recordsView.cec3694e", stats.daysRecorded), "calendar")
+                totalTile(L10n.t("recordsView.55607b29"), Formatters.bytes(stats.networkDownloadBytes), "arrow.down.circle")
+                totalTile(L10n.t("recordsView.02d402ef"), Formatters.bytes(stats.networkUploadBytes), "arrow.up.circle")
             }
 
             if let weekday = stats.busiestWeekday {
-                Text("가장 바쁜 요일은 \(Formatters.weekdayName(weekday))요일이에요")
+                Text(L10n.t("recordsView.7eddd220", Formatters.weekdayName(weekday)))
                     .font(.caption2).foregroundStyle(.tertiary)
             }
             if let wh = stats.totalEnergyWattHours, wh > 0 {
-                Text(String(format: "지금까지 배터리로 약 %.0fWh를 썼어요", wh))
+                Text(String(format: L10n.t("recordsView.c61a62b5"), wh))
                     .font(.caption2).foregroundStyle(.tertiary)
             }
         }
@@ -197,11 +197,11 @@ struct RecordsView: View {
         HStack {
             Image(systemName: "flame.fill").foregroundStyle(.orange)
             VStack(alignment: .leading, spacing: 2) {
-                Text("연속 사용").font(.caption).foregroundStyle(.secondary)
-                Text("\(activityCenter.currentStreak)일째").font(.headline)
+                Text(L10n.t("recordsView.f2f9dc78")).font(.caption).foregroundStyle(.secondary)
+                Text(L10n.t("recordsView.05092309", activityCenter.currentStreak)).font(.headline)
             }
             Spacer()
-            Text("쉬는 날도 괜찮아요")
+            Text(L10n.t("recordsView.8ef52e73"))
                 .font(.caption2)
                 .foregroundStyle(.tertiary)
         }

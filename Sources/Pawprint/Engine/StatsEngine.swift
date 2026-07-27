@@ -512,23 +512,23 @@ enum StatsEngine {
         if let time = summary.maxWPMTime, summary.maxWPM > 0 {
             items.append(Highlight(
                 icon: "bolt.fill",
-                title: "가장 빨랐던 순간",
-                detail: "\(Formatters.time(time))에 \(Formatters.wpm(summary.maxWPM))로 가장 빠르게 타이핑했어요."
+                title: L10n.t("statsEngine.0b7a9c1a"),
+                detail: L10n.t("statsEngine.bcd12d08", Formatters.time(time), Formatters.wpm(summary.maxWPM))
             ))
         }
 
         if let longest = raw.focusSessions.max(by: { $0.duration < $1.duration }) {
             items.append(Highlight(
                 icon: "target",
-                title: "가장 오래 집중한 순간",
-                detail: "\(Formatters.time(longest.start))부터 \(Formatters.longDuration(Int(longest.duration))) 동안 \(longest.primaryApp)에 집중했어요."
+                title: L10n.t("statsEngine.ab2cbd75"),
+                detail: L10n.t("statsEngine.2cb6382c", Formatters.time(longest.start), Formatters.longDuration(Int(longest.duration)), longest.primaryApp)
             ))
         }
 
         if let chaosMoment = chaosMoment(raw: raw, dayStartHour: dayStartHour) {
             items.append(Highlight(
                 icon: "tornado",
-                title: "가장 혼돈스러웠던 순간",
+                title: L10n.t("statsEngine.bfc623f3"),
                 detail: chaosMoment
             ))
         }
@@ -538,16 +538,16 @@ enum StatsEngine {
            let time = date(forMinute: minute, day: raw.day, dayStartHour: dayStartHour) {
             items.append(Highlight(
                 icon: "flame",
-                title: "가장 바빴던 1분",
-                detail: "\(Formatters.time(time))에 1분 동안 \(summary.busiestMinuteCount)번의 입력이 몰렸어요."
+                title: L10n.t("statsEngine.12de8b91"),
+                detail: L10n.t("statsEngine.fda75cb4", Formatters.time(time), summary.busiestMinuteCount)
             ))
         }
 
         if let app = summary.topApp, app.totalSeconds >= 600 {
             items.append(Highlight(
                 icon: "crown",
-                title: "오늘의 MVP 앱",
-                detail: "\(app.appName)에서 \(Formatters.withObjectParticle(Formatters.longDuration(Int(app.totalSeconds)))) 보냈어요."
+                title: L10n.t("statsEngine.c5325415"),
+                detail: L10n.t("statsEngine.845a80a0", app.appName, Formatters.withObjectParticle(Formatters.longDuration(Int(app.totalSeconds))))
             ))
         }
 
@@ -561,12 +561,12 @@ enum StatsEngine {
             byHour[calendar.component(.hour, from: session.start), default: 0] += 1
         }
         if let peak = byHour.max(by: { $0.value < $1.value }), peak.value >= 3 {
-            return "\(Formatters.approximateHourLabel(peak.key))에 앱을 \(peak.value)번 전환하며 분주하게 움직였어요."
+            return L10n.t("statsEngine.a2a40af5", Formatters.approximateHourLabel(peak.key), peak.value)
         }
         if let peakMinute = raw.activityPerMinute.enumerated().max(by: { $0.element < $1.element }),
            peakMinute.element > 0,
            let time = date(forMinute: peakMinute.offset, day: raw.day, dayStartHour: dayStartHour) {
-            return "\(Formatters.time(time))에 활동이 가장 몰려 있었어요."
+            return L10n.t("statsEngine.ff57f565", Formatters.time(time))
         }
         return nil
     }
@@ -611,50 +611,50 @@ enum StatsEngine {
 
         // Keyboard character
         if let key = summary.mostPressedKeyLabel, summary.mostPressedKeyCount > 20 {
-            add(.keys, "오늘 가장 많이 누른 키는 \(key)였어요 (\(Formatters.groupedNumber(summary.mostPressedKeyCount))회)")
+            add(.keys, L10n.t("statsEngine.18b51aec", key, Formatters.groupedNumber(summary.mostPressedKeyCount)))
         }
         if summary.distinctKeysUsed >= 10 {
-            add(.keys, "오늘 누른 키는 서로 다른 \(summary.distinctKeysUsed)종류였어요")
+            add(.keys, L10n.t("statsEngine.842e6485", summary.distinctKeysUsed))
         }
         if summary.leftHandPercent > 0 {
             let left = summary.leftHandPercent
             if left >= 60 {
-                add(.keys, "오늘 타이핑의 \(left)%를 왼손이 담당했어요")
+                add(.keys, L10n.t("statsEngine.563d76f9", left))
             } else if left <= 40 {
-                add(.keys, "오늘 타이핑의 \(100 - left)%를 오른손이 담당했어요")
+                add(.keys, L10n.t("statsEngine.a12cddd4", 100 - left))
             }
         }
         if let top = summary.keyCategoryCounts.max(by: { $0.value < $1.value }), top.value > 0 {
-            add(.keys, "오늘 가장 많이 누른 키 종류는 \(keyCategoryLabel(top.key))였어요")
+            add(.keys, L10n.t("statsEngine.75e25f7f", keyCategoryLabel(top.key)))
         }
         if let undo = summary.shortcutCounts[.undo], undo > 5 {
-            add(.keys, "오늘 실행취소(Cmd+Z)를 \(undo)번 눌렀어요. 되돌리고 싶은 순간이 많았나 봐요")
+            add(.keys, L10n.t("statsEngine.b22ad129", undo))
         }
         if summary.distinctShortcutsUsed >= 5 {
-            add(.keys, "오늘 사용한 단축키는 서로 다른 \(summary.distinctShortcutsUsed)종류였어요")
+            add(.keys, L10n.t("statsEngine.1b952ac9", summary.distinctShortcutsUsed))
         }
 
         // Typing rhythm
         if summary.typingConsistency >= 70 {
-            add(.typing, "오늘 타이핑 리듬의 일관성은 \(summary.typingConsistency)%로 아주 꾸준했어요")
+            add(.typing, L10n.t("statsEngine.8aed76d6", summary.typingConsistency))
         } else if summary.typingConsistency > 0 && summary.typingConsistency < 35 {
-            add(.typing, "오늘 타이핑 리듬의 일관성은 \(summary.typingConsistency)%로, 몰아치듯 불규칙했어요")
+            add(.typing, L10n.t("statsEngine.39b1639d", summary.typingConsistency))
         }
         if let hour = summary.goldenHour, summary.goldenHourWPM > 0 {
-            add(.typing, String(format: "오늘 가장 빠르게 타이핑한 때는 %@이었어요 (평균 %.0f WPM)", Formatters.approximateHourLabel(hour), summary.goldenHourWPM))
+            add(.typing, String(format: L10n.t("statsEngine.382a0007"), Formatters.approximateHourLabel(hour), summary.goldenHourWPM))
         }
 
         // Screen & focus
         if summary.screenOnSeconds > 600, summary.screenUtilizationPercent > 0 {
-            add(.screen, "오늘 화면이 켜져 있던 시간 중 \(summary.screenUtilizationPercent)%만 실제로 사용했어요")
+            add(.screen, L10n.t("statsEngine.355ed757", summary.screenUtilizationPercent))
         }
         if summary.longestBreakSeconds >= 3600 {
-            add(.focus, "오늘 가장 길게 쉰 시간은 \(Formatters.compactDuration(summary.longestBreakSeconds))이었어요")
+            add(.focus, L10n.t("statsEngine.59b909a0", Formatters.compactDuration(summary.longestBreakSeconds)))
         }
 
         // Pointer detail
         if summary.dragDistanceMeters >= 5 {
-            add(.pointer, String(format: "오늘 드래그로만 커서를 약 %.0fm 움직였어요", summary.dragDistanceMeters))
+            add(.pointer, String(format: L10n.t("statsEngine.8bebeffa"), summary.dragDistanceMeters))
         }
 
         // Apps
@@ -662,54 +662,54 @@ enum StatsEngine {
         if let app = summary.topApp, totalAppSeconds > 0 {
             let share = min(100, app.totalSeconds / totalAppSeconds * 100)
             if share >= 25 {
-                add(.apps, String(format: "오늘 앱을 쓴 시간의 약 %.0f%%를 %@에서 보냈어요", share, app.appName))
+                add(.apps, String(format: L10n.t("statsEngine.f0f88eef"), share, app.appName))
             }
         }
         if let typing = summary.topTypingApp, typing.keyPresses > 100 {
-            add(.apps, "오늘 가장 많이 타이핑한 앱은 \(typing.appName)이에요 (\(Formatters.compactNumber(typing.keyPresses))키)")
+            add(.apps, L10n.t("statsEngine.ef798b76", typing.appName, Formatters.compactNumber(typing.keyPresses)))
         }
         if let clicking = summary.topClickingApp, clicking.clicks > 50,
            clicking.bundleID != summary.topTypingApp?.bundleID {
-            add(.apps, "오늘 가장 많이 클릭한 앱은 \(clicking.appName)이에요 (\(Formatters.compactNumber(clicking.clicks))번)")
+            add(.apps, L10n.t("statsEngine.06245ddb", clicking.appName, Formatters.compactNumber(clicking.clicks)))
         }
         if let typing = summary.topTypingApp, typing.totalInput > 200 {
-            add(.apps, "\(typing.appName)에서는 \(typing.styleLabel)으로 작업했어요 (키보드 \(typing.keyboardSharePercent)%)")
+            add(.apps, L10n.t("statsEngine.806f783a", typing.appName, typing.styleLabel, typing.keyboardSharePercent))
         }
 
         if summary.shortDwellCount > 20 {
-            add(.apps, "오늘 5초도 안 머물고 떠난 앱 방문이 \(summary.shortDwellCount)번 있었어요")
+            add(.apps, L10n.t("statsEngine.73aa0650", summary.shortDwellCount))
         }
         if summary.appConcentration >= 50, let app = summary.topApp {
-            add(.apps, "오늘은 \(app.appName) 한 곳에 시간이 몰렸어요 (집중도 \(summary.appConcentration))")
+            add(.apps, L10n.t("statsEngine.2e6da40a", app.appName, summary.appConcentration))
         } else if summary.appsToReachHalfTime >= 4 {
-            add(.apps, "오늘 앱 사용시간의 절반을 채우는 데 앱 \(summary.appsToReachHalfTime)개가 필요했어요")
+            add(.apps, L10n.t("statsEngine.4cb4a4ea", summary.appsToReachHalfTime))
         }
 
         // Power & device
         if summary.totalChargedPercent > 0 {
-            add(.power, "오늘 \(summary.chargeSessionCount)번 충전해서 배터리를 \(summary.totalChargedPercent)% 채웠어요")
+            add(.power, L10n.t("statsEngine.fcbeffff", summary.chargeSessionCount, summary.totalChargedPercent))
         }
         if summary.secondsOnBattery > 0 && summary.secondsOnAC > 0 {
             let share = Double(summary.secondsOnBattery) / Double(summary.secondsOnBattery + summary.secondsOnAC) * 100
-            add(.power, String(format: "오늘 사용시간 중 약 %.0f%%를 배터리로 보냈어요", share))
+            add(.power, String(format: L10n.t("statsEngine.5215cd26"), share))
         }
         if let cycles = summary.batteryCycleCount, let health = summary.batteryHealthPercent {
-            add(.power, "이 Mac 배터리는 지금까지 충전 사이클 \(cycles)번을 돌았고 건강도는 \(health)%예요")
+            add(.power, L10n.t("statsEngine.31a632d6", cycles, health))
         }
         if summary.lowPowerModeSeconds > 60 {
-            add(.power, "오늘 저전력 모드로 \(Formatters.withObjectParticle(Formatters.longDuration(summary.lowPowerModeSeconds))) 보냈어요")
+            add(.power, L10n.t("statsEngine.39c5d7c6", Formatters.withObjectParticle(Formatters.longDuration(summary.lowPowerModeSeconds))))
         }
         if summary.sleepCount > 0 {
-            add(.device, "오늘 Mac을 \(summary.sleepCount)번 재우고 \(summary.wakeCount)번 깨웠어요")
+            add(.device, L10n.t("statsEngine.05d2d0d6", summary.sleepCount, summary.wakeCount))
         }
         if summary.lidCloseCount > 0 {
-            add(.device, "오늘 뚜껑을 \(summary.lidCloseCount)번 닫고 \(summary.lidOpenCount)번 열었어요")
+            add(.device, L10n.t("statsEngine.4a261072", summary.lidCloseCount, summary.lidOpenCount))
         }
         if summary.externalDisplayConnectCount > 0 {
-            add(.device, "오늘 외장 디스플레이를 \(summary.externalDisplayConnectCount)번 연결했어요")
+            add(.device, L10n.t("statsEngine.ac53b688", summary.externalDisplayConnectCount))
         }
         if summary.audioOutputDeviceChangeCount > 2 {
-            add(.device, "오늘 오디오 출력 장치를 \(summary.audioOutputDeviceChangeCount)번 바꿨어요")
+            add(.device, L10n.t("statsEngine.1bb0264e", summary.audioOutputDeviceChangeCount))
         }
 
         return facts
@@ -717,21 +717,21 @@ enum StatsEngine {
 
     private static func keyCategoryLabel(_ category: KeyCategory) -> String {
         switch category {
-        case .character: return "문자 키"
+        case .character: return L10n.t("statsEngine.50dceb8f")
         case .backspace: return "Backspace"
         case .delete: return "Delete"
         case .escape: return "Escape"
         case .enter: return "Enter"
         case .space: return "Space"
         case .tab: return "Tab"
-        case .arrow: return "방향키"
+        case .arrow: return L10n.t("statsEngine.820ab339")
         case .shift: return "Shift"
         case .command: return "Command"
         case .option: return "Option"
         case .control: return "Control"
         case .capsLock: return "Caps Lock"
-        case .hangulSwitch: return "한영 전환"
-        case .functionKey: return "기능 키"
+        case .hangulSwitch: return L10n.t("statsEngine.0ad7f68d")
+        case .functionKey: return L10n.t("statsEngine.119546e6")
         }
     }
 
@@ -739,7 +739,7 @@ enum StatsEngine {
 
     private static func summarySentence(raw: DailyRawCounters, summary: DailySummary, recentDays: [DailyRawCounters]) -> String {
         guard raw.totalKeyPresses > 0 || summary.activeSeconds > 0 else {
-            return "아직 오늘의 활동 기록이 충분하지 않아요. Mac을 사용하면 여기에 이야기가 채워집니다."
+            return L10n.t("statsEngine.0f6bab4e")
         }
 
         var parts: [String] = []
@@ -749,22 +749,22 @@ enum StatsEngine {
             if avgKeys > 0 {
                 let diffPercent = ((Double(raw.totalKeyPresses) - avgKeys) / avgKeys) * 100
                 if abs(diffPercent) >= 8 {
-                    let direction = diffPercent >= 0 ? "더 많이" : "더 적게"
-                    parts.append("오늘은 최근 평균보다 \(Int(abs(diffPercent)))% \(direction) 타이핑했습니다.")
+                    let direction = diffPercent >= 0 ? L10n.t("statsEngine.6ebc2f8b") : L10n.t("statsEngine.730ba352")
+                    parts.append(L10n.t("statsEngine.644f182d", Int(abs(diffPercent)), direction))
                 }
             }
         }
 
         if summary.maxWPM > 0, let time = summary.maxWPMTime {
-            parts.append("\(Formatters.time(time))에 \(Formatters.wpm(summary.maxWPM))로 오늘의 최고 속도를 기록했습니다.")
+            parts.append(L10n.t("statsEngine.d4eec037", Formatters.time(time), Formatters.wpm(summary.maxWPM)))
         }
 
         if summary.longestFocusSeconds >= 300 {
-            parts.append("가장 길게는 \(Formatters.longDuration(summary.longestFocusSeconds)) 동안 집중했습니다.")
+            parts.append(L10n.t("statsEngine.09912d56", Formatters.longDuration(summary.longestFocusSeconds)))
         }
 
         if parts.isEmpty {
-            parts.append("오늘도 Mac과 함께 여러 순간을 보냈습니다.")
+            parts.append(L10n.t("statsEngine.a3fab626"))
         }
 
         return parts.prefix(2).joined(separator: " ")

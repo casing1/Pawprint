@@ -152,7 +152,7 @@ enum FunConversions {
     static func energyFacts(fromBatteryPercent percent: Int) -> [FunFact] {
         guard percent > 0, let wh = BatteryHardware.shared.wattHours(fromPercent: percent), wh > 0 else { return [] }
         let kWh = wh / 1000
-        var b = Builder(topic: .energy, subject: "오늘 쓴 배터리 \(percent)%는")
+        var b = Builder(topic: .energy, subject: L10n.t("funConversions.3ff56496", percent))
 
         /// Include a comparison only when the number in it is one a person can picture.
         func ratio(_ value: Double, low: Double = 0.25, high: Double = 20_000, _ text: (Double) -> String) {
@@ -161,49 +161,49 @@ enum FunConversions {
         }
 
         // Things you charge
-        ratio(wh / Energy.smartphoneFullCharge) { "스마트폰을 약 \(one($0))번 충전할 수 있는 전력이에요" }
-        ratio(wh / Energy.earbudsCaseCharge) { "무선 이어폰 케이스를 약 \(one($0))번 충전할 수 있는 양이에요" }
-        ratio(wh / Energy.smartwatchCharge) { "스마트워치를 약 \(one($0))번 충전할 수 있는 전력이에요" }
-        ratio(wh / Energy.aaBattery) { "AA 건전지 약 \(one($0))개에 담긴 에너지예요" }
+        ratio(wh / Energy.smartphoneFullCharge) { L10n.t("funConversions.62f86a17", one($0)) }
+        ratio(wh / Energy.earbudsCaseCharge) { L10n.t("funConversions.c4e73c5c", one($0)) }
+        ratio(wh / Energy.smartwatchCharge) { L10n.t("funConversions.4a64291c", one($0)) }
+        ratio(wh / Energy.aaBattery) { L10n.t("funConversions.e27a5f33", one($0)) }
 
         // Things that run for a while
-        ratio(wh / Energy.ledBulbWatts) { "LED 전구 하나를 약 \(one($0))시간 켜둘 수 있는 전력이에요" }
-        ratio(wh / Energy.incandescentWatts * 60) { "옛날 백열등을 약 \(whole($0))분 켤 수 있는 양이에요" }
-        ratio(wh / Energy.routerWatts) { "와이파이 공유기를 약 \(one($0))시간 돌릴 수 있는 전력이에요" }
-        ratio(wh / Energy.fanWatts) { "선풍기를 약 \(one($0))시간 돌릴 수 있는 양이에요" }
-        ratio(wh / Energy.electricBlanketWatts * 60) { "전기장판을 약 \(whole($0))분 켤 수 있는 전력이에요" }
-        ratio(wh / Energy.gameConsoleWatts * 60) { "게임 콘솔을 약 \(whole($0))분 돌릴 수 있는 양이에요" }
-        ratio(wh / Energy.vacuumWatts * 60) { "청소기를 약 \(whole($0))분 돌릴 수 있는 전력이에요" }
-        ratio(wh / Energy.microwaveWatts * 3600) { "전자레인지를 약 \(whole($0))초 돌릴 수 있는 양이에요" }
-        ratio(wh / Energy.hairDryerWatts * 60) { "헤어드라이어를 약 \(whole($0))분 쓸 수 있는 전력이에요" }
-        ratio(wh / Energy.airConditionerWatts * 60) { "에어컨을 약 \(whole($0))분 켤 수 있는 양이에요" }
-        ratio(wh / Energy.phoneVideoWatts) { "스마트폰으로 영상을 약 \(one($0))시간 볼 수 있는 전력이에요" }
+        ratio(wh / Energy.ledBulbWatts) { L10n.t("funConversions.28de99a1", one($0)) }
+        ratio(wh / Energy.incandescentWatts * 60) { L10n.t("funConversions.778d9714", whole($0)) }
+        ratio(wh / Energy.routerWatts) { L10n.t("funConversions.460a7860", one($0)) }
+        ratio(wh / Energy.fanWatts) { L10n.t("funConversions.09ac0e82", one($0)) }
+        ratio(wh / Energy.electricBlanketWatts * 60) { L10n.t("funConversions.802a8b63", whole($0)) }
+        ratio(wh / Energy.gameConsoleWatts * 60) { L10n.t("funConversions.657b9f61", whole($0)) }
+        ratio(wh / Energy.vacuumWatts * 60) { L10n.t("funConversions.e9cced23", whole($0)) }
+        ratio(wh / Energy.microwaveWatts * 3600) { L10n.t("funConversions.7d4ed3f7", whole($0)) }
+        ratio(wh / Energy.hairDryerWatts * 60) { L10n.t("funConversions.80cbda01", whole($0)) }
+        ratio(wh / Energy.airConditionerWatts * 60) { L10n.t("funConversions.49105687", whole($0)) }
+        ratio(wh / Energy.phoneVideoWatts) { L10n.t("funConversions.efe5a015", one($0)) }
 
         // Things you do once
-        ratio(wh / Energy.cupOfWaterBoil) { "물 한 컵을 약 \(one($0))번 끓일 수 있는 양이에요" }
-        ratio(wh / Energy.kettleOneLiter) { "전기포트로 물 1L를 약 \(one($0))번 끓일 수 있는 전력이에요" }
-        ratio(wh / Energy.toastPerSlice) { "식빵을 약 \(one($0))장 구울 수 있는 양이에요" }
-        ratio(wh / Energy.riceCookerPerMeal) { "밥을 약 \(one($0))번 지을 수 있는 전력이에요" }
-        ratio(wh / Energy.washingMachinePerCycle) { "세탁기를 약 \(one($0))번 돌릴 수 있는 양이에요" }
-        ratio(wh / Energy.refrigeratorPerDay * 24) { "냉장고를 약 \(one($0))시간 돌릴 수 있는 전력이에요" }
+        ratio(wh / Energy.cupOfWaterBoil) { L10n.t("funConversions.140fbca1", one($0)) }
+        ratio(wh / Energy.kettleOneLiter) { L10n.t("funConversions.110f73b1", one($0)) }
+        ratio(wh / Energy.toastPerSlice) { L10n.t("funConversions.4cc7f549", one($0)) }
+        ratio(wh / Energy.riceCookerPerMeal) { L10n.t("funConversions.6425e937", one($0)) }
+        ratio(wh / Energy.washingMachinePerCycle) { L10n.t("funConversions.afade2fc", one($0)) }
+        ratio(wh / Energy.refrigeratorPerDay * 24) { L10n.t("funConversions.ca3a4d1e", one($0)) }
 
         // Getting around
         ratio(kWh * Energy.evKmPerKWh * 1000, low: 30, high: 500_000) {
             $0 >= 1000
-                ? "전기차로 약 \(one($0 / 1000))km 갈 수 있는 전력이에요"
-                : "전기차로 약 \(whole($0))m 갈 수 있는 전력이에요"
+                ? L10n.t("funConversions.41097675", one($0 / 1000))
+                : L10n.t("funConversions.18664f4f", whole($0))
         }
-        ratio(wh / Energy.eScooterWhPerKm) { "전동킥보드로 약 \(one($0))km 갈 수 있는 양이에요" }
+        ratio(wh / Energy.eScooterWhPerKm) { L10n.t("funConversions.71d37a56", one($0)) }
 
         // Externalities
         let grams = kWh * Energy.gramsCO2PerKWh
-        ratio(grams, low: 1, high: 1_000_000) { "탄소로 환산하면 약 \(whole($0))g CO₂ 정도예요" }
+        ratio(grams, low: 1, high: 1_000_000) { L10n.t("funConversions.ee2798a2", whole($0)) }
         ratio(grams / Energy.treeCO2GramsPerHour, low: 1) {
             $0 >= 24
-                ? "나무 한 그루가 약 \(one($0 / 24))일 동안 흡수하는 탄소량이에요"
-                : "나무 한 그루가 약 \(whole($0))시간 동안 흡수하는 탄소량이에요"
+                ? L10n.t("funConversions.d4d8267f", one($0 / 24))
+                : L10n.t("funConversions.70b8e455", whole($0))
         }
-        ratio(kWh * Energy.krwPerKWh, low: 1, high: 1_000_000) { "전기요금으로 치면 약 \(whole($0))원어치예요" }
+        ratio(kWh * Energy.krwPerKWh, low: 1, high: 1_000_000) { L10n.t("funConversions.832752df", whole($0)) }
 
         return b.facts
     }
@@ -219,29 +219,29 @@ enum FunConversions {
 
         let travel = fingerTravelMeters(keystrokes: totalKeys)
         if totalKeys > 0, travel >= 1 {
-            var b = Builder(topic: .typing, subject: "오늘 키를 누르며 손가락이 움직인 거리는")
-            b.add(when: true, "약 \(meters(travel))예요")
+            var b = Builder(topic: .typing, subject: L10n.t("funConversions.6256d28f"))
+            b.add(when: true, L10n.t("funConversions.42a2582c", meters(travel)))
             b.add(when: travel / Distance.basketballCourt >= 0.5,
-                  "농구 코트 약 \(one(travel / Distance.basketballCourt))개 길이예요")
+                  L10n.t("funConversions.68c1fa2f", one(travel / Distance.basketballCourt)))
             b.add(when: travel / Distance.soccerField >= 0.3,
-                  "축구장 약 \(one(travel / Distance.soccerField))개 길이에 해당해요")
+                  L10n.t("funConversions.f24c151f", one(travel / Distance.soccerField)))
             b.add(when: travel / Distance.bowlingLane >= 1,
-                  "볼링 레인 약 \(whole(travel / Distance.bowlingLane))개 길이예요")
+                  L10n.t("funConversions.d43dd052", whole(travel / Distance.bowlingLane)))
             facts += b.facts
         }
 
         guard characterKeys > 0 else { return facts }
-        var t = Builder(topic: .text, subject: "오늘 입력한 문자 \(Formatters.groupedNumber(characterKeys))자는")
+        var t = Builder(topic: .text, subject: L10n.t("funConversions.1ac20bca", Formatters.groupedNumber(characterKeys)))
         t.add(when: Double(characterKeys) / Text.a4CharsPerPage >= 0.2,
-              "A4 용지 약 \(one(Double(characterKeys) / Text.a4CharsPerPage))장 분량이에요")
+              L10n.t("funConversions.8f5f2e35", one(Double(characterKeys) / Text.a4CharsPerPage)))
         t.add(when: Double(characterKeys) / Text.manuscriptSheet >= 1,
-              "원고지 약 \(count(Double(characterKeys) / Text.manuscriptSheet))매 분량이에요")
+              L10n.t("funConversions.862e28fa", count(Double(characterKeys) / Text.manuscriptSheet)))
         t.add(when: Double(characterKeys) / Text.kakaoMessage >= 5,
-              "메신저 메시지 약 \(count(Double(characterKeys) / Text.kakaoMessage))개를 보낼 수 있는 양이에요")
+              L10n.t("funConversions.5aff25fe", count(Double(characterKeys) / Text.kakaoMessage)))
         t.add(when: Double(characterKeys) / Text.tweet >= 3,
-              "트윗 약 \(count(Double(characterKeys) / Text.tweet))개 분량이에요")
+              L10n.t("funConversions.0937a4b6", count(Double(characterKeys) / Text.tweet)))
         t.add(when: Double(characterKeys) / Text.shortNovel * 100 >= 1,
-              "단편 소설 한 편의 약 \(whole(Double(characterKeys) / Text.shortNovel * 100))%에 해당해요")
+              L10n.t("funConversions.27a3b1e4", whole(Double(characterKeys) / Text.shortNovel * 100)))
         return facts + t.facts
     }
 
@@ -249,25 +249,25 @@ enum FunConversions {
 
     static func cursorFacts(meters value: Double) -> [FunFact] {
         guard value >= 1 else { return [] }
-        var b = Builder(topic: .cursor, subject: "오늘 커서가 움직인 거리는")
+        var b = Builder(topic: .cursor, subject: L10n.t("funConversions.a55d569f"))
 
-        b.add(when: true, "약 \(meters(value))예요")
+        b.add(when: true, L10n.t("funConversions.42a2582c", meters(value)))
         b.add(when: value / Distance.bowlingLane >= 1,
-              "볼링 레인 약 \(whole(value / Distance.bowlingLane))개 길이예요")
+              L10n.t("funConversions.d43dd052", whole(value / Distance.bowlingLane)))
         b.add(when: value / Distance.poolLength >= 1,
-              "수영장을 약 \(one(value / Distance.poolLength / 2))번 왕복한 거리예요")
+              L10n.t("funConversions.7390fcfd", one(value / Distance.poolLength / 2)))
         b.add(when: value / Distance.soccerField >= 0.5,
-              "축구장 약 \(one(value / Distance.soccerField))개 길이에 해당해요")
+              L10n.t("funConversions.f24c151f", one(value / Distance.soccerField)))
         b.add(when: value / Distance.boeing747 >= 0.5,
-              "보잉 747 약 \(one(value / Distance.boeing747))대를 늘어놓은 길이예요")
+              L10n.t("funConversions.e67883b9", one(value / Distance.boeing747)))
         b.add(when: value / Distance.trackLoop >= 0.3,
-              "운동장 트랙 약 \(one(value / Distance.trackLoop))바퀴예요")
+              L10n.t("funConversions.fc768e2c", one(value / Distance.trackLoop)))
         b.add(when: value / Distance.marathon * 100 >= 0.5,
-              "마라톤 풀코스의 약 \(one(value / Distance.marathon * 100))%예요")
+              L10n.t("funConversions.5dab39f8", one(value / Distance.marathon * 100)))
         b.add(when: value / Distance.seoulToBusan * 100 >= 0.1,
-              String(format: "서울에서 부산까지 거리의 약 %.2f%%예요", value / Distance.seoulToBusan * 100))
+              String(format: L10n.t("funConversions.8c82341c"), value / Distance.seoulToBusan * 100))
         b.add(when: value / Distance.earthCircumference * 100 >= 0.001,
-              String(format: "지구 둘레의 약 %.4f%%예요", value / Distance.earthCircumference * 100))
+              String(format: L10n.t("funConversions.fc5ba1b8"), value / Distance.earthCircumference * 100))
         return b.facts
     }
 
@@ -276,17 +276,17 @@ enum FunConversions {
     static func scrollFacts(screens: Double, screenHeightMeters: Double) -> [FunFact] {
         guard screens >= 0.5 else { return [] }
         let h = screens * screenHeightMeters
-        var b = Builder(topic: .scroll, subject: "오늘 스크롤한 화면 약 \(count(screens))개 높이는")
+        var b = Builder(topic: .scroll, subject: L10n.t("funConversions.4ab67311", count(screens)))
 
-        b.add(when: h / Height.stairStep >= 20, "계단 약 \(count(h / Height.stairStep))칸을 오른 높이예요")
-        b.add(when: h / Height.buildingFloor >= 1, "건물 약 \(whole(h / Height.buildingFloor))층 높이에 해당해요")
-        b.add(when: h / Height.namsanTower * 100 >= 5, "남산타워 높이의 약 \(whole(h / Height.namsanTower * 100))%예요")
-        b.add(when: h / Height.building63 * 100 >= 5, "63빌딩 높이의 약 \(whole(h / Height.building63 * 100))%예요")
-        b.add(when: h / Height.eiffelTower * 100 >= 5, "에펠탑 높이의 약 \(whole(h / Height.eiffelTower * 100))%예요")
-        b.add(when: h / Height.lotteWorldTower * 100 >= 5, "롯데월드타워 높이의 약 \(whole(h / Height.lotteWorldTower * 100))%예요")
-        b.add(when: h / Height.hallasan * 100 >= 2, "한라산 높이의 약 \(whole(h / Height.hallasan * 100))%예요")
-        b.add(when: h / Height.baekdusan * 100 >= 2, "백두산 높이의 약 \(whole(h / Height.baekdusan * 100))%예요")
-        b.add(when: h / Height.everest * 100 >= 1, "에베레스트 높이의 약 \(one(h / Height.everest * 100))%예요")
+        b.add(when: h / Height.stairStep >= 20, L10n.t("funConversions.ebd62fd4", count(h / Height.stairStep)))
+        b.add(when: h / Height.buildingFloor >= 1, L10n.t("funConversions.44265811", whole(h / Height.buildingFloor)))
+        b.add(when: h / Height.namsanTower * 100 >= 5, L10n.t("funConversions.e8938a1d", whole(h / Height.namsanTower * 100)))
+        b.add(when: h / Height.building63 * 100 >= 5, L10n.t("funConversions.6da5b474", whole(h / Height.building63 * 100)))
+        b.add(when: h / Height.eiffelTower * 100 >= 5, L10n.t("funConversions.aedf7161", whole(h / Height.eiffelTower * 100)))
+        b.add(when: h / Height.lotteWorldTower * 100 >= 5, L10n.t("funConversions.9bbfbe7a", whole(h / Height.lotteWorldTower * 100)))
+        b.add(when: h / Height.hallasan * 100 >= 2, L10n.t("funConversions.9e49a594", whole(h / Height.hallasan * 100)))
+        b.add(when: h / Height.baekdusan * 100 >= 2, L10n.t("funConversions.234d1075", whole(h / Height.baekdusan * 100)))
+        b.add(when: h / Height.everest * 100 >= 1, L10n.t("funConversions.90f861e0", one(h / Height.everest * 100)))
         return b.facts
     }
 
@@ -295,30 +295,30 @@ enum FunConversions {
     static func timeFacts(activeSeconds: Int, focusSeconds: Int, screenOnSeconds: Int) -> [FunFact] {
         guard activeSeconds > 60 else { return [] }
         let minutes = Double(activeSeconds) / 60
-        var b = Builder(topic: .time, subject: "오늘 Mac을 실제로 쓴 시간은")
+        var b = Builder(topic: .time, subject: L10n.t("funConversions.4c0f4d4d"))
 
-        b.add(when: true, "\(Formatters.compactDuration(activeSeconds))이에요")
+        b.add(when: true, L10n.t("funConversions.b689ae61", Formatters.compactDuration(activeSeconds)))
         b.add(when: minutes / Time.movieMinutes >= 0.2,
-              "영화 약 \(one(minutes / Time.movieMinutes))편을 볼 수 있는 시간이에요")
+              L10n.t("funConversions.bff2c14b", one(minutes / Time.movieMinutes)))
         b.add(when: minutes / Time.sitcomMinutes >= 1,
-              "시트콤 약 \(whole(minutes / Time.sitcomMinutes))편 분량이에요")
+              L10n.t("funConversions.95d37de9", whole(minutes / Time.sitcomMinutes)))
         b.add(when: minutes / Time.songMinutes >= 5,
-              "노래 약 \(whole(minutes / Time.songMinutes))곡을 들을 수 있는 시간이에요")
+              L10n.t("funConversions.51c438cf", whole(minutes / Time.songMinutes)))
         b.add(when: minutes / Time.ramenMinutes >= 5,
-              "라면을 약 \(whole(minutes / Time.ramenMinutes))번 끓일 수 있는 시간이에요")
+              L10n.t("funConversions.9a1e80af", whole(minutes / Time.ramenMinutes)))
         b.add(when: minutes / (24 * 60) * 100 >= 5,
-              "하루 24시간의 약 \(whole(minutes / (24 * 60) * 100))%예요")
+              L10n.t("funConversions.8623d04d", whole(minutes / (24 * 60) * 100)))
 
         var facts = b.facts
         let pomodoros = Double(focusSeconds) / 60 / Time.pomodoroMinutes
         if pomodoros >= 1 {
             facts.append(FunFact(topic: .focus,
-                                 text: "오늘 집중한 시간은 포모도로 약 \(one(pomodoros))세트에 해당해요"))
+                                 text: L10n.t("funConversions.8e8b13e7", one(pomodoros))))
         }
         if screenOnSeconds > activeSeconds, screenOnSeconds > 600 {
             let idle = screenOnSeconds - activeSeconds
             facts.append(FunFact(topic: .screen,
-                                 text: "오늘 화면이 켜져 있던 시간 중 \(Formatters.compactDuration(idle))은 자리를 비운 시간이에요"))
+                                 text: L10n.t("funConversions.227e0c8c", Formatters.compactDuration(idle))))
         }
         return facts
     }
@@ -328,24 +328,24 @@ enum FunConversions {
     static func networkFacts(downloadBytes: UInt64, uploadBytes: UInt64, peakDownPerSec: Double) -> [FunFact] {
         let total = Double(downloadBytes) + Double(uploadBytes)
         guard total > 1024 * 1024 else { return [] }
-        var b = Builder(topic: .network, subject: "오늘 주고받은 인터넷 데이터는")
+        var b = Builder(topic: .network, subject: L10n.t("funConversions.38cb8fee"))
 
-        b.add(when: true, "\(Formatters.bytes(UInt64(total)))예요")
+        b.add(when: true, L10n.t("funConversions.0be01953", Formatters.bytes(UInt64(total))))
         b.add(when: Double(downloadBytes) / Payload.streamingPerHour1080p >= 0.1,
-              "1080p 영상 약 \(one(Double(downloadBytes) / Payload.streamingPerHour1080p))시간 분량이에요")
+              L10n.t("funConversions.c7749d4e", one(Double(downloadBytes) / Payload.streamingPerHour1080p)))
         b.add(when: Double(downloadBytes) / Payload.streamingPerHour4K >= 0.1,
-              "4K 영상 약 \(one(Double(downloadBytes) / Payload.streamingPerHour4K))시간 분량이에요")
-        b.add(when: total / Payload.song >= 5, "MP3 약 \(count(total / Payload.song))곡에 해당해요")
-        b.add(when: total / Payload.photo >= 5, "사진 약 \(count(total / Payload.photo))장 분량이에요")
-        b.add(when: total / Payload.email >= 50, "이메일 약 \(count(total / Payload.email))통에 해당해요")
-        b.add(when: total / Payload.floppy >= 20, "옛날 플로피 디스크 약 \(count(total / Payload.floppy))장이 필요한 양이에요")
-        b.add(when: total / Payload.cd >= 0.3, "CD 약 \(one(total / Payload.cd))장 분량이에요")
-        b.add(when: total / Payload.dvd >= 0.2, "DVD 약 \(one(total / Payload.dvd))장 분량이에요")
+              L10n.t("funConversions.85423555", one(Double(downloadBytes) / Payload.streamingPerHour4K)))
+        b.add(when: total / Payload.song >= 5, L10n.t("funConversions.ae66c577", count(total / Payload.song)))
+        b.add(when: total / Payload.photo >= 5, L10n.t("funConversions.e2ccfb48", count(total / Payload.photo)))
+        b.add(when: total / Payload.email >= 50, L10n.t("funConversions.b7937890", count(total / Payload.email)))
+        b.add(when: total / Payload.floppy >= 20, L10n.t("funConversions.e3a6b8c1", count(total / Payload.floppy)))
+        b.add(when: total / Payload.cd >= 0.3, L10n.t("funConversions.f47908e4", one(total / Payload.cd)))
+        b.add(when: total / Payload.dvd >= 0.2, L10n.t("funConversions.bbe91673", one(total / Payload.dvd)))
 
         var facts = b.facts
         if peakDownPerSec > 100 * 1024 {
             facts.append(FunFact(topic: .network,
-                                 text: "오늘 가장 빨랐던 다운로드 속도는 약 \(Formatters.bytesPerSecond(peakDownPerSec))였어요"))
+                                 text: L10n.t("funConversions.33977165", Formatters.bytesPerSecond(peakDownPerSec))))
         }
         return facts
     }
@@ -356,16 +356,16 @@ enum FunConversions {
         var facts: [FunFact] = []
         if totalClicks >= 50 {
             facts.append(FunFact(topic: .pointer,
-                                 text: "오늘 클릭한 횟수는 \(Formatters.groupedNumber(totalClicks))번이에요"))
+                                 text: L10n.t("funConversions.fa173ac3", Formatters.groupedNumber(totalClicks))))
             if activeSeconds > 600 {
                 let perMinute = Double(totalClicks) / (Double(activeSeconds) / 60)
                 facts.append(FunFact(topic: .pointer,
-                                     text: "오늘 클릭은 사용 중 1분에 약 \(one(perMinute))번 꼴이었어요"))
+                                     text: L10n.t("funConversions.79d03d7d", one(perMinute))))
             }
         }
         if scrollDirectionChanges >= 30 {
             facts.append(FunFact(topic: .pointer,
-                                 text: "오늘 스크롤 방향을 \(Formatters.groupedNumber(scrollDirectionChanges))번 바꿨어요. 뭔가 찾고 있었나 봐요"))
+                                 text: L10n.t("funConversions.df31798f", Formatters.groupedNumber(scrollDirectionChanges))))
         }
         return facts
     }

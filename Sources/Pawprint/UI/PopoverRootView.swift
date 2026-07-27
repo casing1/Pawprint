@@ -6,10 +6,10 @@ enum PopoverTab: Int, CaseIterable {
 
     var label: String {
         switch self {
-        case .today: return "오늘"
-        case .calendar: return "활동 달력"
-        case .gallery: return "도감"
-        case .records: return "기록"
+        case .today: return L10n.t("popoverRootView.2bdce5e8")
+        case .calendar: return L10n.t("popoverRootView.7b98812d")
+        case .gallery: return L10n.t("popoverRootView.7d776781")
+        case .records: return L10n.t("popoverRootView.d84b6f4b")
         }
     }
 }
@@ -43,6 +43,7 @@ struct PopoverRootView: View {
             permissions.startPolling()
         }
         .preferredColorScheme(colorScheme)
+        .id(LocalizationManager.shared.revision)
     }
 
     private var mainContent: some View {
@@ -97,7 +98,7 @@ struct PopoverRootView: View {
                 Image(systemName: activityCenter.settings.isPaused ? "play.circle" : "pause.circle")
             }
             .buttonStyle(.plain)
-            .help(activityCenter.settings.isPaused ? "기록 재개" : "기록 일시정지")
+            .help(activityCenter.settings.isPaused ? L10n.t("popoverRootView.6491e6a9") : L10n.t("popoverRootView.5a694dfb"))
 
             Button {
                 LiveHUDController.shared.toggle()
@@ -105,7 +106,7 @@ struct PopoverRootView: View {
                 Image(systemName: "rectangle.inset.filled.badge.record")
             }
             .buttonStyle(.plain)
-            .help("라이브 세션 창 켜기/끄기")
+            .help(L10n.t("popoverRootView.e6bbfa53"))
 
             Button {
                 SettingsOpener.open()
@@ -113,7 +114,7 @@ struct PopoverRootView: View {
                 Image(systemName: "gearshape")
             }
             .buttonStyle(.plain)
-            .help("설정")
+            .help(L10n.t("popoverRootView.c14a567e"))
 
             Button {
                 NSApp.terminate(nil)
@@ -121,7 +122,7 @@ struct PopoverRootView: View {
                 Image(systemName: "power")
             }
             .buttonStyle(.plain)
-            .help("Pawprint 종료")
+            .help(L10n.t("popoverRootView.e3bc5d45"))
         }
         .padding(.horizontal, 14)
         .padding(.top, 10)

@@ -8,7 +8,7 @@ struct AchievementGrid: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Text("업적").font(.caption).foregroundStyle(.secondary)
+                Text(L10n.t("achievementGrid.62850cd4")).font(.caption).foregroundStyle(.secondary)
                 Spacer()
                 Text("\(achievements.unlocked.count) / \(AchievementID.allCases.count)")
                     .font(.caption2.monospacedDigit())
@@ -57,7 +57,7 @@ private struct AchievementBadge: View {
             RoundedRectangle(cornerRadius: 10, style: .continuous)
                 .stroke(isUnlocked ? Color.accentColor.opacity(0.35) : .clear, lineWidth: 1)
         )
-        .help(isUnlocked ? "\(id.detail) — \(Formatters.dayLabel(unlockedOn ?? "")) 달성" : id.detail)
+        .help(isUnlocked ? L10n.t("achievementGrid.845c86d9", id.detail, Formatters.dayLabel(unlockedOn ?? "")) : id.detail)
     }
 }
 
@@ -75,7 +75,7 @@ struct AchievementCelebrationBanner: View {
                 .scaleEffect(appeared ? 1 : 0.4)
                 .rotationEffect(.degrees(appeared ? 0 : -25))
             VStack(alignment: .leading, spacing: 1) {
-                Text("새 업적 달성!")
+                Text(L10n.t("achievementGrid.8757a96d"))
                     .font(.caption2.weight(.semibold))
                     .foregroundStyle(.secondary)
                 Text(id.title)

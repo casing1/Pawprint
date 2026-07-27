@@ -66,7 +66,7 @@ struct LiveHUDView: View {
                 .font(.system(size: 9))
                 .foregroundStyle(Color.accentColor)
             if !isCompact {
-                Text("현재 세션").font(.caption2.weight(.semibold))
+                Text(L10n.t("liveHUD.b7a78a5a")).font(.caption2.weight(.semibold))
             }
             Spacer(minLength: 2)
 
@@ -78,7 +78,7 @@ struct LiveHUDView: View {
             }
             .buttonStyle(.plain)
             .foregroundStyle(showingOpacity ? Color.accentColor : Color.secondary.opacity(0.7))
-            .help("투명도")
+            .help(L10n.t("liveHUD.3885d542"))
 
             Button {
                 activityCenter.setHUDCompact(!isCompact)
@@ -88,7 +88,7 @@ struct LiveHUDView: View {
             }
             .buttonStyle(.plain)
             .foregroundStyle(.tertiary)
-            .help(isCompact ? "펼치기" : "축소")
+            .help(isCompact ? L10n.t("liveHUD.5eec8827") : L10n.t("liveHUD.35a0c359"))
 
             Button {
                 LiveHUDController.shared.hide()
@@ -97,7 +97,7 @@ struct LiveHUDView: View {
             }
             .buttonStyle(.plain)
             .foregroundStyle(.tertiary)
-            .help("닫기")
+            .help(L10n.t("liveHUD.94b7dba1"))
         }
     }
 
@@ -160,13 +160,13 @@ struct LiveHUDView: View {
     private var stats: some View {
         VStack(spacing: 4) {
             if settings.hudShowsSessionTime {
-                row("세션 시간", Formatters.compactDuration(activityCenter.sessionSeconds))
+                row(L10n.t("liveHUD.046d22be"), Formatters.compactDuration(activityCenter.sessionSeconds))
             }
             if settings.hudShowsSessionKeys {
-                row("이번 세션 키", Formatters.compactNumber(activityCenter.sessionKeyPresses))
+                row(L10n.t("liveHUD.567fb32a"), Formatters.compactNumber(activityCenter.sessionKeyPresses))
             }
             if settings.hudShowsSessionClicks {
-                row("이번 세션 클릭", Formatters.compactNumber(activityCenter.sessionClicks))
+                row(L10n.t("liveHUD.ec433402"), Formatters.compactNumber(activityCenter.sessionClicks))
             }
 
             let metrics = settings.hudMetricIDs.compactMap { MetricCatalog.metric(id: $0) }

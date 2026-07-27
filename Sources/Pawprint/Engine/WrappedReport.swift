@@ -33,13 +33,13 @@ struct WrappedReport {
     /// month's totals happened today, so the subject is rewritten for the retrospective.
     private static func monthlyPhrase(_ text: String?) -> String? {
         guard let text else { return nil }
-        return text.replacingOccurrences(of: "오늘 ", with: "이번 달 ")
+        return text.replacingOccurrences(of: L10n.t("wrappedReport.8bd1dd77"), with: L10n.t("wrappedReport.b062d55e"))
     }
 
     static func monthTitle(for monthKey: String) -> String {
         let parts = monthKey.split(separator: "-")
         guard parts.count == 2, let year = Int(parts[0]), let month = Int(parts[1]) else { return monthKey }
-        return "\(year)년 \(month)월"
+        return L10n.t("wrappedReport.7a6f23a4", year, month)
     }
 
     /// Builds a report for the given month key ("yyyy-MM"). Returns nil when the month has no
@@ -65,37 +65,37 @@ struct WrappedReport {
             index += 1
         }
 
-        add("", monthTitle(for: monthKey), .opener, "\(days.count)일의 기록을 돌아볼게요")
+        add("", monthTitle(for: monthKey), .opener, L10n.t("wrappedReport.9b09776a", days.count))
 
-        add("이번 달 함께한 시간", "총 \(Formatters.longSpan(totalActive))",
+        add(L10n.t("wrappedReport.7be87d01"), L10n.t("wrappedReport.84152b81", Formatters.longSpan(totalActive)),
             .bigNumber(value: Formatters.longSpan(totalActive), unit: ""),
-            "하루 평균 \(Formatters.compactDuration(totalActive / max(days.count, 1)))")
+            L10n.t("wrappedReport.fa730e90", Formatters.compactDuration(totalActive / max(days.count, 1))))
 
         if totalKeys > 0 {
-            add("두드린 키", "\(Formatters.compactNumber(totalKeys))번",
-                .bigNumber(value: Formatters.compactNumber(totalKeys), unit: "키"),
+            add(L10n.t("wrappedReport.d42c2d41"), L10n.t("wrappedReport.13adce96", Formatters.compactNumber(totalKeys)),
+                .bigNumber(value: Formatters.compactNumber(totalKeys), unit: L10n.t("wrappedReport.31618a08")),
                 monthlyPhrase(FunConversions.keyboardFacts(characterKeys: totalKeys, totalKeys: totalKeys).first?.text))
         }
 
         if let best = bestWPMDay, best.maxWPM > 0 {
-            add("가장 빨랐던 순간", Formatters.wpm(best.maxWPM),
-                .highlightDay(day: best.day, detail: "이 날 최고 속도를 냈어요"))
+            add(L10n.t("wrappedReport.0b7a9c1a"), Formatters.wpm(best.maxWPM),
+                .highlightDay(day: best.day, detail: L10n.t("wrappedReport.23e0f864")))
         }
 
         if let busiest = busiestDay {
-            add("가장 뜨거웠던 날", Formatters.dayLabel(busiest.day),
+            add(L10n.t("wrappedReport.a3447b8e"), Formatters.dayLabel(busiest.day),
                 .highlightDay(day: busiest.day,
-                              detail: "\(Formatters.compactDuration(busiest.activeSeconds)) 사용 · \(Formatters.compactNumber(busiest.totalKeyPresses))키"))
+                              detail: L10n.t("wrappedReport.868e2dd4", Formatters.compactDuration(busiest.activeSeconds), Formatters.compactNumber(busiest.totalKeyPresses))))
         }
 
         if totalFocus > 0, let focusDay {
-            add("집중한 시간", Formatters.longSpan(totalFocus),
+            add(L10n.t("wrappedReport.439c5286"), Formatters.longSpan(totalFocus),
                 .bigNumber(value: Formatters.longSpan(totalFocus), unit: ""),
-                "최장 집중은 \(Formatters.dayLabel(focusDay.day))의 \(Formatters.compactDuration(focusDay.longestFocusSeconds))")
+                L10n.t("wrappedReport.fc216e75", Formatters.dayLabel(focusDay.day), Formatters.compactDuration(focusDay.longestFocusSeconds)))
         }
 
         if totalCursor >= 100 {
-            add("커서가 달린 거리", Formatters.compactDistance(meters: totalCursor),
+            add(L10n.t("wrappedReport.b11e6a60"), Formatters.compactDistance(meters: totalCursor),
                 .bigNumber(value: Formatters.compactDistance(meters: totalCursor), unit: ""),
                 monthlyPhrase(FunConversions.cursorFacts(meters: totalCursor).dropFirst().first?.text))
         }
@@ -104,9 +104,9 @@ struct WrappedReport {
         let previousActive = previousMonth.reduce(0) { $0 + $1.activeSeconds }
         if previousActive > 0 {
             let change = (Double(totalActive) - Double(previousActive)) / Double(previousActive) * 100
-            let direction = change >= 0 ? "더" : "덜"
-            add("지난달과 비교하면",
-                String(format: "%.0f%% %@ 썼어요", abs(change), direction),
+            let direction = change >= 0 ? L10n.t("wrappedReport.a20f2464") : L10n.t("wrappedReport.9f9037e6")
+            add(L10n.t("wrappedReport.19868e83"),
+                String(format: L10n.t("wrappedReport.97996a20"), abs(change), direction),
                 .comparison(lead: Formatters.longSpan(totalActive), trail: Formatters.longSpan(previousActive)))
         }
 
@@ -117,7 +117,7 @@ struct WrappedReport {
         }
         let topApps = appSeconds.sorted { $0.value > $1.value }.prefix(3)
         if !topApps.isEmpty {
-            add("가장 오래 머문 곳", "이번 달의 앱",
+            add(L10n.t("wrappedReport.046fcfa3"), L10n.t("wrappedReport.f10d2165"),
                 .list(items: topApps.map { ($0.key, Formatters.longSpan(Int($0.value))) }))
         }
 
@@ -125,22 +125,22 @@ struct WrappedReport {
         var tagCounts: [ActivityTag: Int] = [:]
         for day in days { for tag in day.activityTags { tagCounts[tag, default: 0] += 1 } }
         if let signature = tagCounts.max(by: { $0.value < $1.value }) {
-            add("이번 달의 당신은", "\(signature.key.emoji) \(signature.key.label)",
-                .highlightDay(day: monthKey, detail: "\(signature.value)일 동안 이 모습이었어요"))
+            add(L10n.t("wrappedReport.c5acd03a"), "\(signature.key.emoji) \(signature.key.label)",
+                .highlightDay(day: monthKey, detail: L10n.t("wrappedReport.4afb3c8b", signature.value)))
         }
 
         let summaryItems: [(String, String)] = [
-            ("기록한 날", "\(days.count)일"),
-            ("총 사용시간", Formatters.longSpan(totalActive)),
-            ("총 키 입력", Formatters.compactNumber(totalKeys)),
-            ("총 클릭", Formatters.compactNumber(totalClicks)),
-            ("총 집중시간", Formatters.longSpan(totalFocus)),
-            ("커서 이동", Formatters.compactDistance(meters: totalCursor)),
-            ("스크롤", Formatters.compactNumber(Int(totalScroll)) + "화면"),
-            ("최고 속도", bestWPMDay.map { Formatters.wpm($0.maxWPM) } ?? "-"),
+            (L10n.t("wrappedReport.79df15ef"), L10n.t("wrappedReport.cec3694e", days.count)),
+            (L10n.t("wrappedReport.49d8f80b"), Formatters.longSpan(totalActive)),
+            (L10n.t("wrappedReport.110bf3ae"), Formatters.compactNumber(totalKeys)),
+            (L10n.t("wrappedReport.866e0ee4"), Formatters.compactNumber(totalClicks)),
+            (L10n.t("wrappedReport.da8dd921"), Formatters.longSpan(totalFocus)),
+            (L10n.t("wrappedReport.7c2c694b"), Formatters.compactDistance(meters: totalCursor)),
+            (L10n.t("wrappedReport.daa69457"), Formatters.compactNumber(Int(totalScroll)) + L10n.t("wrappedReport.43c786f1")),
+            (L10n.t("wrappedReport.50922e57"), bestWPMDay.map { Formatters.wpm($0.maxWPM) } ?? "-"),
         ]
 
-        add("", "\(monthTitle(for: monthKey))의 발자국", .closer, "카드로 저장하거나 공유할 수 있어요")
+        add("", L10n.t("wrappedReport.6092d116", monthTitle(for: monthKey)), .closer, L10n.t("wrappedReport.c03b6594"))
 
         return WrappedReport(
             monthKey: monthKey,

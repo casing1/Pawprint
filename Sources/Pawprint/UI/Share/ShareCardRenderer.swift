@@ -24,12 +24,12 @@ enum ShareCardRenderer {
     @discardableResult
     static func copyToPasteboard(_ mode: ShareCardView.Mode, metrics: [MetricDefinition]) -> Result {
         guard let image = image(for: mode, metrics: metrics) else {
-            return .failed("이미지를 만들지 못했어요")
+            return .failed(L10n.t("shareCardRenderer.1de11fcc"))
         }
         guard let tiff = image.tiffRepresentation,
               let bitmap = NSBitmapImageRep(data: tiff),
               let png = bitmap.representation(using: .png, properties: [:]) else {
-            return .failed("이미지를 변환하지 못했어요")
+            return .failed(L10n.t("shareCardRenderer.bedb79f1"))
         }
 
         let pasteboard = NSPasteboard.general
@@ -48,20 +48,20 @@ enum ShareCardRenderer {
               let tiff = image.tiffRepresentation,
               let bitmap = NSBitmapImageRep(data: tiff),
               let png = bitmap.representation(using: .png, properties: [:]) else {
-            return .failed("이미지를 만들지 못했어요")
+            return .failed(L10n.t("shareCardRenderer.1de11fcc"))
         }
 
         let panel = NSSavePanel()
         panel.allowedContentTypes = [.png]
         panel.nameFieldStringValue = suggestedName
         guard panel.runModal() == .OK, let url = panel.url else {
-            return .failed("저장을 취소했어요")
+            return .failed(L10n.t("shareCardRenderer.4a1e31c3"))
         }
         do {
             try png.write(to: url)
             return .copied
         } catch {
-            return .failed("저장하지 못했어요: \(error.localizedDescription)")
+            return .failed(L10n.t("shareCardRenderer.0f66b746", error.localizedDescription))
         }
     }
 }

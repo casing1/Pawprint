@@ -11,10 +11,10 @@ enum Formatters {
     static func longDuration(_ seconds: Int) -> String {
         let h = seconds / 3600
         let m = (seconds % 3600) / 60
-        if h > 0 && m > 0 { return "\(h)시간 \(m)분" }
-        if h > 0 { return "\(h)시간" }
-        if m > 0 { return "\(m)분" }
-        return "\(seconds)초"
+        if h > 0 && m > 0 { return L10n.t("formatters.4173ae55", h, m) }
+        if h > 0 { return L10n.t("formatters.0967e5ff", h) }
+        if m > 0 { return L10n.t("formatters.bfecc441", m) }
+        return L10n.t("formatters.e1455aca", seconds)
     }
 
     /// "47m" / "1h 6m" compact form for menu bar and small cards.
@@ -32,7 +32,7 @@ enum Formatters {
     static func time(_ date: Date) -> String {
         let formatter = DateFormatter()
         formatter.dateFormat = "a h:mm"
-        formatter.locale = Locale(identifier: "ko_KR")
+        formatter.locale = LocalizationManager.activeLocale
         return formatter.string(from: date)
     }
 
@@ -40,18 +40,20 @@ enum Formatters {
     /// whether its final syllable ends in a consonant. Without this, generated sentences read
     /// as "37분를" instead of "37분을".
     static func withObjectParticle(_ text: String) -> String {
+        // Only Korean has the 을/를 distinction; other languages append nothing.
+        guard LocalizationManager.usesMyriadGrouping else { return text }
         guard let last = text.unicodeScalars.last else { return text }
         // Hangul syllables occupy U+AC00...U+D7A3; (code - 0xAC00) % 28 == 0 means no final consonant.
         if last.value >= 0xAC00 && last.value <= 0xD7A3 {
             let hasFinalConsonant = (last.value - 0xAC00) % 28 != 0
-            return text + (hasFinalConsonant ? "을" : "를")
+            return text + (hasFinalConsonant ? L10n.t("formatters.90fb063b") : L10n.t("formatters.943d1aff"))
         }
         // Digits: pick by how the numeral is read aloud in Korean.
         if let digit = last.properties.numericValue, last.value < 128 {
             let endsInConsonantSound = [0, 1, 3, 6, 7, 8].contains(Int(digit))
-            return text + (endsInConsonantSound ? "을" : "를")
+            return text + (endsInConsonantSound ? L10n.t("formatters.90fb063b") : L10n.t("formatters.943d1aff"))
         }
-        return text + "을"
+        return text + L10n.t("formatters.90fb063b")
     }
 
     /// Abbreviates large counts so they can't overflow a narrow card.
@@ -72,9 +74,14 @@ enum Formatters {
         let n = abs(value)
         guard n >= 100_000 else { return sign + groupedNumber(n) }
 
-        let units: [(scale: Double, suffix: String)] = [
-            (10_000, "만"), (100_000_000, "억"), (1_000_000_000_000, "조")
-        ]
+        // The *scale* is locale-dependent, not just the suffix: Korean groups by myriads
+        // (만 = 10⁴, 억 = 10⁸) while English groups by thousands. Swapping only the suffix would
+        // label 123,000 as "12.3K".
+        let units: [(scale: Double, suffix: String)] = LocalizationManager.usesMyriadGrouping
+            ? [(10_000, L10n.t("formatters.63948d05")),
+               (100_000_000, L10n.t("formatters.ed3c743d")),
+               (1_000_000_000_000, L10n.t("formatters.7977ad75"))]
+            : [(1_000, "K"), (1_000_000, "M"), (1_000_000_000, "B"), (1_000_000_000_000, "T")]
         var chosen = units[0]
         for unit in units where Double(n) >= unit.scale { chosen = unit }
 
@@ -119,10 +126,10 @@ enum Formatters {
         let minutes = (seconds % 3600) / 60
         let secs = seconds % 60
         var parts: [String] = []
-        if days > 0 { parts.append("\(days)일") }
-        if hours > 0 { parts.append("\(hours)시간") }
-        if minutes > 0 { parts.append("\(minutes)분") }
-        if secs > 0 || parts.isEmpty { parts.append("\(secs)초") }
+        if days > 0 { parts.append(L10n.t("formatters.cec3694e", days)) }
+        if hours > 0 { parts.append(L10n.t("formatters.0967e5ff", hours)) }
+        if minutes > 0 { parts.append(L10n.t("formatters.bfecc441", minutes)) }
+        if secs > 0 || parts.isEmpty { parts.append(L10n.t("formatters.e1455aca", secs)) }
         return parts.joined(separator: " ")
     }
 
@@ -155,7 +162,7 @@ enum Formatters {
         guard seconds >= 24 * 3600 else { return compactDuration(seconds) }
         let days = seconds / (24 * 3600)
         let hours = (seconds % (24 * 3600)) / 3600
-        return hours > 0 ? "\(days)일 \(hours)시간" : "\(days)일"
+        return hours > 0 ? L10n.t("formatters.8a9f57f9", days, hours) : L10n.t("formatters.cec3694e", days)
     }
 
     /// Distance that stays short whatever the magnitude.
@@ -177,9 +184,9 @@ enum Formatters {
     /// Hours rendered so small and large values stay distinguishable: under an hour it drops to
     /// minutes, because "0.2시간 / 0.2시간" made a progress bar look stuck at its own target.
     static func hoursValue(_ hours: Double) -> String {
-        if hours < 1 { return "\(Int((hours * 60).rounded()))분" }
-        if hours >= 100 { return compactNumber(Int(hours)) + "시간" }
-        return String(format: "%.1f시간", hours)
+        if hours < 1 { return L10n.t("formatters.bfecc441", Int((hours * 60).rounded())) }
+        if hours >= 100 { return compactNumber(Int(hours)) + L10n.t("formatters.6c35133c") }
+        return String(format: L10n.t("formatters.3dd100c4"), hours)
     }
 
     static func bytesPerSecond(_ value: Double) -> String {
@@ -193,20 +200,20 @@ enum Formatters {
     /// spelled out with an 오전/오후 prefix.
     static func hourLabel(_ hour24: Int) -> String {
         let hour = ((hour24 % 24) + 24) % 24
-        if hour == 0 { return "오전 12시" }
-        if hour < 12 { return "오전 \(hour)시" }
-        if hour == 12 { return "오후 12시" }
-        return "오후 \(hour - 12)시"
+        if hour == 0 { return L10n.t("formatters.c308f2aa") }
+        if hour < 12 { return L10n.t("formatters.1de73f1f", hour) }
+        if hour == 12 { return L10n.t("formatters.92e4ba2e") }
+        return L10n.t("formatters.998e2965", hour - 12)
     }
 
     /// "오후 3시경" — for approximate, bucketed times.
     static func approximateHourLabel(_ hour24: Int) -> String {
-        hourLabel(hour24) + "경"
+        hourLabel(hour24) + L10n.t("formatters.30f39b92")
     }
 
     /// Korean weekday name for a 0-based index where 0 = Sunday.
     static func weekdayName(_ index: Int) -> String {
-        let names = ["일", "월", "화", "수", "목", "금", "토"]
+        let names = [L10n.t("formatters.06cf3e90"), L10n.t("formatters.75448692"), L10n.t("formatters.adb4a282"), L10n.t("formatters.c04eb2ef"), L10n.t("formatters.5664a634"), L10n.t("formatters.cf5632c7"), L10n.t("formatters.b9e40662")]
         guard index >= 0 && index < names.count else { return "?" }
         return names[index]
     }
@@ -215,7 +222,7 @@ enum Formatters {
     static func shortDayLabel(_ day: String) -> String {
         guard let date = DayKey.date(fromDayString: day) else { return day }
         let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "ko_KR")
+        formatter.locale = LocalizationManager.activeLocale
         formatter.dateFormat = "M/d"
         return formatter.string(from: date)
     }
@@ -223,8 +230,8 @@ enum Formatters {
     static func dayLabel(_ day: String) -> String {
         guard let date = DayKey.date(fromDayString: day) else { return day }
         let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "ko_KR")
-        formatter.dateFormat = "M월 d일 (E)"
+        formatter.locale = LocalizationManager.activeLocale
+        formatter.dateFormat = L10n.t("formatters.26ce67f8")
         return formatter.string(from: date)
     }
 }

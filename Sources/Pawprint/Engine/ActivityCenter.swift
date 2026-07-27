@@ -90,6 +90,7 @@ final class ActivityCenter {
             loadedSettings = migrated
             PawprintStore.shared.saveSettings(migrated)
         }
+        LocalizationManager.shared.apply(loadedSettings.language)
         self.settings = loadedSettings
         let day = DayKey.today(dayStartHour: loadedSettings.dayStartHour)
         self.currentDayString = day
@@ -178,7 +179,7 @@ final class ActivityCenter {
     /// stored day, so it must never sit on a hot path.
     private(set) var lifetimeStats = LifetimeStats()
     private(set) var quests: [QuestProgress] = []
-    private(set) var overallLevel = OverallLevel(level: 1, title: "갓 태어난 발자국", totalLevels: 0)
+    private(set) var overallLevel = OverallLevel(level: 1, title: L10n.t("activityCenter.e10505c5"), totalLevels: 0)
 
     @ObservationIgnored private var lastLifetimeRefresh: Date?
 
@@ -251,8 +252,8 @@ final class ActivityCenter {
             else { continue }
             updatedSettings.notificationCountToday += 1
 
-            let title = "레벨 업! \(quest.track.emoji)"
-            let body = "\(quest.displayTitle) Lv.\(quest.level) 달성"
+            let title = L10n.t("activityCenter.44529013", quest.track.emoji)
+            let body = L10n.t("activityCenter.96eadd51", quest.displayTitle, quest.level)
             Task { @MainActor in
                 await NotificationManager.shared.announce(title: title, body: body)
             }
@@ -296,6 +297,7 @@ final class ActivityCenter {
         let dockIconChanged = newSettings.showDockIcon != settings.showDockIcon
         let dayStartChanged = newSettings.dayStartHour != settings.dayStartHour
         let focusThresholdChanged = newSettings.focusThresholdSeconds != settings.focusThresholdSeconds
+        LocalizationManager.shared.apply(newSettings.language)
         settings = newSettings
         store.saveSettings(newSettings)
         refreshExclusionState()

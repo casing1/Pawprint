@@ -74,12 +74,12 @@ final class RecordTracker {
         }
 
         return [
-            best("maxWPM", "최고 타자 속도", "bolt.fill", { $0.maxWPM }, { Formatters.wpm($0) }),
-            best("totalKeys", "하루 키 입력", "keyboard", { Double($0.totalKeyPresses) }, { Formatters.compactNumber(Int($0)) }),
-            best("activeTime", "하루 사용시간", "clock.fill", { Double($0.activeSeconds) }, { Formatters.compactDuration(Int($0)) }),
-            best("focusTime", "하루 집중시간", "target", { Double($0.totalFocusSeconds) }, { Formatters.compactDuration(Int($0)) }),
-            best("totalClicks", "하루 클릭", "cursorarrow.click", { Double($0.totalClicks) }, { Formatters.compactNumber(Int($0)) }),
-            best("cursorDistance", "하루 커서 이동", "figure.run", { $0.cursorDistanceMeters }, { Formatters.compactDistance(meters: $0) }),
+            best("maxWPM", L10n.t("recordTracker.99e3df8c"), "bolt.fill", { $0.maxWPM }, { Formatters.wpm($0) }),
+            best("totalKeys", L10n.t("recordTracker.92933c2c"), "keyboard", { Double($0.totalKeyPresses) }, { Formatters.compactNumber(Int($0)) }),
+            best("activeTime", L10n.t("recordTracker.a1ba9993"), "clock.fill", { Double($0.activeSeconds) }, { Formatters.compactDuration(Int($0)) }),
+            best("focusTime", L10n.t("recordTracker.97fff18b"), "target", { Double($0.totalFocusSeconds) }, { Formatters.compactDuration(Int($0)) }),
+            best("totalClicks", L10n.t("recordTracker.162ac83e"), "cursorarrow.click", { Double($0.totalClicks) }, { Formatters.compactNumber(Int($0)) }),
+            best("cursorDistance", L10n.t("recordTracker.e6ea1cf6"), "figure.run", { $0.cursorDistanceMeters }, { Formatters.compactDistance(meters: $0) }),
         ].compactMap { $0 }
     }
 

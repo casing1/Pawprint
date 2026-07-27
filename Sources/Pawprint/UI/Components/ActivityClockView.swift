@@ -29,7 +29,7 @@ struct ActivityClockView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
-                Label("24시간 활동 시계", systemImage: "clock.badge.checkmark")
+                Label(L10n.t("activityClockView.a70de050"), systemImage: "clock.badge.checkmark")
                     .font(.caption).foregroundStyle(.secondary)
                 Spacer()
                 if let peak = peakLabel {
@@ -53,7 +53,7 @@ struct ActivityClockView: View {
         let values = slots
         guard let peak = values.enumerated().max(by: { $0.element < $1.element }), peak.element > 0 else { return nil }
         let hour = peak.offset / 2
-        return "가장 활발했던 때 \(Formatters.approximateHourLabel(hour))"
+        return L10n.t("activityClockView.9c405353", Formatters.approximateHourLabel(hour))
     }
 
     private var dial: some View {
@@ -136,10 +136,10 @@ struct ActivityClockView: View {
             return Int((sum / total * 100).rounded())
         }
         return [
-            Period(name: "새벽 0-6시", emoji: "🌙", percent: share(0..<6)),
-            Period(name: "오전 6-12시", emoji: "🌅", percent: share(6..<12)),
-            Period(name: "오후 12-18시", emoji: "☀️", percent: share(12..<18)),
-            Period(name: "저녁 18-24시", emoji: "🌆", percent: share(18..<24)),
+            Period(name: L10n.t("activityClockView.7f679637"), emoji: "🌙", percent: share(0..<6)),
+            Period(name: L10n.t("activityClockView.2c0538b2"), emoji: "🌅", percent: share(6..<12)),
+            Period(name: L10n.t("activityClockView.97bdffaf"), emoji: "☀️", percent: share(12..<18)),
+            Period(name: L10n.t("activityClockView.78da68f9"), emoji: "🌆", percent: share(18..<24)),
         ]
     }
 }

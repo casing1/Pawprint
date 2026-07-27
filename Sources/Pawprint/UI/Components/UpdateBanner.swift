@@ -15,9 +15,9 @@ struct UpdateBanner: View {
         case .available(let release):
             banner(
                 icon: "sparkles",
-                title: "새 버전 \(release.version)",
-                subtitle: "지금 설치하고 재시작할 수 있어요",
-                action: ("업데이트", { Task { await updater.downloadAndInstall(release) } })
+                title: L10n.t("updateBanner.c329d2a5", release.version),
+                subtitle: L10n.t("updateBanner.7b39e5f1"),
+                action: (L10n.t("updateBanner.4f72dd68"), { Task { await updater.downloadAndInstall(release) } })
             )
 
         case .downloading(let progress):
@@ -25,13 +25,13 @@ struct UpdateBanner: View {
                 HStack(spacing: 6) {
                     Image(systemName: "arrow.down.circle")
                         .font(.system(size: 13)).foregroundStyle(Color.accentColor)
-                    Text("업데이트 내려받는 중…").font(.caption.weight(.medium))
+                    Text(L10n.t("updateBanner.6d72ddb4")).font(.caption.weight(.medium))
                     Spacer()
                     Text("\(Int(progress * 100))%")
                         .font(.system(size: 9).monospacedDigit()).foregroundStyle(.secondary)
                 }
                 // The relaunch is the surprising part, so it is announced before it happens.
-                Text("끝나면 자동으로 설치하고 앱이 다시 시작돼요")
+                Text(L10n.t("updateBanner.69236882"))
                     .font(.system(size: 9)).foregroundStyle(.secondary)
                 // Drawn rather than a `ProgressView`, matching the WPM gauge: a shape renders
                 // identically everywhere, an AppKit-backed control does not.
@@ -52,9 +52,9 @@ struct UpdateBanner: View {
         case .readyToInstall(let release):
             banner(
                 icon: "checkmark.seal.fill",
-                title: "\(release.version) 준비 완료",
-                subtitle: "서명 확인됨 — 눌러서 설치",
-                action: ("설치하고 재시작", { updater.install() })
+                title: L10n.t("updateBanner.5720d93f", release.version),
+                subtitle: L10n.t("updateBanner.ae670f69"),
+                action: (L10n.t("updateBanner.e723d26a"), { updater.install() })
             )
 
         case .failed(let message):
@@ -63,9 +63,9 @@ struct UpdateBanner: View {
             if updater.lastCheckedAt != nil {
                 banner(
                     icon: "exclamationmark.triangle.fill",
-                    title: "업데이트를 완료하지 못했어요",
+                    title: L10n.t("updateBanner.dc293408"),
                     subtitle: message,
-                    action: ("닫기", { updater.dismiss() }),
+                    action: (L10n.t("updateBanner.94b7dba1"), { updater.dismiss() }),
                     tone: .orange
                 )
             }

@@ -15,7 +15,7 @@ struct PercentileRanking: Identifiable {
 
     /// Reads naturally in the UI: "상위 8%" for a strong day, plain rank for a small history.
     var label: String {
-        totalDays < 10 ? "\(totalDays)일 중 \(rank)위" : "상위 \(topPercent)%"
+        totalDays < 10 ? L10n.t("percentileEngine.d9027497", totalDays, rank) : L10n.t("percentileEngine.8ea91d0d", topPercent)
     }
 
     var isStandout: Bool { topPercent <= 25 && totalDays >= 3 }
@@ -56,10 +56,10 @@ enum PercentileEngine {
         if let scoreSamples = samples[scoreKey], let score = today.score, score.total > 0 {
             result.append(ranking(
                 metricID: scoreKey,
-                title: "오늘의 점수",
+                title: L10n.t("percentileEngine.c0849f0a"),
                 icon: "star.fill",
                 todayValue: Double(score.total),
-                display: "\(score.total)점",
+                display: L10n.t("percentileEngine.f0b5b795", score.total),
                 sorted: scoreSamples
             ))
         }
@@ -125,15 +125,15 @@ enum PercentileEngine {
     /// One-line verdict for the headline, phrased without judgement — a quiet day is just quiet.
     static func headline(for ranking: PercentileRanking) -> String {
         guard ranking.totalDays >= 3 else {
-            return "기록이 조금 더 쌓이면 순위를 보여드릴게요"
+            return L10n.t("percentileEngine.1ce14e82")
         }
         switch ranking.topPercent {
-        case ...5: return "지금까지 중 손에 꼽히는 하루예요"
-        case 6...15: return "평소보다 훨씬 바쁜 하루예요"
-        case 16...35: return "제법 바쁜 하루예요"
-        case 36...65: return "평소와 비슷한 하루예요"
-        case 66...85: return "여유로운 하루예요"
-        default: return "조용한 하루예요"
+        case ...5: return L10n.t("percentileEngine.458c561e")
+        case 6...15: return L10n.t("percentileEngine.1790d0b4")
+        case 16...35: return L10n.t("percentileEngine.77295a1d")
+        case 36...65: return L10n.t("percentileEngine.62411d0e")
+        case 66...85: return L10n.t("percentileEngine.86ef14fb")
+        default: return L10n.t("percentileEngine.aeb41031")
         }
     }
 }

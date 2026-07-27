@@ -58,8 +58,8 @@ struct WeeklyRollup {
     }
 
     static func weekdayName(_ weekday: Int) -> String {
-        let names = ["", "일", "월", "화", "수", "목", "금", "토"]
+        let names = ["", L10n.t("weeklyRollup.06cf3e90"), L10n.t("weeklyRollup.75448692"), L10n.t("weeklyRollup.adb4a282"), L10n.t("weeklyRollup.c04eb2ef"), L10n.t("weeklyRollup.5664a634"), L10n.t("weeklyRollup.cf5632c7"), L10n.t("weeklyRollup.b9e40662")]
         guard weekday >= 1 && weekday < names.count else { return "" }
-        return "\(names[weekday])요일"
+        return L10n.t("weeklyRollup.80e0471d", names[weekday])
     }
 }

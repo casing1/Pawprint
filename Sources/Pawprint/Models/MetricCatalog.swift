@@ -45,9 +45,9 @@ enum MetricCatalog {
         // MARK: Time
         MetricDefinition(
             id: "activeTime",
-            title: "활성 사용시간",
+            title: L10n.t("metricCatalog.e6bdb45b"),
             icon: "clock.fill",
-            explanation: "실제로 입력이 있었던 시간의 합계예요. 자리를 비운 시간은 빠집니다.",
+            explanation: L10n.t("metricCatalog.dfb8fcab"),
             category: .appUsage,
             value: { Double($0.activeSeconds) },
             display: { Formatters.compactDuration($0.activeSeconds) },
@@ -57,7 +57,7 @@ enum MetricCatalog {
         ),
         MetricDefinition(
             id: "screenOnTime",
-            title: "화면 켜짐 시간",
+            title: L10n.t("metricCatalog.e5e7450c"),
             icon: "display",
             explanation: MetricExplanations.screenTime.body,
             category: .sleepWake,
@@ -69,9 +69,9 @@ enum MetricCatalog {
         ),
         MetricDefinition(
             id: "screenUtilization",
-            title: "화면 활용도",
+            title: L10n.t("metricCatalog.a4db1d38"),
             icon: "gauge.medium",
-            explanation: "화면이 켜져 있던 시간 중 실제로 입력이 있었던 비율이에요.",
+            explanation: L10n.t("metricCatalog.e4702cd7"),
             category: .sleepWake,
             value: { Double($0.screenUtilizationPercent) },
             display: { $0.screenOnSeconds > 0 ? "\($0.screenUtilizationPercent)%" : "-" },
@@ -79,7 +79,7 @@ enum MetricCatalog {
         ),
         MetricDefinition(
             id: "focusTime",
-            title: "집중시간",
+            title: L10n.t("metricCatalog.77bad0ab"),
             icon: "target",
             explanation: MetricExplanations.focus.body,
             category: .appUsage,
@@ -91,9 +91,9 @@ enum MetricCatalog {
         ),
         MetricDefinition(
             id: "longestFocus",
-            title: "최장 집중시간",
+            title: L10n.t("metricCatalog.57beed03"),
             icon: "scope",
-            explanation: "오늘 가장 길게 이어진 집중 세션 하나의 길이예요.",
+            explanation: L10n.t("metricCatalog.df234c85"),
             category: .appUsage,
             value: { Double($0.longestFocusSeconds) },
             display: { $0.longestFocusSeconds > 0 ? Formatters.compactDuration($0.longestFocusSeconds) : "-" }
@@ -102,9 +102,9 @@ enum MetricCatalog {
         // MARK: Keyboard
         MetricDefinition(
             id: "totalKeys",
-            title: "전체 키 입력",
+            title: L10n.t("metricCatalog.ebcbe122"),
             icon: "keyboard",
-            explanation: "누른 모든 키의 횟수예요. 어떤 키였는지 순서나 내용은 저장하지 않아요.",
+            explanation: L10n.t("metricCatalog.8b6bf2d3"),
             category: .keyboard,
             value: { Double($0.totalKeyPresses) },
             display: { Formatters.compactNumber($0.totalKeyPresses) },
@@ -114,9 +114,9 @@ enum MetricCatalog {
         ),
         MetricDefinition(
             id: "maxWPM",
-            title: "최고 타자 속도",
+            title: L10n.t("metricCatalog.99e3df8c"),
             icon: "bolt.fill",
-            explanation: "1분 동안 입력한 문자 키 수를 기준으로 계산한 그날의 최고 속도예요.",
+            explanation: L10n.t("metricCatalog.b26c159f"),
             category: .keyboard,
             value: { $0.maxWPM },
             display: { $0.maxWPM > 0 ? Formatters.wpm($0.maxWPM) : "-" },
@@ -125,9 +125,9 @@ enum MetricCatalog {
         ),
         MetricDefinition(
             id: "typingConsistency",
-            title: "타이핑 일관성",
+            title: L10n.t("metricCatalog.99bb387e"),
             icon: "waveform.path",
-            explanation: "타이핑이 시간에 걸쳐 얼마나 고르게 이뤄졌는지를 0~100으로 나타내요.",
+            explanation: L10n.t("metricCatalog.2a4a07dc"),
             category: .keyboard,
             value: { Double($0.typingConsistency) },
             display: { $0.typingConsistency > 0 ? "\($0.typingConsistency)%" : "-" },
@@ -135,9 +135,9 @@ enum MetricCatalog {
         ),
         MetricDefinition(
             id: "shortcuts",
-            title: "단축키 사용",
+            title: L10n.t("metricCatalog.4ca8229c"),
             icon: "command",
-            explanation: "복사·붙여넣기·실행취소 등 OS 전역 단축키를 누른 횟수예요.",
+            explanation: L10n.t("metricCatalog.b0fcd9e3"),
             category: .keyboard,
             value: { Double($0.shortcutCounts.values.reduce(0, +)) },
             display: { Formatters.groupedNumber($0.shortcutCounts.values.reduce(0, +)) },
@@ -148,9 +148,9 @@ enum MetricCatalog {
         // MARK: Pointer
         MetricDefinition(
             id: "totalClicks",
-            title: "클릭 수",
+            title: L10n.t("metricCatalog.900f26cb"),
             icon: "cursorarrow.click",
-            explanation: "좌클릭·우클릭·더블클릭을 모두 더한 횟수예요.",
+            explanation: L10n.t("metricCatalog.ae86bdaf"),
             category: .mouse,
             value: { Double($0.totalClicks) },
             display: { Formatters.compactNumber($0.totalClicks) },
@@ -160,9 +160,9 @@ enum MetricCatalog {
         ),
         MetricDefinition(
             id: "cursorDistance",
-            title: "커서 이동 거리",
+            title: L10n.t("metricCatalog.314017fc"),
             icon: "figure.run",
-            explanation: "커서가 움직인 거리를 이 Mac 화면의 실제 물리 크기 기준으로 환산했어요.",
+            explanation: L10n.t("metricCatalog.560ab027"),
             category: .mouse,
             value: { $0.cursorDistanceMeters },
             display: { Formatters.compactDistance(meters: $0.cursorDistanceMeters) },
@@ -171,22 +171,22 @@ enum MetricCatalog {
         ),
         MetricDefinition(
             id: "scrollAmount",
-            title: "스크롤량",
+            title: L10n.t("metricCatalog.00adcaf0"),
             icon: "scroll",
-            explanation: "스크롤한 거리를 화면 높이 단위로 환산한 값이에요.",
+            explanation: L10n.t("metricCatalog.472edd57"),
             category: .mouse,
             value: { $0.scrollScreens },
-            display: { Formatters.compactNumber(Int($0.scrollScreens.rounded())) + "화면" },
+            display: { Formatters.compactNumber(Int($0.scrollScreens.rounded())) + L10n.t("metricCatalog.43c786f1") },
             lifetimeValue: { $0.scrollScreens },
-            lifetimeDisplay: { Formatters.compactNumber(Int($0.scrollScreens.rounded())) + "화면" }
+            lifetimeDisplay: { Formatters.compactNumber(Int($0.scrollScreens.rounded())) + L10n.t("metricCatalog.43c786f1") }
         ),
 
         // MARK: Apps
         MetricDefinition(
             id: "appSwitches",
-            title: "앱 전환 횟수",
+            title: L10n.t("metricCatalog.f77d9ebb"),
             icon: "arrow.left.arrow.right",
-            explanation: "다른 앱으로 전환한 횟수예요.",
+            explanation: L10n.t("metricCatalog.96bcdc56"),
             category: .appUsage,
             value: { Double($0.totalAppSwitches) },
             display: { Formatters.groupedNumber($0.totalAppSwitches) },
@@ -195,7 +195,7 @@ enum MetricCatalog {
         ),
         MetricDefinition(
             id: "appConcentration",
-            title: "앱 집중도",
+            title: L10n.t("metricCatalog.c8d17c79"),
             icon: "chart.pie.fill",
             explanation: MetricExplanations.appConcentration.body,
             category: .appUsage,
@@ -207,9 +207,9 @@ enum MetricCatalog {
         // MARK: Clipboard
         MetricDefinition(
             id: "clipboard",
-            title: "복사·붙여넣기",
+            title: L10n.t("metricCatalog.00b3e1ca"),
             icon: "doc.on.clipboard",
-            explanation: "복사와 붙여넣기 횟수의 합계예요. 클립보드 내용은 저장하지 않아요.",
+            explanation: L10n.t("metricCatalog.dafd6e9c"),
             category: .clipboard,
             value: { Double($0.clipboardCopyCount + $0.clipboardPasteCount) },
             display: { "\($0.clipboardCopyCount) / \($0.clipboardPasteCount)" },
@@ -220,7 +220,7 @@ enum MetricCatalog {
         // MARK: Power
         MetricDefinition(
             id: "batteryUsed",
-            title: "사용한 배터리",
+            title: L10n.t("metricCatalog.81bdc1fb"),
             icon: "battery.25",
             explanation: MetricExplanations.energy.body,
             category: .powerPeripherals,
@@ -229,36 +229,36 @@ enum MetricCatalog {
         ),
         MetricDefinition(
             id: "batteryTime",
-            title: "배터리 사용시간",
+            title: L10n.t("metricCatalog.4cbcb836"),
             icon: "battery.100.bolt",
-            explanation: "충전기를 꽂지 않고 배터리로 사용한 시간이에요.",
+            explanation: L10n.t("metricCatalog.70017495"),
             category: .powerPeripherals,
             value: { Double($0.secondsOnBattery) },
             display: { Formatters.compactDuration($0.secondsOnBattery) }
         ),
         MetricDefinition(
             id: "sleepCount",
-            title: "잠자기 횟수",
+            title: L10n.t("metricCatalog.642e4659"),
             icon: "moon.zzz",
-            explanation: "Mac이 잠자기 상태로 전환된 횟수예요.",
+            explanation: L10n.t("metricCatalog.3cc2c92e"),
             category: .sleepWake,
             value: { Double($0.sleepCount) },
-            display: { "\($0.sleepCount)회" }
+            display: { L10n.t("metricCatalog.cf3d71b3", $0.sleepCount) }
         ),
         MetricDefinition(
             id: "lidCloses",
-            title: "뚜껑 닫은 횟수",
+            title: L10n.t("metricCatalog.e5723771"),
             icon: "laptopcomputer.and.arrow.down",
-            explanation: "뚜껑을 닫아도 Mac이 깨어 있는 경우(외장 모니터 연결 등)만 집계돼요.",
+            explanation: L10n.t("metricCatalog.52d7858e"),
             category: .powerPeripherals,
             value: { Double($0.lidCloseCount) },
-            display: { "\($0.lidCloseCount)회" }
+            display: { L10n.t("metricCatalog.cf3d71b3", $0.lidCloseCount) }
         ),
 
         // MARK: Network
         MetricDefinition(
             id: "networkTotal",
-            title: "네트워크 사용량",
+            title: L10n.t("metricCatalog.d182eb6a"),
             icon: "network",
             explanation: MetricExplanations.network.body,
             category: .powerPeripherals,
@@ -270,9 +270,9 @@ enum MetricCatalog {
         ),
         MetricDefinition(
             id: "networkDownload",
-            title: "다운로드",
+            title: L10n.t("metricCatalog.5c5095ab"),
             icon: "arrow.down.circle",
-            explanation: "네트워크로 내려받은 총 바이트 수예요.",
+            explanation: L10n.t("metricCatalog.fff554f2"),
             category: .powerPeripherals,
             value: { Double($0.networkDownloadBytes) },
             display: { Formatters.bytes($0.networkDownloadBytes) },
@@ -281,9 +281,9 @@ enum MetricCatalog {
         ),
         MetricDefinition(
             id: "networkUpload",
-            title: "업로드",
+            title: L10n.t("metricCatalog.51672ccd"),
             icon: "arrow.up.circle",
-            explanation: "네트워크로 올린 총 바이트 수예요.",
+            explanation: L10n.t("metricCatalog.456156da"),
             category: .powerPeripherals,
             value: { Double($0.networkUploadBytes) },
             display: { Formatters.bytes($0.networkUploadBytes) },

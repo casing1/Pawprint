@@ -22,7 +22,7 @@ struct BatteryTimelineView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
-                Label("배터리", systemImage: "battery.100")
+                Label(L10n.t("batteryTimelineView.40524c64"), systemImage: "battery.100")
                     .font(.caption).foregroundStyle(.secondary)
                 Spacer()
                 if let minLevel, let maxLevel {
@@ -33,7 +33,7 @@ struct BatteryTimelineView: View {
             }
 
             if samples.count < 2 {
-                Text("배터리 변화가 기록되면 그래프가 표시돼요")
+                Text(L10n.t("batteryTimelineView.40084ab3"))
                     .font(.caption2).foregroundStyle(.tertiary)
                     .frame(height: 40)
             } else {

@@ -49,7 +49,7 @@ struct QuestList: View {
                         detail: MetricExplanations.level.detail
                     )
                 }
-                Text("전체 트랙 누적 레벨 \(overall.totalLevels)")
+                Text(L10n.t("questList.935d82a6", overall.totalLevels))
                     .font(.caption2).foregroundStyle(.secondary)
             }
             Spacer(minLength: 0)
@@ -110,8 +110,8 @@ private struct QuestRow: View {
             // Near the top of a level the remaining amount rounds to zero ("0분 남았어요"),
             // which reads like the bar is stuck. Say it plainly instead.
             Text(quest.fraction >= 0.98
-                 ? "거의 다 왔어요!"
-                 : "다음 레벨까지 \(quest.track.formatted(quest.remaining)) 남았어요")
+                 ? L10n.t("questList.fb23592f")
+                 : L10n.t("questList.19dea11a", quest.track.formatted(quest.remaining)))
                 .font(.system(size: 9))
                 .foregroundStyle(quest.fraction >= 0.98 ? Color.accentColor : Color.secondary.opacity(0.7))
         }
@@ -129,7 +129,7 @@ struct LevelUpBanner: View {
         HStack(spacing: 10) {
             Text(quest.track.emoji).font(.title3)
             VStack(alignment: .leading, spacing: 1) {
-                Text("레벨 업!").font(.caption.weight(.bold)).foregroundStyle(.orange)
+                Text(L10n.t("questList.7102f81d")).font(.caption.weight(.bold)).foregroundStyle(.orange)
                 Text("\(quest.displayTitle) Lv.\(quest.level)")
                     .font(.caption2).foregroundStyle(.secondary)
             }

@@ -40,7 +40,7 @@ struct PawpetView: View {
                     .clipShape(RoundedRectangle(cornerRadius: size * 0.15, style: .continuous))
             }
         }
-        .accessibilityLabel("오늘의 고양이: \(t.caption)")
+        .accessibilityLabel(L10n.t("pawpetView.00642d2d", t.caption))
     }
 
     // MARK: - Composition

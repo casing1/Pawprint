@@ -114,8 +114,8 @@ struct WrappedView: View {
 
         case .comparison(let lead, let trail):
             HStack(spacing: 10) {
-                pill(lead, tint: .cyan, label: "이번 달")
-                pill(trail, tint: .white.opacity(0.35), label: "지난달")
+                pill(lead, tint: .cyan, label: L10n.t("wrappedView.fa72e1d8"))
+                pill(trail, tint: .white.opacity(0.35), label: L10n.t("wrappedView.7c7d578d"))
             }
             .opacity(revealed ? 1 : 0)
 
@@ -187,7 +187,7 @@ struct WrappedView: View {
             if isLast {
                 ShareButton(
                     mode: .wrapped(report),
-                    label: "카드",
+                    label: L10n.t("wrappedView.7dedeb82"),
                     suggestedFileName: "pawprint_wrapped_\(report.monthKey).png"
                 )
                 .fixedSize()

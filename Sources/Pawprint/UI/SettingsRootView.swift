@@ -17,21 +17,22 @@ struct SettingsRootView: View {
     var body: some View {
         TabView {
             GeneralSettingsTab()
-                .tabItem { Label("일반", systemImage: "gearshape") }
+                .tabItem { Label(L10n.t("settingsRootView.aef1a1e7"), systemImage: "gearshape") }
             CollectionSettingsTab()
-                .tabItem { Label("수집", systemImage: "chart.bar") }
+                .tabItem { Label(L10n.t("settingsRootView.c5b9a11e"), systemImage: "chart.bar") }
             ExcludedAppsSettingsTab()
-                .tabItem { Label("제외 앱", systemImage: "nosign") }
+                .tabItem { Label(L10n.t("settingsRootView.48511ffb"), systemImage: "nosign") }
             HUDSettingsTab()
                 .tabItem { Label("HUD", systemImage: "rectangle.inset.filled") }
             NotificationSettingsTab()
-                .tabItem { Label("알림", systemImage: "bell") }
+                .tabItem { Label(L10n.t("settingsRootView.e29d147e"), systemImage: "bell") }
             DataSettingsTab()
-                .tabItem { Label("데이터", systemImage: "externaldrive") }
+                .tabItem { Label(L10n.t("settingsRootView.0c6de345"), systemImage: "externaldrive") }
             UpdateSettingsTab()
-                .tabItem { Label("업데이트", systemImage: "arrow.triangle.2.circlepath") }
+                .tabItem { Label(L10n.t("settingsRootView.4f72dd68"), systemImage: "arrow.triangle.2.circlepath") }
         }
         .frame(width: 460, height: 420)
+        .id(LocalizationManager.shared.revision)
         .preferredColorScheme(colorScheme)
     }
 }
@@ -46,22 +47,25 @@ private struct GeneralSettingsTab: View {
     var body: some View {
         Form {
             Section {
-                Toggle("로그인 시 자동 실행", isOn: Binding(
+                Toggle(L10n.t("settingsRootView.24530a7a"), isOn: Binding(
                     get: { launchAtLoginEnabled },
                     set: { newValue in
                         launchAtLoginEnabled = newValue
                         LaunchAtLogin.set(newValue)
                     }
                 ))
-                Toggle("Dock 아이콘 표시", isOn: activityCenter.binding(\.showDockIcon))
-                Picker("메뉴바 대표 지표", selection: activityCenter.binding(\.menuBarMetric)) {
+                Toggle(L10n.t("settingsRootView.b9b55f4e"), isOn: activityCenter.binding(\.showDockIcon))
+                Picker(L10n.t("settingsRootView.76213e74"), selection: activityCenter.binding(\.menuBarMetric)) {
                     ForEach(MenuBarMetric.allCases, id: \.self) { Text($0.label).tag($0) }
                 }
-                Picker("테마", selection: activityCenter.binding(\.theme)) {
+                Picker(L10n.t("settingsRootView.5d8fee11"), selection: activityCenter.binding(\.theme)) {
                     ForEach(AppTheme.allCases, id: \.self) { Text($0.label).tag($0) }
                 }
+                Picker(L10n.t("settings.language"), selection: activityCenter.binding(\.language)) {
+                    ForEach(AppLanguage.allCases, id: \.self) { Text($0.label).tag($0) }
+                }
                 Stepper(
-                    "하루 시작 시각: \(activityCenter.settings.dayStartHour)시",
+                    L10n.t("settingsRootView.b9bbcb6a", activityCenter.settings.dayStartHour),
                     value: activityCenter.binding(\.dayStartHour),
                     in: 0...23
                 )
@@ -75,7 +79,7 @@ private struct GeneralSettingsTab: View {
                 Link(destination: URL(string: "https://github.com/yhcho0405/Pawprint")!) {
                     HStack(spacing: 5) {
                         Image(systemName: "star")
-                        Text("GitHub에서 Pawprint 보기")
+                        Text(L10n.t("settingsRootView.f1481e16"))
                         Spacer()
                         Image(systemName: "arrow.up.forward.square")
                             .foregroundStyle(.tertiary)
@@ -86,19 +90,19 @@ private struct GeneralSettingsTab: View {
                 .foregroundStyle(.secondary)
             }
 
-            Section("권한") {
+            Section(L10n.t("settingsRootView.4d02bde7")) {
                 PermissionStatusRows()
                 HStack {
-                    Button("설정 마법사 다시 열기") { OnboardingWindowController.shared.present() }
+                    Button(L10n.t("settingsRootView.9aa2b706")) { OnboardingWindowController.shared.present() }
                     Spacer()
                 }
             }
 
-            Section("오늘 탭 대표 카드 (최대 \(AppSettings.maxDashboardCards)개)") {
+            Section(L10n.t("settingsRootView.6db6c218", AppSettings.maxDashboardCards)) {
                 DashboardCardPicker()
             }
 
-            Section("공유 카드에 넣을 항목 (최대 \(AppSettings.maxShareCardMetrics)개)") {
+            Section(L10n.t("settingsRootView.42a37112", AppSettings.maxShareCardMetrics)) {
                 ShareCardMetricPicker()
             }
         }
@@ -179,19 +183,19 @@ private struct CollectionSettingsTab: View {
     var body: some View {
         Form {
             Section {
-                Toggle("전체 기록 일시정지", isOn: activityCenter.binding(\.isPaused))
+                Toggle(L10n.t("settingsRootView.2cbbbd10"), isOn: activityCenter.binding(\.isPaused))
             }
-            Section("수집 카테고리") {
-                Toggle("키보드 통계", isOn: activityCenter.binding(\.collectKeyboard))
-                Toggle("마우스 통계", isOn: activityCenter.binding(\.collectMouse))
-                Toggle("앱 사용시간", isOn: activityCenter.binding(\.collectAppUsage))
-                Toggle("클립보드 횟수", isOn: activityCenter.binding(\.collectClipboard))
-                Toggle("잠자기·깨우기", isOn: activityCenter.binding(\.collectSleepWake))
-                Toggle("전원과 주변장치", isOn: activityCenter.binding(\.collectPowerPeripherals))
+            Section(L10n.t("settingsRootView.7f244382")) {
+                Toggle(L10n.t("settingsRootView.573cc0a8"), isOn: activityCenter.binding(\.collectKeyboard))
+                Toggle(L10n.t("settingsRootView.3a53938d"), isOn: activityCenter.binding(\.collectMouse))
+                Toggle(L10n.t("settingsRootView.3dd1ec75"), isOn: activityCenter.binding(\.collectAppUsage))
+                Toggle(L10n.t("settingsRootView.7c6e2e22"), isOn: activityCenter.binding(\.collectClipboard))
+                Toggle(L10n.t("settingsRootView.bcafb5d0"), isOn: activityCenter.binding(\.collectSleepWake))
+                Toggle(L10n.t("settingsRootView.d04beeae"), isOn: activityCenter.binding(\.collectPowerPeripherals))
             }
-            Section("집중 세션 기준") {
+            Section(L10n.t("settingsRootView.5cabef7f")) {
                 Stepper(
-                    "\(activityCenter.settings.focusThresholdSeconds / 60)분 이상 유지 시 집중 세션으로 인정",
+                    L10n.t("settingsRootView.59af7816", activityCenter.settings.focusThresholdSeconds / 60),
                     value: Binding(
                         get: { activityCenter.settings.focusThresholdSeconds / 60 },
                         set: { minutes in
@@ -216,7 +220,7 @@ private struct ExcludedAppsSettingsTab: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("이 앱들에서는 기록이 자동으로 중단됩니다.")
+            Text(L10n.t("settingsRootView.45523438"))
                 .font(.callout)
                 .foregroundStyle(.secondary)
                 .padding([.top, .horizontal])
@@ -239,7 +243,7 @@ private struct ExcludedAppsSettingsTab: View {
 
             HStack {
                 Spacer()
-                Button("앱 추가…") { addApp() }
+                Button(L10n.t("settingsRootView.3b94ada7")) { addApp() }
                     .padding([.horizontal, .bottom])
             }
         }
@@ -256,7 +260,7 @@ private struct ExcludedAppsSettingsTab: View {
         panel.allowedContentTypes = [.application]
         panel.allowsMultipleSelection = false
         panel.canChooseDirectories = false
-        panel.prompt = "제외 목록에 추가"
+        panel.prompt = L10n.t("settingsRootView.90015697")
         guard panel.runModal() == .OK, let url = panel.url,
               let bundle = Bundle(url: url), let bundleID = bundle.bundleIdentifier else { return }
         let name = (bundle.infoDictionary?["CFBundleName"] as? String) ?? url.deletingPathExtension().lastPathComponent
@@ -277,25 +281,25 @@ private struct HUDSettingsTab: View {
         Form {
             Section {
                 HStack {
-                    Button(LiveHUDController.shared.isVisible ? "HUD 숨기기" : "HUD 표시")
+                    Button(LiveHUDController.shared.isVisible ? L10n.t("settingsRootView.14cf7d17") : L10n.t("settingsRootView.953a6727"))
                         { LiveHUDController.shared.toggle() }
                     Spacer()
                 }
-                Toggle("축소 모드", isOn: Binding(
+                Toggle(L10n.t("settingsRootView.e9a8a0f8"), isOn: Binding(
                     get: { activityCenter.settings.hudCompact },
                     set: { activityCenter.setHUDCompact($0) }
                 ))
-                Text("투명도는 HUD 상단의 반원 버튼에서 조절해요 — 뒤에 깔린 화면을 보면서 맞춰야 하니까요.")
+                Text(L10n.t("settingsRootView.ae73ebc3"))
                     .font(.caption2).foregroundStyle(.tertiary)
             }
 
-            Section("현재 세션 항목") {
-                Toggle("세션 시간", isOn: activityCenter.binding(\.hudShowsSessionTime))
-                Toggle("이번 세션 키", isOn: activityCenter.binding(\.hudShowsSessionKeys))
-                Toggle("이번 세션 클릭", isOn: activityCenter.binding(\.hudShowsSessionClicks))
+            Section(L10n.t("settingsRootView.9723170d")) {
+                Toggle(L10n.t("settingsRootView.046d22be"), isOn: activityCenter.binding(\.hudShowsSessionTime))
+                Toggle(L10n.t("settingsRootView.567fb32a"), isOn: activityCenter.binding(\.hudShowsSessionKeys))
+                Toggle(L10n.t("settingsRootView.ec433402"), isOn: activityCenter.binding(\.hudShowsSessionClicks))
             }
 
-            Section("오늘 통계 항목 (최대 \(AppSettings.maxHUDMetrics)개)") {
+            Section(L10n.t("settingsRootView.f2646959", AppSettings.maxHUDMetrics)) {
                 // Same catalog-driven pattern as the other pickers.
                 ForEach(MetricCatalog.enabled(MetricCatalog.all, settings: activityCenter.settings)) { metric in
                     Toggle(isOn: Binding(
@@ -319,7 +323,7 @@ private struct HUDSettingsTab: View {
                         }
                     }
                 }
-                Text("축소 모드에서는 WPM과 세션 시간만 표시돼요.")
+                Text(L10n.t("settingsRootView.abc83896"))
                     .font(.caption2).foregroundStyle(.tertiary)
             }
         }
@@ -359,8 +363,8 @@ private struct NotificationSettingsTab: View {
 
     var body: some View {
         Form {
-            Section("하루 요약") {
-                Toggle("매일 요약 알림 받기", isOn: Binding(
+            Section(L10n.t("settingsRootView.613263b3")) {
+                Toggle(L10n.t("settingsRootView.2fa70c01"), isOn: Binding(
                     get: { activityCenter.settings.dailySummaryEnabled },
                     set: { isOn in
                         var s = activityCenter.settings
@@ -369,14 +373,14 @@ private struct NotificationSettingsTab: View {
                         Task { await apply(enabled: isOn) }
                     }
                 ))
-                DatePicker("알림 시각", selection: summaryTime, displayedComponents: .hourAndMinute)
+                DatePicker(L10n.t("settingsRootView.94c2756c"), selection: summaryTime, displayedComponents: .hourAndMinute)
                     .disabled(!activityCenter.settings.dailySummaryEnabled)
-                Text("그날의 등급, 사용시간, 키 입력을 한 줄로 알려줘요. 소리는 울리지 않아요.")
+                Text(L10n.t("settingsRootView.57ce5282"))
                     .font(.caption2).foregroundStyle(.tertiary)
             }
 
-            Section("업적 알림") {
-                Toggle("레벨업 알림", isOn: Binding(
+            Section(L10n.t("settingsRootView.99e19534")) {
+                Toggle(L10n.t("settingsRootView.e5d5e106"), isOn: Binding(
                     get: { activityCenter.settings.celebrationNotificationsEnabled },
                     set: { isOn in
                         var s = activityCenter.settings
@@ -385,19 +389,19 @@ private struct NotificationSettingsTab: View {
                         if isOn { Task { _ = await NotificationManager.shared.requestAuthorizationIfNeeded() } }
                     }
                 ))
-                Text("퀘스트 트랙이 레벨업했을 때만, 하루 최대 \(AppSettings.maxAchievementNotificationsPerDay)번까지 울려요. 개인 기록 갱신은 알림 없이 앱 안에서만 축하해요 — 누적 지표라 하루에도 여러 번 넘어서거든요.")
+                Text(L10n.t("settingsRootView.08f28613", AppSettings.maxAchievementNotificationsPerDay))
                     .font(.caption2).foregroundStyle(.tertiary)
             }
 
-            Section("알림 권한") {
+            Section(L10n.t("settingsRootView.7429b001")) {
                 HStack(spacing: 6) {
                     Image(systemName: statusIcon).foregroundStyle(statusColor)
                     Text(statusText).font(.callout)
                     Spacer()
                 }
                 HStack {
-                    Button("권한 확인") { Task { await refreshStatus() } }
-                    Button("시스템 설정 열기") { openNotificationSettings() }
+                    Button(L10n.t("settingsRootView.dfd24172")) { Task { await refreshStatus() } }
+                    Button(L10n.t("settingsRootView.a53aa7ea")) { openNotificationSettings() }
                     Spacer()
                 }
                 if let authorizationNote {
@@ -427,11 +431,11 @@ private struct NotificationSettingsTab: View {
 
     private var statusText: String {
         switch status {
-        case .authorized: return "알림이 허용되어 있어요"
-        case .provisional: return "조용한 알림으로 허용되어 있어요"
-        case .denied: return "알림이 거부되어 있어요 — 시스템 설정에서 켜주세요"
-        case .notDetermined: return "아직 권한을 요청하지 않았어요"
-        @unknown default: return "권한 상태를 확인할 수 없어요"
+        case .authorized: return L10n.t("settingsRootView.069f7a37")
+        case .provisional: return L10n.t("settingsRootView.c62e4186")
+        case .denied: return L10n.t("settingsRootView.cf33ef6f")
+        case .notDetermined: return L10n.t("settingsRootView.88fb55f1")
+        @unknown default: return L10n.t("settingsRootView.c36d25c1")
         }
     }
 
@@ -454,7 +458,7 @@ private struct NotificationSettingsTab: View {
         }
         let granted = await NotificationManager.shared.requestAuthorizationIfNeeded()
         guard granted else {
-            authorizationNote = "시스템 설정 > 알림에서 Pawprint의 알림을 허용해 주세요."
+            authorizationNote = L10n.t("settingsRootView.d22e58d7")
             return
         }
         authorizationNote = nil
@@ -487,41 +491,41 @@ private struct DataSettingsTab: View {
 
     var body: some View {
         Form {
-            Section("보존 기간") {
-                Picker("보관 기간", selection: activityCenter.binding(\.retentionDays)) {
-                    Text("30일").tag(30)
-                    Text("90일").tag(90)
-                    Text("180일").tag(180)
-                    Text("365일").tag(365)
-                    Text("영구 보관").tag(0)
+            Section(L10n.t("settingsRootView.f130a33e")) {
+                Picker(L10n.t("settingsRootView.c4d8f13d"), selection: activityCenter.binding(\.retentionDays)) {
+                    Text(L10n.t("settingsRootView.504b4b63")).tag(30)
+                    Text(L10n.t("settingsRootView.f5c43d03")).tag(90)
+                    Text(L10n.t("settingsRootView.e8680014")).tag(180)
+                    Text(L10n.t("settingsRootView.fa41cf32")).tag(365)
+                    Text(L10n.t("settingsRootView.de824e4f")).tag(0)
                 }
-                Text("데이터 위치: \(PawprintStore.shared.databaseURL.path)")
+                Text(L10n.t("settingsRootView.ee0ecd1a", PawprintStore.shared.databaseURL.path))
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
                     .textSelection(.enabled)
             }
 
-            Section("내보내기") {
-                Button("모든 기록을 CSV로 내보내기…") { exportCSV() }
-                Button("모든 기록을 JSON으로 내보내기…") { exportData() }
+            Section(L10n.t("settingsRootView.c3a6ac35")) {
+                Button(L10n.t("settingsRootView.c80acff1")) { exportCSV() }
+                Button(L10n.t("settingsRootView.6abc1f94")) { exportData() }
                 if let exportMessage {
                     Text(exportMessage).font(.caption).foregroundStyle(.secondary)
                 }
             }
 
-            Section("삭제") {
-                DatePicker("특정 날짜 삭제", selection: $deleteDate, displayedComponents: .date)
-                Button("이 날짜 기록 삭제", role: .destructive) { showDeleteDateConfirm = true }
-                    .confirmationDialog("이 날짜의 기록을 삭제할까요?", isPresented: $showDeleteDateConfirm, titleVisibility: .visible) {
-                        Button("삭제", role: .destructive) { deleteDate(deleteDate) }
-                        Button("취소", role: .cancel) {}
+            Section(L10n.t("settingsRootView.fc81e222")) {
+                DatePicker(L10n.t("settingsRootView.9cfd39c5"), selection: $deleteDate, displayedComponents: .date)
+                Button(L10n.t("settingsRootView.57ee6700"), role: .destructive) { showDeleteDateConfirm = true }
+                    .confirmationDialog(L10n.t("settingsRootView.20d7b731"), isPresented: $showDeleteDateConfirm, titleVisibility: .visible) {
+                        Button(L10n.t("settingsRootView.fc81e222"), role: .destructive) { deleteDate(deleteDate) }
+                        Button(L10n.t("settingsRootView.19b2d19b"), role: .cancel) {}
                     }
 
-                Button("전체 기록 완전 삭제", role: .destructive) { showDeleteAllConfirm = true }
-                    .confirmationDialog("모든 Pawprint 기록을 완전히 삭제할까요? 이 작업은 되돌릴 수 없습니다.", isPresented: $showDeleteAllConfirm, titleVisibility: .visible) {
-                        Button("전체 삭제 (업적 유지)", role: .destructive) { deleteAll(includingAchievements: false) }
-                        Button("전체 삭제 + 업적까지 초기화", role: .destructive) { deleteAll(includingAchievements: true) }
-                        Button("취소", role: .cancel) {}
+                Button(L10n.t("settingsRootView.90e1a615"), role: .destructive) { showDeleteAllConfirm = true }
+                    .confirmationDialog(L10n.t("settingsRootView.ca6259e9"), isPresented: $showDeleteAllConfirm, titleVisibility: .visible) {
+                        Button(L10n.t("settingsRootView.dfa74759"), role: .destructive) { deleteAll(includingAchievements: false) }
+                        Button(L10n.t("settingsRootView.da1d4a83"), role: .destructive) { deleteAll(includingAchievements: true) }
+                        Button(L10n.t("settingsRootView.19b2d19b"), role: .cancel) {}
                     }
             }
         }
@@ -537,9 +541,9 @@ private struct DataSettingsTab: View {
         guard panel.runModal() == .OK, let url = panel.url else { return }
         do {
             try data.write(to: url)
-            exportMessage = "CSV 내보내기 완료: \(url.lastPathComponent)"
+            exportMessage = L10n.t("settingsRootView.dbcfd145", url.lastPathComponent)
         } catch {
-            exportMessage = "내보내기 실패: \(error.localizedDescription)"
+            exportMessage = L10n.t("settingsRootView.a2f75add", error.localizedDescription)
         }
     }
 
@@ -551,9 +555,9 @@ private struct DataSettingsTab: View {
         guard panel.runModal() == .OK, let url = panel.url else { return }
         do {
             try data.write(to: url)
-            exportMessage = "내보내기 완료: \(url.lastPathComponent)"
+            exportMessage = L10n.t("settingsRootView.f17ca062", url.lastPathComponent)
         } catch {
-            exportMessage = "내보내기 실패: \(error.localizedDescription)"
+            exportMessage = L10n.t("settingsRootView.a2f75add", error.localizedDescription)
         }
     }
 
@@ -585,8 +589,8 @@ private struct PermissionStatusRows: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            row("손쉬운 사용", permissions.accessibilityGranted) { permissions.openAccessibilitySettings() }
-            row("입력 모니터링", permissions.inputMonitoringGranted) { permissions.openInputMonitoringSettings() }
+            row(L10n.t("settingsRootView.2008ca0e"), permissions.accessibilityGranted) { permissions.openAccessibilitySettings() }
+            row(L10n.t("settingsRootView.e87e0ec4"), permissions.inputMonitoringGranted) { permissions.openInputMonitoringSettings() }
         }
         .onAppear { permissions.refresh() }
     }
@@ -598,9 +602,9 @@ private struct PermissionStatusRows: View {
             Text(title)
             Spacer()
             if granted {
-                Text("허용됨").font(.caption).foregroundStyle(.secondary)
+                Text(L10n.t("settingsRootView.a157c8c4")).font(.caption).foregroundStyle(.secondary)
             } else {
-                Button("열기", action: open).controlSize(.small)
+                Button(L10n.t("settingsRootView.e5637183"), action: open).controlSize(.small)
             }
         }
     }
@@ -621,50 +625,50 @@ private struct UpdateSettingsTab: View {
     var body: some View {
         Form {
             Section {
-                LabeledContent("현재 버전") {
+                LabeledContent(L10n.t("settingsRootView.c0a56eea")) {
                     Text("\(updater.currentVersion) (\(updater.currentBuild))")
                         .foregroundStyle(.secondary)
                 }
             }
 
             Section {
-                Toggle("업데이트 확인 사용", isOn: activityCenter.binding(\.updateCheckEnabled))
-                Text("Pawprint가 인터넷에 접속하는 유일한 기능이에요. 켜면 아래 주소로 GET 요청 한 번을 보내고, 기기 정보나 사용 기록은 아무것도 함께 보내지 않아요. 꺼두면 앱은 완전히 오프라인으로 동작해요.")
+                Toggle(L10n.t("settingsRootView.ef2792c1"), isOn: activityCenter.binding(\.updateCheckEnabled))
+                Text(L10n.t("settingsRootView.267a3303"))
                     .font(.caption2).foregroundStyle(.secondary)
 
                 if settings.updateCheckEnabled {
-                    Toggle("실행할 때 자동으로 확인", isOn: activityCenter.binding(\.updateCheckAutomatically))
-                    TextField("업데이트 주소 (https://…/appcast.json)",
+                    Toggle(L10n.t("settingsRootView.aa2a685b"), isOn: activityCenter.binding(\.updateCheckAutomatically))
+                    TextField(L10n.t("settingsRootView.b644dd89"),
                               text: activityCenter.binding(\.updateFeedURL))
                         .textFieldStyle(.roundedBorder)
                 }
             }
 
             if settings.updateCheckEnabled {
-                Section("상태") {
+                Section(L10n.t("settingsRootView.2926977b")) {
                     statusRow
                     HStack {
-                        Button("지금 확인") {
+                        Button(L10n.t("settingsRootView.a8201e37")) {
                             Task { await updater.check(feedURL: settings.updateFeedURL, manual: true) }
                         }
                         .disabled(settings.updateFeedURL.isEmpty || isBusy)
                         if case .available(let release) = updater.state {
-                            Button("다운로드") { Task { await updater.download(release) } }
+                            Button(L10n.t("settingsRootView.5c5095ab")) { Task { await updater.download(release) } }
                                 .buttonStyle(.borderedProminent)
-                            Button("브라우저로 열기") { updater.openDownloadPage(release) }
+                            Button(L10n.t("settingsRootView.7d536052")) { updater.openDownloadPage(release) }
                         }
                         if case .readyToInstall = updater.state {
-                            Button("설치하고 재시작") { updater.install() }
+                            Button(L10n.t("settingsRootView.e723d26a")) { updater.install() }
                                 .buttonStyle(.borderedProminent)
-                            Button("취소") { updater.dismiss() }
+                            Button(L10n.t("settingsRootView.19b2d19b")) { updater.dismiss() }
                         }
                         Spacer()
                     }
                 }
             }
 
-            Section("서명 확인") {
-                Text("내려받은 앱이 지금 실행 중인 앱과 같은 서명인지 확인한 뒤에만 교체해요. 서명이 다르면 설치를 중단해요 — 업데이트 주소가 바뀌어도 임의의 코드가 실행되지 않도록.")
+            Section(L10n.t("settingsRootView.7d793248")) {
+                Text(L10n.t("settingsRootView.bf7fbbb3"))
                     .font(.caption2).foregroundStyle(.secondary)
             }
         }
@@ -682,16 +686,16 @@ private struct UpdateSettingsTab: View {
     private var statusRow: some View {
         switch updater.state {
         case .idle:
-            Text("아직 확인하지 않았어요").font(.caption).foregroundStyle(.secondary)
+            Text(L10n.t("settingsRootView.b0177d91")).font(.caption).foregroundStyle(.secondary)
         case .checking:
-            HStack(spacing: 6) { ProgressView().controlSize(.small); Text("확인 중…").font(.caption) }
+            HStack(spacing: 6) { ProgressView().controlSize(.small); Text(L10n.t("settingsRootView.33c1f78f")).font(.caption) }
         case .upToDate(let at):
-            Label("최신 버전이에요 (\(at.formatted(date: .omitted, time: .shortened)) 확인)",
+            Label(L10n.t("settingsRootView.964c983e", at.formatted(date: .omitted, time: .shortened)),
                   systemImage: "checkmark.circle.fill")
                 .font(.caption).foregroundStyle(.green)
         case .available(let release):
             VStack(alignment: .leading, spacing: 3) {
-                Label("새 버전 \(release.version)이 있어요", systemImage: "sparkles")
+                Label(L10n.t("settingsRootView.dbaf68c1", release.version), systemImage: "sparkles")
                     .font(.callout.weight(.semibold))
                 if let notes = release.notes {
                     Text(notes).font(.caption).foregroundStyle(.secondary)
@@ -700,11 +704,11 @@ private struct UpdateSettingsTab: View {
             }
         case .downloading(let progress):
             VStack(alignment: .leading, spacing: 4) {
-                Text("내려받는 중…").font(.caption)
+                Text(L10n.t("settingsRootView.cc336a93")).font(.caption)
                 ProgressView(value: progress)
             }
         case .readyToInstall(let release):
-            Label("\(release.version) 설치 준비 완료 — 서명 확인됨", systemImage: "checkmark.seal.fill")
+            Label(L10n.t("settingsRootView.64b5f1e0", release.version), systemImage: "checkmark.seal.fill")
                 .font(.caption).foregroundStyle(.green)
         case .failed(let message):
             Label(message, systemImage: "exclamationmark.triangle.fill")

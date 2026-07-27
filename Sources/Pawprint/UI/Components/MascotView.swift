@@ -32,17 +32,17 @@ enum MascotMood {
     /// Shown next to the date, gives the mascot a voice without claiming to read the user's mind.
     var label: String {
         switch self {
-        case .paused: return "기록을 잠시 멈췄어요"
-        case .idle: return "조용히 기다리고 있어요"
-        case .sprinting: return "엄청 빠르게 타이핑 중!"
-        case .typing: return "열심히 타이핑 중"
-        case .flustered: return "수정이 좀 많네요"
-        case .focused: return "집중 모드예요"
-        case .clicking: return "클릭이 바쁘네요"
-        case .scrolling: return "한참 스크롤 중"
-        case .nightOwl: return "밤이 깊었어요"
-        case .tired: return "오늘 많이 달렸어요"
-        case .neutral: return "평소처럼 사용 중"
+        case .paused: return L10n.t("mascotView.732a4450")
+        case .idle: return L10n.t("mascotView.9f075163")
+        case .sprinting: return L10n.t("mascotView.93739fc8")
+        case .typing: return L10n.t("mascotView.e858b921")
+        case .flustered: return L10n.t("mascotView.bb1af037")
+        case .focused: return L10n.t("mascotView.9f1822e9")
+        case .clicking: return L10n.t("mascotView.a0771ecd")
+        case .scrolling: return L10n.t("mascotView.7c387c2f")
+        case .nightOwl: return L10n.t("mascotView.0df88534")
+        case .tired: return L10n.t("mascotView.90bda5fe")
+        case .neutral: return L10n.t("mascotView.02e81996")
         }
     }
 

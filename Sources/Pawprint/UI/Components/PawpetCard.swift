@@ -28,11 +28,11 @@ struct PawpetCard: View {
                 pet
                 VStack(alignment: .leading, spacing: 3) {
                     HStack(spacing: 4) {
-                        Text("오늘의 고양이").font(.caption).foregroundStyle(.secondary)
+                        Text(L10n.t("pawpetCard.be3bfdb0")).font(.caption).foregroundStyle(.secondary)
                         InfoBadge(
-                            title: "오늘의 고양이",
-                            explanation: "털색·무늬·귀·꼬리·눈색은 날짜로 정해져 하루 종일 그대로예요. 표정, 머리 장식, 안경, 소품, 목걸이, 볼, 배경, 주변 효과는 각각 다른 지표를 따라가요.",
-                            detail: "나올 수 있는 조합은 \(Formatters.groupedNumber(PawpetTraits.combinationCount))가지예요."
+                            title: L10n.t("pawpetCard.be3bfdb0"),
+                            explanation: L10n.t("pawpetCard.ef03744e"),
+                            detail: L10n.t("pawpetCard.a2e3e955", Formatters.groupedNumber(PawpetTraits.combinationCount))
                         )
                         Spacer()
                     }
@@ -53,7 +53,7 @@ struct PawpetCard: View {
                 Spacer(minLength: 0)
             }
             if notes.count > 3 {
-                Button(showAllNotes ? "접기" : "왜 이렇게 생겼나요? (\(notes.count - 3)개 더)") {
+                Button(showAllNotes ? L10n.t("pawpetCard.0d2c2495") : L10n.t("pawpetCard.db8825e0", notes.count - 3)) {
                     withAnimation(.easeInOut(duration: 0.2)) { showAllNotes.toggle() }
                 }
                 .buttonStyle(.plain)

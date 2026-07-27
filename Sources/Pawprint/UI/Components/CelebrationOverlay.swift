@@ -78,10 +78,10 @@ struct RecordBrokenBanner: View {
                 .rotationEffect(.degrees(appeared ? 0 : -30))
 
             VStack(alignment: .leading, spacing: 1) {
-                Text("새 기록!").font(.caption.weight(.bold)).foregroundStyle(.orange)
+                Text(L10n.t("celebrationOverlay.4995b5f4")).font(.caption.weight(.bold)).foregroundStyle(.orange)
                 Text("\(standing.best.title) \(standing.best.formatted(standing.todayValue))")
                     .font(.caption2).foregroundStyle(.primary)
-                Text("이전 기록 \(standing.best.formatted(standing.best.best))")
+                Text(L10n.t("celebrationOverlay.24276211", standing.best.formatted(standing.best.best)))
                     .font(.system(size: 9)).foregroundStyle(.secondary)
             }
             Spacer(minLength: 0)

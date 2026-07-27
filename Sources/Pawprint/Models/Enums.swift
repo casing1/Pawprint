@@ -18,12 +18,12 @@ enum ClipboardDataType: String, Codable, CaseIterable {
 
     var displayName: String {
         switch self {
-        case .text: return "텍스트"
-        case .richText: return "서식 있는 텍스트"
+        case .text: return L10n.t("enums.6223fadb")
+        case .richText: return L10n.t("enums.94a6475e")
         case .url: return "URL"
-        case .image: return "이미지"
-        case .file: return "파일"
-        case .other: return "기타"
+        case .image: return L10n.t("enums.981f89bf")
+        case .file: return L10n.t("enums.68b8eecb")
+        case .other: return L10n.t("enums.44650a96")
         }
     }
 }
@@ -82,24 +82,24 @@ enum ActivityTag: String, Codable, CaseIterable {
 
     var label: String {
         switch self {
-        case .steadyTyper: return "꾸준한 타이퍼"
-        case .burstTyper: return "폭발형 타이퍼"
-        case .editorType: return "수정형 타이퍼"
-        case .mouseExplorer: return "마우스 탐험가"
-        case .scrollTraveler: return "스크롤 여행자"
-        case .shortcutExpert: return "단축키 전문가"
-        case .pasteHeavy: return "복붙형"
-        case .focused: return "집중형"
-        case .appHopper: return "앱 호핑형"
-        case .chaotic: return "혼돈형"
-        case .earlyBird: return "아침형"
-        case .nightOwl: return "야간형"
-        case .marathoner: return "장시간형"
-        case .sprinter: return "짧고 굵게형"
-        case .unplugged: return "무선형"
-        case .multiScreen: return "멀티스크린형"
-        case .dataHeavy: return "데이터 헤비유저"
-        case .screenIdler: return "켜두고 자리비움형"
+        case .steadyTyper: return L10n.t("enums.fbddde2a")
+        case .burstTyper: return L10n.t("enums.6d65c6ee")
+        case .editorType: return L10n.t("enums.f337674c")
+        case .mouseExplorer: return L10n.t("enums.38e3c4ab")
+        case .scrollTraveler: return L10n.t("enums.37a37788")
+        case .shortcutExpert: return L10n.t("enums.3616de17")
+        case .pasteHeavy: return L10n.t("enums.b260824b")
+        case .focused: return L10n.t("enums.f722fdd4")
+        case .appHopper: return L10n.t("enums.d930cb17")
+        case .chaotic: return L10n.t("enums.0bdbc32c")
+        case .earlyBird: return L10n.t("enums.64b28a94")
+        case .nightOwl: return L10n.t("enums.be1d226d")
+        case .marathoner: return L10n.t("enums.2087f474")
+        case .sprinter: return L10n.t("enums.c78b8de8")
+        case .unplugged: return L10n.t("enums.544ab871")
+        case .multiScreen: return L10n.t("enums.eac94e53")
+        case .dataHeavy: return L10n.t("enums.d80a27b5")
+        case .screenIdler: return L10n.t("enums.cd06e4e1")
         }
     }
 

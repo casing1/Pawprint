@@ -19,7 +19,7 @@ struct KeyboardHeatmapView: View {
             header
 
             if counts.isEmpty {
-                Text("아직 키 입력이 기록되지 않았어요")
+                Text(L10n.t("keyboardHeatmapView.fe84cf84"))
                     .font(.caption).foregroundStyle(.tertiary)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.vertical, 20)
@@ -35,15 +35,15 @@ struct KeyboardHeatmapView: View {
 
     private var header: some View {
         HStack {
-            Label("키보드 히트맵", systemImage: "keyboard")
+            Label(L10n.t("keyboardHeatmapView.d0bd899a"), systemImage: "keyboard")
                 .font(.caption).foregroundStyle(.secondary)
             Spacer()
             if let hovered = hoveredKey, let count = counts[hovered] {
-                Text("\(KeyboardLayout.label(for: hovered) ?? "?") · \(Formatters.groupedNumber(count))회")
+                Text(L10n.t("keyboardHeatmapView.07eb3505", KeyboardLayout.label(for: hovered) ?? "?", Formatters.groupedNumber(count)))
                     .font(.caption2.monospacedDigit())
                     .foregroundStyle(.secondary)
             } else if let label = summary.mostPressedKeyLabel {
-                Text("최다 \(label) · \(Formatters.groupedNumber(summary.mostPressedKeyCount))회")
+                Text(L10n.t("keyboardHeatmapView.12524de6", label, Formatters.groupedNumber(summary.mostPressedKeyCount)))
                     .font(.caption2.monospacedDigit())
                     .foregroundStyle(.tertiary)
             }
@@ -144,7 +144,7 @@ struct KeyboardHeatmapView: View {
                 }
             }
 
-            Text("어떤 자리의 키를 몇 번 눌렀는지만 셉니다. 입력 순서나 내용은 저장하지 않아요.")
+            Text(L10n.t("keyboardHeatmapView.92a21452"))
                 .font(.system(size: 9))
                 .foregroundStyle(.tertiary)
         }
@@ -155,9 +155,9 @@ struct KeyboardHeatmapView: View {
         let right = 100 - left
         return VStack(alignment: .leading, spacing: 3) {
             HStack {
-                Text("왼손 \(left)%").font(.system(size: 9)).foregroundStyle(.secondary)
+                Text(L10n.t("keyboardHeatmapView.62892a29", left)).font(.system(size: 9)).foregroundStyle(.secondary)
                 Spacer()
-                Text("오른손 \(right)%").font(.system(size: 9)).foregroundStyle(.secondary)
+                Text(L10n.t("keyboardHeatmapView.69df8f4f", right)).font(.system(size: 9)).foregroundStyle(.secondary)
             }
             GeometryReader { geo in
                 HStack(spacing: 2) {

@@ -52,43 +52,43 @@ struct OnboardingView: View {
             VStack(alignment: .leading, spacing: 14) {
                 privacyNote
 
-                Text("필수 권한").font(.caption).foregroundStyle(.secondary)
+                Text(L10n.t("onboardingView.d788f1b9")).font(.caption).foregroundStyle(.secondary)
 
                 step(
                     number: 1,
-                    title: "손쉬운 사용",
-                    detail: "마우스 이벤트와 앱 전환을 감지하는 데 필요해요.",
+                    title: L10n.t("onboardingView.2008ca0e"),
+                    detail: L10n.t("onboardingView.3caa40c7"),
                     granted: permissions.accessibilityGranted,
-                    primary: ("권한 요청", { permissions.requestAccessibility() }),
-                    secondary: ("시스템 설정 열기", { permissions.openAccessibilitySettings() })
+                    primary: (L10n.t("onboardingView.9076c0e6"), { permissions.requestAccessibility() }),
+                    secondary: (L10n.t("onboardingView.a53aa7ea"), { permissions.openAccessibilitySettings() })
                 )
 
                 step(
                     number: 2,
-                    title: "입력 모니터링",
-                    detail: "키를 눌렀다는 사실만 감지해요. 무엇을 입력했는지는 읽지도, 저장하지도 않아요.",
+                    title: L10n.t("onboardingView.e87e0ec4"),
+                    detail: L10n.t("onboardingView.b800f998"),
                     granted: permissions.inputMonitoringGranted,
-                    primary: ("권한 요청", { permissions.requestInputMonitoring() }),
-                    secondary: ("시스템 설정 열기", { permissions.openInputMonitoringSettings() })
+                    primary: (L10n.t("onboardingView.9076c0e6"), { permissions.requestInputMonitoring() }),
+                    secondary: (L10n.t("onboardingView.a53aa7ea"), { permissions.openInputMonitoringSettings() })
                 )
 
-                Text("선택 사항").font(.caption).foregroundStyle(.secondary).padding(.top, 4)
+                Text(L10n.t("onboardingView.3259d0ae")).font(.caption).foregroundStyle(.secondary).padding(.top, 4)
 
                 optionalRow(
                     icon: "bell.badge",
-                    title: "알림",
+                    title: L10n.t("onboardingView.e29d147e"),
                     detail: notificationDetail,
                     isOn: notificationStatus == .authorized || notificationStatus == .provisional,
-                    actionLabel: notificationStatus == .denied ? "시스템 설정 열기" : "허용하기",
+                    actionLabel: notificationStatus == .denied ? L10n.t("onboardingView.a53aa7ea") : L10n.t("onboardingView.2be27d6a"),
                     action: handleNotifications
                 )
 
                 optionalRow(
                     icon: "power",
-                    title: "로그인 시 자동 실행",
-                    detail: "Mac을 켜면 Pawprint가 자동으로 시작돼요. 기록이 끊기지 않아요.",
+                    title: L10n.t("onboardingView.24530a7a"),
+                    detail: L10n.t("onboardingView.d17086d3"),
                     isOn: launchAtLogin,
-                    actionLabel: launchAtLogin ? "해제" : "켜기",
+                    actionLabel: launchAtLogin ? L10n.t("onboardingView.a7abea5b") : L10n.t("onboardingView.a57a2d9a"),
                     action: toggleLaunchAtLogin
                 )
             }
@@ -101,8 +101,8 @@ struct OnboardingView: View {
                 .font(.system(size: 30))
                 .foregroundStyle(Color.accentColor)
             VStack(alignment: .leading, spacing: 3) {
-                Text("Pawprint에 오신 걸 환영해요").font(.title3.weight(.semibold))
-                Text("Mac을 어떻게 쓰는지 조용히 기록하고, 하루가 끝나면 보여드릴게요.")
+                Text(L10n.t("onboardingView.3e9c7a4b")).font(.title3.weight(.semibold))
+                Text(L10n.t("onboardingView.c0bf9d1b"))
                     .font(.caption).foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -113,12 +113,12 @@ struct OnboardingView: View {
 
     private var privacyNote: some View {
         VStack(alignment: .leading, spacing: 5) {
-            Label("기록되지 않는 것", systemImage: "lock.shield")
+            Label(L10n.t("onboardingView.e4cb0796"), systemImage: "lock.shield")
                 .font(.caption.weight(.semibold))
-            Text("입력한 글자와 순서, 비밀번호, 클립보드 내용, 화면 캡처, 창·문서·웹페이지 내용은 저장하지 않아요. 횟수와 시간만 기록하고, 모든 데이터는 이 Mac에만 남아요.")
+            Text(L10n.t("onboardingView.51bbb9bc"))
                 .font(.caption2).foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
-            Text("인터넷을 쓰는 기능은 새 버전 확인 하나뿐이에요. 기기 정보나 사용 기록은 함께 보내지 않고, 설정 > 업데이트에서 끌 수 있어요.")
+            Text(L10n.t("onboardingView.f5179fab"))
                 .font(.caption2).foregroundStyle(.tertiary)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -130,15 +130,15 @@ struct OnboardingView: View {
     private var footer: some View {
         HStack {
             if !requiredGranted {
-                Text("권한을 켜면 자동으로 다음 단계로 넘어가요")
+                Text(L10n.t("onboardingView.668011ac"))
                     .font(.caption2).foregroundStyle(.tertiary)
             }
             Spacer()
-            Button("나중에 하기") { onFinish() }
+            Button(L10n.t("onboardingView.c9c8403d")) { onFinish() }
                 .buttonStyle(.plain)
                 .font(.caption)
                 .foregroundStyle(.secondary)
-            Button(requiredGranted ? "시작하기" : "권한 없이 계속") { onFinish() }
+            Button(requiredGranted ? L10n.t("onboardingView.389b82de") : L10n.t("onboardingView.9e7ad479")) { onFinish() }
                 .buttonStyle(.borderedProminent)
                 .keyboardShortcut(.defaultAction)
         }
@@ -180,7 +180,7 @@ struct OnboardingView: View {
                     }
                     .padding(.top, 2)
                 } else {
-                    Text("허용됨").font(.caption2).foregroundStyle(.green)
+                    Text(L10n.t("onboardingView.a157c8c4")).font(.caption2).foregroundStyle(.green)
                 }
             }
             Spacer(minLength: 0)
@@ -221,9 +221,9 @@ struct OnboardingView: View {
 
     private var notificationDetail: String {
         switch notificationStatus {
-        case .authorized, .provisional: return "하루 요약과 신기록 알림을 받을 수 있어요."
-        case .denied: return "거부되어 있어요. 시스템 설정에서 켤 수 있어요."
-        default: return "하루 요약과 신기록을 알려드릴까요? 원하지 않으면 건너뛰어도 돼요."
+        case .authorized, .provisional: return L10n.t("onboardingView.0e30212e")
+        case .denied: return L10n.t("onboardingView.0e562213")
+        default: return L10n.t("onboardingView.ed23b382")
         }
     }
 
@@ -273,7 +273,7 @@ final class OnboardingWindowController: NSObject, NSWindowDelegate {
 
         let hosting = NSHostingController(rootView: OnboardingView { [weak self] in self?.finish() })
         let window = NSWindow(contentViewController: hosting)
-        window.title = "Pawprint 설정 마법사"
+        window.title = L10n.t("onboardingView.19668f3a")
         window.styleMask = [.titled, .closable]
         window.isReleasedWhenClosed = false
         window.center()

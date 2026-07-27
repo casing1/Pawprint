@@ -21,12 +21,12 @@ struct AppInputCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Label("앱별 입력", systemImage: "square.stack.3d.up")
+                Label(L10n.t("appInputCard.378a9a3e"), systemImage: "square.stack.3d.up")
                     .font(.caption).foregroundStyle(.secondary)
                 InfoBadge(
-                    title: "앱별 입력",
-                    explanation: "각 앱이 활성화되어 있는 동안의 키 입력과 클릭 횟수를 앱별로 나눠 센 값이에요.",
-                    detail: "무엇을 입력했는지, 어디를 클릭했는지는 저장하지 않아요. 제외한 앱은 집계되지 않습니다."
+                    title: L10n.t("appInputCard.378a9a3e"),
+                    explanation: L10n.t("appInputCard.fa356805"),
+                    detail: L10n.t("appInputCard.247da8d3")
                 )
                 Spacer()
                 if profiles.count > 3 {
@@ -63,7 +63,7 @@ struct AppInputCard: View {
                     .background(Capsule().fill(Color.accentColor.opacity(0.15)))
                     .foregroundStyle(Color.accentColor)
                 Spacer(minLength: 4)
-                Text("\(Formatters.compactNumber(profile.keyPresses))키 · \(Formatters.compactNumber(profile.clicks))클릭")
+                Text(L10n.t("appInputCard.e2cd016f", Formatters.compactNumber(profile.keyPresses), Formatters.compactNumber(profile.clicks)))
                     .font(.system(size: 9).monospacedDigit())
                     .foregroundStyle(.secondary)
             }

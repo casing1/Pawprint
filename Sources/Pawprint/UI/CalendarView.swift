@@ -53,7 +53,7 @@ struct CalendarView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Picker("기준", selection: activityCenter.binding(\.calendarMetricID)) {
+            Picker(L10n.t("calendarView.39b300c7"), selection: activityCenter.binding(\.calendarMetricID)) {
                 ForEach(MetricCatalog.enabled(MetricCatalog.calendarMetrics, settings: activityCenter.settings)) { m in
                     Text(m.title).tag(m.id)
                 }
@@ -65,7 +65,7 @@ struct CalendarView: View {
             HStack {
                 legend
                 Spacer()
-                Text("\(recordedDayCount)일 기록됨")
+                Text(L10n.t("calendarView.75cfe69a", recordedDayCount))
                     .font(.caption2).foregroundStyle(.tertiary)
             }
 
@@ -74,7 +74,7 @@ struct CalendarView: View {
             if let day = hoveredDay ?? selectedDay, let summary = summaries[day] {
                 CalendarDayDetailCard(summary: summary, metric: metric, isBest: day == bestDayKey)
             } else {
-                Text("날짜를 눌러 자세히 보세요")
+                Text(L10n.t("calendarView.c085788d"))
                     .font(.caption)
                     .foregroundStyle(.tertiary)
                     .frame(maxWidth: .infinity, alignment: .center)
@@ -146,7 +146,7 @@ struct CalendarView: View {
                 let previousMonth = previous.map { calendar.component(.month, from: $0) }
                 Group {
                     if week == 0 || month != previousMonth {
-                        Text("\(month)월")
+                        Text(L10n.t("calendarView.540792f2", month))
                             .font(.system(size: 8))
                             .foregroundStyle(.tertiary)
                             .fixedSize()
@@ -215,7 +215,7 @@ struct CalendarView: View {
     }
 
     private func tooltip(dayKey: String, summary: DailySummary?) -> String {
-        guard let summary else { return "\(Formatters.dayLabel(dayKey)) · 기록 없음" }
+        guard let summary else { return L10n.t("calendarView.69920d98", Formatters.dayLabel(dayKey)) }
         return "\(Formatters.dayLabel(dayKey)) · \(metric.title) \(metric.display(summary))"
     }
 
@@ -244,13 +244,13 @@ struct CalendarView: View {
 
     private var legend: some View {
         HStack(spacing: 4) {
-            Text("적음").font(.caption2).foregroundStyle(.tertiary)
+            Text(L10n.t("calendarView.0eedf854")).font(.caption2).foregroundStyle(.tertiary)
             ForEach([0.0, 0.25, 0.5, 0.75, 1.0], id: \.self) { level in
                 RoundedRectangle(cornerRadius: 2)
                     .fill(level == 0 ? Color.gray.opacity(0.15) : Color.accentColor.opacity(0.25 + level * 0.65))
                     .frame(width: 10, height: 10)
             }
-            Text("많음").font(.caption2).foregroundStyle(.tertiary)
+            Text(L10n.t("calendarView.176252ef")).font(.caption2).foregroundStyle(.tertiary)
         }
     }
 
@@ -261,10 +261,10 @@ struct CalendarView: View {
         let total = values.reduce(0.0) { $0 + metric.value($1) }
         let average = values.isEmpty ? 0 : total / Double(values.count)
         return HStack(spacing: 8) {
-            stripTile("합계", formattedAggregate(total))
-            stripTile("일 평균", formattedAggregate(average))
-            stripTile("최고", formattedAggregate(values.map { metric.value($0) }.max() ?? 0))
-            stripTile("연속", "\(activityCenter.currentStreak)일")
+            stripTile(L10n.t("calendarView.3dcb27ed"), formattedAggregate(total))
+            stripTile(L10n.t("calendarView.c27998b7"), formattedAggregate(average))
+            stripTile(L10n.t("calendarView.d45df3e9"), formattedAggregate(values.map { metric.value($0) }.max() ?? 0))
+            stripTile(L10n.t("calendarView.86522b3c"), L10n.t("calendarView.cec3694e", activityCenter.currentStreak))
         }
     }
 
@@ -296,14 +296,14 @@ struct CalendarView: View {
         return Group {
             if sorted.count >= 2 {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("월별 추이").font(.caption).foregroundStyle(.secondary)
+                    Text(L10n.t("calendarView.5763b9d2")).font(.caption).foregroundStyle(.secondary)
                     HStack(alignment: .bottom, spacing: 6) {
                         ForEach(Array(sorted), id: \.key) { month, value in
                             VStack(spacing: 3) {
                                 RoundedRectangle(cornerRadius: 3)
                                     .fill(Color.accentColor.opacity(value > 0 ? 0.75 : 0.2))
                                     .frame(height: peak > 0 ? max(3, 46 * value / peak) : 3)
-                                Text(String(month.suffix(2)) + "월")
+                                Text(String(month.suffix(2)) + L10n.t("calendarView.75448692"))
                                     .font(.system(size: 8))
                                     .foregroundStyle(.tertiary)
                             }
@@ -331,7 +331,7 @@ private struct CalendarDayDetailCard: View {
             HStack(spacing: 5) {
                 Text(Formatters.dayLabel(summary.day)).font(.subheadline.weight(.semibold))
                 if isBest {
-                    Text("최고 기록")
+                    Text(L10n.t("calendarView.f3703633"))
                         .font(.system(size: 8, weight: .bold))
                         .padding(.horizontal, 5).padding(.vertical, 1)
                         .background(Capsule().fill(Color.yellow.opacity(0.25)))
@@ -339,21 +339,21 @@ private struct CalendarDayDetailCard: View {
                 }
                 Spacer()
                 if let score = summary.score, summary.activeSeconds > 0 {
-                    Text("\(score.grade) \(score.total)점")
+                    Text(L10n.t("calendarView.c781cf0f", score.grade, score.total))
                         .font(.caption2.weight(.semibold))
                         .foregroundStyle(.secondary)
                 }
             }
             Grid(alignment: .leading, horizontalSpacing: 14, verticalSpacing: 4) {
                 GridRow {
-                    detail("사용시간", Formatters.compactDuration(summary.activeSeconds))
-                    detail("화면 켜짐", Formatters.compactDuration(summary.screenOnSeconds))
-                    detail("키 입력", Formatters.groupedNumber(summary.totalKeyPresses))
+                    detail(L10n.t("calendarView.f27f893c"), Formatters.compactDuration(summary.activeSeconds))
+                    detail(L10n.t("calendarView.cc4b5b89"), Formatters.compactDuration(summary.screenOnSeconds))
+                    detail(L10n.t("calendarView.59ca8aa6"), Formatters.groupedNumber(summary.totalKeyPresses))
                 }
                 GridRow {
-                    detail("최고 속도", summary.maxWPM > 0 ? Formatters.wpm(summary.maxWPM) : "-")
-                    detail("최장 집중", summary.longestFocusSeconds > 0 ? Formatters.compactDuration(summary.longestFocusSeconds) : "-")
-                    detail("클릭", Formatters.groupedNumber(summary.totalClicks))
+                    detail(L10n.t("calendarView.50922e57"), summary.maxWPM > 0 ? Formatters.wpm(summary.maxWPM) : "-")
+                    detail(L10n.t("calendarView.068c9e05"), summary.longestFocusSeconds > 0 ? Formatters.compactDuration(summary.longestFocusSeconds) : "-")
+                    detail(L10n.t("calendarView.6e3b1fc9"), Formatters.groupedNumber(summary.totalClicks))
                 }
             }
             if !summary.activityTags.isEmpty {

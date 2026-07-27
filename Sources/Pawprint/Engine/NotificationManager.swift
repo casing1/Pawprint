@@ -48,7 +48,7 @@ final class NotificationManager {
         guard await requestAuthorizationIfNeeded() else { return }
 
         let content = UNMutableNotificationContent()
-        content.title = "오늘의 Pawprint 🐾"
+        content.title = L10n.t("notificationManager.0bd1f05d")
         content.body = Self.dailyBody(for: summary)
         content.sound = nil   // a summary shouldn't interrupt anything
 
@@ -71,18 +71,18 @@ final class NotificationManager {
 
     static func dailyBody(for summary: DailySummary) -> String {
         guard summary.activeSeconds > 0 else {
-            return "오늘은 조용한 하루였네요. 그것도 좋죠."
+            return L10n.t("notificationManager.86e5eb59")
         }
         var parts: [String] = []
         if let score = summary.score {
-            parts.append("\(score.grade)등급 · \(score.headline)")
+            parts.append(L10n.t("notificationManager.79ca0623", score.grade, score.headline))
         }
-        parts.append("사용 \(Formatters.compactDuration(summary.activeSeconds))")
+        parts.append(L10n.t("notificationManager.6cee1183", Formatters.compactDuration(summary.activeSeconds)))
         if summary.totalKeyPresses > 0 {
-            parts.append("\(Formatters.compactNumber(summary.totalKeyPresses))키")
+            parts.append(L10n.t("notificationManager.a7c3c02f", Formatters.compactNumber(summary.totalKeyPresses)))
         }
         if summary.longestFocusSeconds >= 300 {
-            parts.append("최장 집중 \(Formatters.compactDuration(summary.longestFocusSeconds))")
+            parts.append(L10n.t("notificationManager.ba31f788", Formatters.compactDuration(summary.longestFocusSeconds)))
         }
         return parts.joined(separator: " · ")
     }

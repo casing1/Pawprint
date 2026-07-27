@@ -430,26 +430,21 @@ enum DebugSnapshot {
             }
         }
 
+        // A plain grid: the README shows this to people who don't read Korean, and the caption
+        // rows underneath were unreadable at the width GitHub renders it.
         let columns = 4
-        let sheet = VStack(spacing: 12) {
+        let sheet = VStack(spacing: 10) {
             ForEach(0..<(built.count / columns), id: \.self) { row in
-                HStack(spacing: 12) {
+                HStack(spacing: 10) {
                     ForEach(0..<columns, id: \.self) { column in
-                        let index = row * columns + column
-                        let entry = built[index]
-                        VStack(spacing: 3) {
-                            PawpetView(summary: entry.0, size: 118, streakDays: 40,
-                                       isCelebrating: entry.1)
-                            Text(entry.2.title).font(.system(size: 10, weight: .semibold))
-                            Text("\(entry.3.frameName) · \(entry.3.pawCharmName)")
-                                .font(.system(size: 8)).foregroundStyle(.secondary)
-                        }
-                        .frame(width: 130)
+                        let entry = built[row * columns + column]
+                        PawpetView(summary: entry.0, size: 132, streakDays: 40,
+                                   isCelebrating: entry.1)
                     }
                 }
             }
         }
-        .padding(16)
+        .padding(14)
         .background(Color(white: 0.12))
 
         capture(sheet, name: "showcase", bare: true)
@@ -625,6 +620,12 @@ enum DebugSnapshot {
 
     @MainActor
     static func run() {
+        // Render everything in whichever language PAWPRINT_LANG names, so both packs get eyes on.
+        if let code = ProcessInfo.processInfo.environment["PAWPRINT_LANG"] {
+            LocalizationManager.shared.apply(code == "en" ? .english : .korean)
+            write("LANG forced to \(code)\n")
+        }
+
         let center = ActivityCenter.shared
         var out = "PERCENTILES (\(center.todayPercentiles.count)):\n"
         for r in center.todayPercentiles {

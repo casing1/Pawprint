@@ -18,12 +18,12 @@ struct PunchCardView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
-                Label("주간 리듬", systemImage: "square.grid.3x3.fill")
+                Label(L10n.t("punchCardView.be7b4982"), systemImage: "square.grid.3x3.fill")
                     .font(.caption).foregroundStyle(.secondary)
                 InfoBadge(
-                    title: "주간 리듬",
-                    explanation: "지금까지 기록된 모든 날을 요일과 시간대로 나눠 활동량을 표시해요. 진할수록 그 시간대에 활발했다는 뜻이에요.",
-                    detail: "며칠 이상 쌓여야 패턴이 또렷해져요."
+                    title: L10n.t("punchCardView.be7b4982"),
+                    explanation: L10n.t("punchCardView.602fe1a0"),
+                    detail: L10n.t("punchCardView.e2b728dd")
                 )
                 Spacer()
                 if let peak = peakLabel {
@@ -35,7 +35,7 @@ struct PunchCardView: View {
                 gridBody
                 hourAxis
             } else {
-                Text("기록이 며칠 쌓이면 주간 패턴이 나타나요")
+                Text(L10n.t("punchCardView.7ed570a0"))
                     .font(.caption2).foregroundStyle(.tertiary)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.vertical, 12)
@@ -55,7 +55,7 @@ struct PunchCardView: View {
             }
         }
         guard best.value > 0 else { return nil }
-        return "\(Formatters.weekdayName(best.weekday))요일 \(Formatters.hourLabel(best.hour))"
+        return L10n.t("punchCardView.fe166a62", Formatters.weekdayName(best.weekday), Formatters.hourLabel(best.hour))
     }
 
     private var gridBody: some View {
@@ -70,7 +70,7 @@ struct PunchCardView: View {
                         RoundedRectangle(cornerRadius: 1.5)
                             .fill(color(for: grid[weekday][hour]))
                             .frame(height: 11)
-                            .help("\(Formatters.weekdayName(weekday))요일 \(Formatters.hourLabel(hour))")
+                            .help(L10n.t("punchCardView.fe166a62", Formatters.weekdayName(weekday), Formatters.hourLabel(hour)))
                     }
                 }
             }

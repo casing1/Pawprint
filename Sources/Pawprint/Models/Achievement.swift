@@ -19,31 +19,31 @@ enum AchievementID: String, Codable, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .firstTenThousandKeys: return "첫 10,000키"
-        case .hundredWPM: return "100 WPM 돌파"
-        case .focusThirtyMinutes: return "30분 집중"
-        case .focusSixtyMinutes: return "60분 집중"
-        case .cursorOneKilometer: return "커서 마라토너"
-        case .scrollSkyscraper: return "스크롤 등반가"
-        case .sevenDayStreak: return "7일 연속 기록"
-        case .nightOwl: return "야행성 사용자"
-        case .unpluggedMarathon: return "무선 마라토너"
-        case .multiDisplay: return "멀티 스크리너"
+        case .firstTenThousandKeys: return L10n.t("achievement.96a8084f")
+        case .hundredWPM: return L10n.t("achievement.48a7b7c2")
+        case .focusThirtyMinutes: return L10n.t("achievement.4b66a9f3")
+        case .focusSixtyMinutes: return L10n.t("achievement.5caa92e1")
+        case .cursorOneKilometer: return L10n.t("achievement.5c5e4fba")
+        case .scrollSkyscraper: return L10n.t("achievement.07b7522c")
+        case .sevenDayStreak: return L10n.t("achievement.89526736")
+        case .nightOwl: return L10n.t("achievement.14fb321a")
+        case .unpluggedMarathon: return L10n.t("achievement.87c016b4")
+        case .multiDisplay: return L10n.t("achievement.143917cc")
         }
     }
 
     var detail: String {
         switch self {
-        case .firstTenThousandKeys: return "하루에 10,000키를 입력했어요"
-        case .hundredWPM: return "타자 속도 100 WPM을 넘겼어요"
-        case .focusThirtyMinutes: return "30분 동안 한 작업에 집중했어요"
-        case .focusSixtyMinutes: return "60분 동안 한 작업에 집중했어요"
-        case .cursorOneKilometer: return "하루에 커서를 1km 이상 움직였어요"
-        case .scrollSkyscraper: return "하루에 화면 1,000개 높이를 스크롤했어요"
-        case .sevenDayStreak: return "7일 연속으로 기록을 남겼어요"
-        case .nightOwl: return "새벽 시간대에 활동했어요"
-        case .unpluggedMarathon: return "충전 없이 4시간 이상 사용했어요"
-        case .multiDisplay: return "디스플레이 3개를 동시에 사용했어요"
+        case .firstTenThousandKeys: return L10n.t("achievement.f601a386")
+        case .hundredWPM: return L10n.t("achievement.9bde8e1b")
+        case .focusThirtyMinutes: return L10n.t("achievement.fdc83faa")
+        case .focusSixtyMinutes: return L10n.t("achievement.9ebc89eb")
+        case .cursorOneKilometer: return L10n.t("achievement.6fd1d603")
+        case .scrollSkyscraper: return L10n.t("achievement.623d8857")
+        case .sevenDayStreak: return L10n.t("achievement.219c14d5")
+        case .nightOwl: return L10n.t("achievement.d2ad9e94")
+        case .unpluggedMarathon: return L10n.t("achievement.e38dd7d0")
+        case .multiDisplay: return L10n.t("achievement.c7091ec9")
         }
     }
 
