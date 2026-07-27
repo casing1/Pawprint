@@ -50,7 +50,10 @@ final class RecordTracker {
     static let nearThreshold = 0.85
 
     private(set) var standings: [RecordStanding] = []
-    /// Records already celebrated today, keyed by "day/metricID".
+    /// Records already celebrated, keyed by "day/metricID". Seeded from persisted settings —
+    /// holding it only in memory meant every relaunch re-celebrated the same record, and since
+    /// a broken record stays broken for the rest of the day, the banner came back on every
+    /// launch, login and post-update restart.
     @ObservationIgnored private var celebrated: Set<String> = []
     /// Set when a record breaks so the UI can fire a celebration once.
     private(set) var pendingCelebration: RecordStanding?
@@ -81,7 +84,14 @@ final class RecordTracker {
     }
 
     /// Recomputes standings for today. Cheap enough to call on the summary refresh cadence.
-    func evaluate(today: DailySummary, bests: [PersonalBest]) {
+    ///
+    /// Returns the updated celebrated-key set when it grew, so the caller can persist it; nil
+    /// when nothing changed, so the common path writes nothing.
+    @discardableResult
+    func evaluate(today: DailySummary, bests: [PersonalBest], alreadyCelebrated: Set<String>) -> Set<String>? {
+        // Keys only ever describe today, so anything older is dead weight.
+        celebrated = alreadyCelebrated.union(celebrated).filter { $0.hasPrefix(today.day + "/") }
+        let before = celebrated
         var next: [RecordStanding] = []
 
         for best in bests {
@@ -107,8 +117,7 @@ final class RecordTracker {
                     celebrated.insert(key)
                     // In-app confetti only. Beating a personal best is not a *notification*
                     // -worthy event: several of these metrics are cumulative, so a long day
-                    // crosses one record after another, and every relaunch re-armed the check.
-                    // The user sees this in the popover when they open it, which is enough.
+                    // crosses one record after another.
                     pendingCelebration = standing
                 }
             }
@@ -125,6 +134,8 @@ final class RecordTracker {
             }
             return rank(lhs) > rank(rhs)
         }
+
+        return celebrated == before ? nil : celebrated
     }
 
     /// Today's value for a given personal-best id. Kept beside `personalBests` so the two can't

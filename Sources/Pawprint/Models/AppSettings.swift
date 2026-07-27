@@ -84,6 +84,9 @@ struct AppSettings: Codable {
     /// notifications the user has already seen. In-memory state was not enough: every rebuild or
     /// restart re-armed them.
     var notifiedQuestLevels: [String: Int] = [:]
+    /// Personal-best celebrations already shown, keyed "day/metricID". Pruned to the current day
+    /// whenever it is written, so it stays a handful of entries.
+    var celebratedRecords: [String] = []
     /// Day and running count for the per-day cap.
     var notificationDay: String = ""
     var notificationCountToday: Int = 0
@@ -157,7 +160,7 @@ struct AppSettings: Codable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case notifiedQuestLevels, notificationDay, notificationCountToday
+        case notifiedQuestLevels, notificationDay, notificationCountToday, celebratedRecords
         case hasCompletedOnboarding
         case updateCheckEnabled, updateFeedURL, updateCheckAutomatically, updateDefaultsMigrated
         case launchAtLogin, showDockIcon, menuBarMetric, dayStartHour, theme
@@ -178,6 +181,7 @@ struct AppSettings: Codable {
         let fallback = AppSettings()
 
         notifiedQuestLevels = try c.decodeIfPresent([String: Int].self, forKey: .notifiedQuestLevels) ?? fallback.notifiedQuestLevels
+        celebratedRecords = try c.decodeIfPresent([String].self, forKey: .celebratedRecords) ?? fallback.celebratedRecords
         notificationDay = try c.decodeIfPresent(String.self, forKey: .notificationDay) ?? fallback.notificationDay
         notificationCountToday = try c.decodeIfPresent(Int.self, forKey: .notificationCountToday) ?? fallback.notificationCountToday
         hasCompletedOnboarding = try c.decodeIfPresent(Bool.self, forKey: .hasCompletedOnboarding) ?? fallback.hasCompletedOnboarding
@@ -237,6 +241,7 @@ struct AppSettings: Codable {
     func encode(to encoder: Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
         try c.encode(notifiedQuestLevels, forKey: .notifiedQuestLevels)
+        try c.encode(celebratedRecords, forKey: .celebratedRecords)
         try c.encode(notificationDay, forKey: .notificationDay)
         try c.encode(notificationCountToday, forKey: .notificationCountToday)
         try c.encode(hasCompletedOnboarding, forKey: .hasCompletedOnboarding)

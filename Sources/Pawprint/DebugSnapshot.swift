@@ -80,6 +80,22 @@ enum DebugSnapshot {
         write(out)
     }
 
+    // MARK: - Record celebration probe (PAWPRINT_RECORD_PROBE)
+
+    /// Reports whether a broken record is pending and what has been marked as already celebrated.
+    /// Run it twice across a relaunch: the second run must report nothing pending.
+    @MainActor
+    static func probeRecordCelebration() {
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(3))
+            let center = ActivityCenter.shared
+            let pending = RecordTracker.shared.pendingCelebration
+            write("RECORD pending=\(pending?.best.title ?? "none")\n")
+            write("RECORD persisted=\(center.settings.celebratedRecords.sorted().joined(separator: ","))\n")
+            exit(0)
+        }
+    }
+
     // MARK: - Automatic scheduler probe (PAWPRINT_UPDATE_PROBE)
 
     /// Waits out the launch delay and reports what the *scheduler* found, with no manual check
@@ -215,6 +231,117 @@ enum DebugSnapshot {
         .frame(width: 1200, height: 272)
 
         capture(banner, name: "banner", scale: 2, bare: true)
+    }
+
+    // MARK: - DMG background (PAWPRINT_DMG_BG)
+
+    /// Installer window backdrop: 1200x800 px for a 600x400 pt window (2x for Retina).
+    ///
+    /// The layout has to leave two clear landing zones — the app icon on the left, the
+    /// Applications alias on the right — because `make_dmg.sh` positions the real icons at fixed
+    /// coordinates on top of this. Everything decorative stays below or outside those rectangles.
+    @MainActor
+    static func renderDMGBackground() {
+        // Icon centres in *points*, matching the AppleScript in make_dmg.sh.
+        let leftCenter = CGFloat(150)
+        let rightCenter = CGFloat(450)
+        let iconY = CGFloat(170)
+
+        // Three cats loitering along the bottom, drawn by the same code the app uses.
+        // Deliberately *not* S-grade: a prismatic frame cropped by the window edge reads as a
+        // stray coloured box. Scoring low drops the frame and leaves just the cat.
+        var cats: [DailySummary] = []
+        var usedPalettes: Set<Int> = []
+        outer: for month in 1...12 {
+            for day in 1...28 {
+                var summary = excellentDay()
+                summary.day = String(format: "2026-%02d-%02d", month, day)
+                summary.score = PawprintScore(total: 24, grade: "D", gradeColorHint: .gray,
+                                              headline: "", components: [])
+                summary.scrollScreens = 100      // below the wing threshold
+                summary.cursorDistanceMeters = 100
+                let traits = PawpetTraits(day: summary.day, summary: summary, streakDays: 40)
+                guard traits.frame == .none,
+                      !usedPalettes.contains(traits.paletteIndex) else { continue }
+                usedPalettes.insert(traits.paletteIndex)
+                cats.append(summary)
+                if cats.count == 3 { break outer }
+            }
+        }
+
+        let background = ZStack {
+            LinearGradient(
+                colors: [Color(red: 0.10, green: 0.11, blue: 0.18),
+                         Color(red: 0.17, green: 0.14, blue: 0.26),
+                         Color(red: 0.11, green: 0.16, blue: 0.24)],
+                startPoint: .topLeading, endPoint: .bottomTrailing
+            )
+
+            // Cats peeking up from the bottom edge, cropped by the window so they read as
+            // decoration rather than content competing with the two icons.
+            HStack(alignment: .bottom, spacing: 84) {
+                ForEach(Array(cats.enumerated()), id: \.offset) { index, summary in
+                    PawpetView(summary: summary, size: index == 1 ? 124 : 104,
+                               streakDays: 40, showsAura: false)
+                        .opacity(0.42)
+                        .offset(y: index == 1 ? 26 : 34)
+                }
+            }
+            .frame(maxHeight: .infinity, alignment: .bottom)
+
+            // A small paw trail arcing from the app toward Applications: the instruction, drawn.
+            Canvas { context, size in
+                let steps = 9
+                for step in 0..<steps {
+                    let t = CGFloat(step) / CGFloat(steps - 1)
+                    let x = leftCenter + (rightCenter - leftCenter) * t
+                    // Gentle arc that dips below the icons and never crosses them.
+                    let y = iconY + 96 + sin(Double(t) * .pi) * 14
+                    var paw = context
+                    paw.translateBy(x: x, y: CGFloat(y))
+                    paw.rotate(by: .degrees(Double(t) * 26 - 13))
+                    let scale = CGFloat(9)
+                    let opacity = 0.10 + Double(t) * 0.16
+                    paw.fill(
+                        Path(ellipseIn: CGRect(x: -scale * 0.60, y: -scale * 0.28,
+                                               width: scale * 1.20, height: scale * 1.02)),
+                        with: .color(.white.opacity(opacity))
+                    )
+                    for (tx, ty, tw) in [(-0.60, -1.00, 0.40), (-0.20, -1.26, 0.42),
+                                         (0.24, -1.24, 0.42), (0.62, -0.94, 0.38)] {
+                        paw.fill(
+                            Path(ellipseIn: CGRect(x: scale * CGFloat(tx) - scale * CGFloat(tw) / 2,
+                                                   y: scale * CGFloat(ty),
+                                                   width: scale * CGFloat(tw),
+                                                   height: scale * CGFloat(tw) * 1.2)),
+                            with: .color(.white.opacity(opacity * 0.9))
+                        )
+                    }
+                }
+            }
+
+            VStack(spacing: 5) {
+                Text("Pawprint")
+                    .font(.system(size: 32, weight: .heavy, design: .rounded))
+                    .foregroundStyle(.white)
+                Text("Drag Pawprint into your Applications folder")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(.white.opacity(0.60))
+                Spacer()
+            }
+            .padding(.top, 30)
+
+            Image(systemName: "arrow.right")
+                .font(.system(size: 24, weight: .semibold))
+                .foregroundStyle(.white.opacity(0.38))
+                .position(x: (leftCenter + rightCenter) / 2, y: iconY)
+        }
+        .frame(width: 600, height: 400)
+        .clipped()
+
+        write("DMGBG cats=\(cats.count)\n")
+        // scale 2 → 1200x800 px, which is what a 600x400 pt window wants on Retina.
+        capture(background, name: "dmg_background", scale: 2, bare: true)
     }
 
     // MARK: - Best-combination showcase (PAWPRINT_SHOWCASE)

@@ -140,7 +140,15 @@ final class ActivityCenter {
         todaySummary = StatsEngine.summary(for: today, recentDays: recentDaysCache, dayStartHour: settings.dayStartHour)
         if currentStreak == 0 { recomputeStreak() }
         AchievementEngine.shared.evaluate(summary: todaySummary, currentStreak: currentStreak)
-        RecordTracker.shared.evaluate(today: todaySummary, bests: personalBests)
+        if let celebrated = RecordTracker.shared.evaluate(
+            today: todaySummary,
+            bests: personalBests,
+            alreadyCelebrated: Set(settings.celebratedRecords)
+        ) {
+            var updated = settings
+            updated.celebratedRecords = Array(celebrated).sorted()
+            updateSettings(updated)
+        }
         todayPercentiles = PercentileEngine.rankings(for: todaySummary, samples: percentileSamples)
     }
 
