@@ -18,6 +18,10 @@ permissions:
 jobs:
   release:
     runs-on: macos-14
+    env:
+      # Hoisted to job scope because the `secrets` context is not available in a step `if`.
+      CERTIFICATE_P12: ${{ secrets.MACOS_CERTIFICATE_P12 }}
+      CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -45,10 +49,7 @@ jobs:
       # Optional: without these secrets the build is ad-hoc signed and still works, it is just
       # less pleasant to update. See docs/RELEASING.md.
       - name: Import signing certificate
-        if: ${{ secrets.MACOS_CERTIFICATE_P12 != '' }}
-        env:
-          CERTIFICATE_P12: ${{ secrets.MACOS_CERTIFICATE_P12 }}
-          CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+        if: env.CERTIFICATE_P12 != ''
         run: |
           KEYCHAIN=$RUNNER_TEMP/signing.keychain-db
           KEYCHAIN_PASSWORD=$(uuidgen)
