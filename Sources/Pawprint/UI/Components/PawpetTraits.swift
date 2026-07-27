@@ -214,6 +214,10 @@ struct PawpetTraits {
     // changes a handful of times a day rather than continuously.
 
     private static func expression(_ s: DailySummary, score: Int) -> Expression {
+        // Sparkle used to mean "a record banner is on screen", which made it disappear the moment
+        // the banner was dismissed. It now belongs to the very best days — a rung above the crown
+        // at 85, so it stays the rarest face rather than becoming a second way to say "grade S".
+        if score >= 90 { return .sparkle }
         if s.activeSeconds < 300 { return .sleepy }
         if s.totalKeyPresses > 50, s.backspaceRatio > 0.30 { return .dizzy }
         if s.chaosIndex >= 70 { return .chaotic }

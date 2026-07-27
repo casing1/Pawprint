@@ -627,14 +627,45 @@ enum DebugSnapshot {
         ]
     }
 
-    // MARK: - Record reward + usage ping (PAWPRINT_PRIVACY)
-
-    /// Checks the two things here that would be bad to get wrong and invisible if we did.
+    /// Screenshots the Settings window itself. `ImageRenderer` renders `TabView` as a placeholder,
+    /// so the tab bar can only be inspected on a real window.
     @MainActor
-    static func probePrivacyAndRewards() {
+    static func captureSettingsWindow() {
+        guard let window = NSApp.windows.first(where: { $0.title.contains("설정") || $0.title.contains("Settings") })
+                ?? NSApp.windows.first(where: { $0.isVisible && $0.styleMask.contains(.titled) })
+        else { write("SETTINGS WINDOW NOT FOUND\n"); exit(1) }
+        // Reproduce the reported regression: writing a setting is exactly what a toggle does, and
+        // it used to rebuild the TabView and snap the user back to the General pane.
+        if ProcessInfo.processInfo.environment["PAWPRINT_SETTINGS_POKE"] != nil {
+            var settings = ActivityCenter.shared.settings
+            // Not `showDockIcon`: that one changes the activation policy, which reorders windows
+            // and would make the screenshot below capture whatever ends up in front.
+            settings.hudShowsSessionKeys.toggle()
+            ActivityCenter.shared.updateSettings(settings)
+            settings.hudShowsSessionKeys.toggle()
+            ActivityCenter.shared.updateSettings(settings)
+            write("POKED settings\n")
+        }
+        // Captured by window id, not by screen rect: a rect grabs whatever happens to be in
+        // front, which silently produced a screenshot of an unrelated app the first time.
+        let task = Process()
+        task.executableURL = URL(fileURLWithPath: "/usr/sbin/screencapture")
+        task.arguments = ["-x", "-o", "-l", String(window.windowNumber),
+                          ProcessInfo.processInfo.environment["PAWPRINT_SETTINGS_SHOT"] ?? "/tmp/pawprint_settings.png"]
+        try? task.run()
+        task.waitUntilExit()
+        write("SETTINGS SHOT window \(window.windowNumber) \(window.title)\n")
+        exit(0)
+    }
+
+    // MARK: - Record reward size (PAWPRINT_REWARDS)
+
+    /// Guards the size of the personal-best bonus, which stays invisible until a grade looks wrong.
+    @MainActor
+    static func probeRecordRewards() {
         var failures = 0
 
-        // 1. Setting a record must be a small bonus, not a free grade. It used to force the
+        // Setting a record must be a small bonus, not a free grade. It used to force the
         //    prismatic frame — 32 of 100 points — plus the sparkle expression, so a quiet day
         //    that happened to nudge one counter jumped straight to grade S.
         var day = DailySummary(day: "2026-02-10")
@@ -656,43 +687,7 @@ enum DebugSnapshot {
             failures += 1
         }
 
-        // 2. The usage ping must be inert without an endpoint. `reportIfDue` marks the day as
-        //    sent before firing the request, so a stamped day is a reliable witness that it
-        //    decided to send.
-        var settings = ActivityCenter.shared.settings
-        let restore = settings
-        settings.usageStatsEnabled = true
-        settings.usageStatsEndpoint = ""
-        settings.lastUsagePingDay = ""
-        ActivityCenter.shared.updateSettings(settings)
-        UsageReporter.reportIfDue()
-        if !ActivityCenter.shared.settings.lastUsagePingDay.isEmpty {
-            write("FAIL usage ping ran with no endpoint configured\n"); failures += 1
-        } else {
-            write("usage ping inert with empty endpoint: ok\n")
-        }
-        // http:// must be refused too — the payload is small but it is still someone's data.
-        settings.usageStatsEndpoint = "http://example.com"
-        ActivityCenter.shared.updateSettings(settings)
-        UsageReporter.reportIfDue()
-        if !ActivityCenter.shared.settings.lastUsagePingDay.isEmpty {
-            write("FAIL usage ping accepted a plain-http endpoint\n"); failures += 1
-        } else {
-            write("usage ping refuses http: ok\n")
-        }
-        ActivityCenter.shared.updateSettings(restore)
-
-        // 3. The rotating hash must actually rotate, and must not be the install ID.
-        let id = UUID().uuidString
-        let a = UsageReporter.rotatingHash(id, salt: "2026-02-10")
-        let b = UsageReporter.rotatingHash(id, salt: "2026-02-11")
-        let again = UsageReporter.rotatingHash(id, salt: "2026-02-10")
-        write("hash \(a) / \(b)\n")
-        if a == b { write("FAIL hash does not rotate between days\n"); failures += 1 }
-        if a != again { write("FAIL hash is unstable within a day\n"); failures += 1 }
-        if a.contains(id) || id.contains(a) { write("FAIL hash leaks the install id\n"); failures += 1 }
-
-        write(failures == 0 ? "\nPRIVACY OK\n" : "\nPRIVACY \(failures) FAILURES\n")
+        write(failures == 0 ? "\nREWARDS OK\n" : "\nREWARDS \(failures) FAILURES\n")
         exit(failures == 0 ? 0 : 1)
     }
 

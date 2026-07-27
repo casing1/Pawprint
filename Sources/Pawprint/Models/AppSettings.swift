@@ -65,7 +65,11 @@ struct AppSettings: Codable {
     var isPaused: Bool = false
 
     var excludedApps: [ExcludedApp] = AppSettings.defaultExcludedApps
-    var focusThresholdSeconds: Int = 5 * 60
+    /// Fixed at five minutes and not exposed in Settings. It is the definition of a focus session,
+    /// so changing it silently rewrites the meaning of every past day's focus figures — the stored
+    /// summaries were computed against whatever it was at the time and are not recomputed.
+    var focusThresholdSeconds: Int = AppSettings.focusThresholdDefault
+    static let focusThresholdDefault = 5 * 60
     /// Days of history to keep. 0 means keep forever.
     var retentionDays: Int = 90
 
@@ -131,21 +135,6 @@ struct AppSettings: Codable {
     /// Skip the daily background check but keep the manual button working.
     var updateCheckAutomatically: Bool = true
 
-    // MARK: - Anonymous usage count
-
-    /// Whether to send the once-a-day "this install ran" ping. See `UsageReporter` for exactly
-    /// what it contains — no counters, no metrics, no stable identifier.
-    ///
-    /// On by default, but that alone sends nothing: `usageStatsEndpoint` ships empty, and with no
-    /// endpoint the reporter never opens a connection. A build only becomes capable of sending
-    /// anything once someone deploys an endpoint and points this at it.
-    var usageStatsEnabled: Bool = true
-    /// Where the ping goes. Empty means the feature is inert.
-    var usageStatsEndpoint: String = ""
-    /// Random, local, never transmitted — only rotating hashes of it are. Blank until first use.
-    var installID: String = ""
-    /// Last day a ping was sent, as "yyyy-MM-dd" in UTC.
-    var lastUsagePingDay: String = ""
 
     /// Automatic update checks shipped as opt-in first and became the default afterwards. Without
     /// a marker, everyone who ran the earlier build would stay opted out forever — their stored
@@ -187,7 +176,6 @@ struct AppSettings: Codable {
     private enum CodingKeys: String, CodingKey {
         case notifiedQuestLevels, notificationDay, notificationCountToday, celebratedRecords
         case recordDays
-        case usageStatsEnabled, usageStatsEndpoint, installID, lastUsagePingDay
         case hasCompletedOnboarding
         case updateCheckEnabled, updateFeedURL, updateCheckAutomatically, updateDefaultsMigrated
         case launchAtLogin, showDockIcon, menuBarMetric, dayStartHour, theme, language
@@ -210,10 +198,6 @@ struct AppSettings: Codable {
         notifiedQuestLevels = try c.decodeIfPresent([String: Int].self, forKey: .notifiedQuestLevels) ?? fallback.notifiedQuestLevels
         celebratedRecords = try c.decodeIfPresent([String].self, forKey: .celebratedRecords) ?? fallback.celebratedRecords
         recordDays = try c.decodeIfPresent([String].self, forKey: .recordDays) ?? fallback.recordDays
-        usageStatsEnabled = try c.decodeIfPresent(Bool.self, forKey: .usageStatsEnabled) ?? fallback.usageStatsEnabled
-        usageStatsEndpoint = try c.decodeIfPresent(String.self, forKey: .usageStatsEndpoint) ?? fallback.usageStatsEndpoint
-        installID = try c.decodeIfPresent(String.self, forKey: .installID) ?? fallback.installID
-        lastUsagePingDay = try c.decodeIfPresent(String.self, forKey: .lastUsagePingDay) ?? fallback.lastUsagePingDay
         notificationDay = try c.decodeIfPresent(String.self, forKey: .notificationDay) ?? fallback.notificationDay
         notificationCountToday = try c.decodeIfPresent(Int.self, forKey: .notificationCountToday) ?? fallback.notificationCountToday
         hasCompletedOnboarding = try c.decodeIfPresent(Bool.self, forKey: .hasCompletedOnboarding) ?? fallback.hasCompletedOnboarding
@@ -237,7 +221,8 @@ struct AppSettings: Codable {
 
         isPaused = try c.decodeIfPresent(Bool.self, forKey: .isPaused) ?? fallback.isPaused
         excludedApps = try c.decodeIfPresent([ExcludedApp].self, forKey: .excludedApps) ?? fallback.excludedApps
-        focusThresholdSeconds = try c.decodeIfPresent(Int.self, forKey: .focusThresholdSeconds) ?? fallback.focusThresholdSeconds
+        _ = try c.decodeIfPresent(Int.self, forKey: .focusThresholdSeconds)
+        focusThresholdSeconds = AppSettings.focusThresholdDefault
         retentionDays = try c.decodeIfPresent(Int.self, forKey: .retentionDays) ?? fallback.retentionDays
 
         let storedIDs = try c.decodeIfPresent([String].self, forKey: .dashboardCardIDs)
@@ -276,10 +261,6 @@ struct AppSettings: Codable {
         try c.encode(notifiedQuestLevels, forKey: .notifiedQuestLevels)
         try c.encode(celebratedRecords, forKey: .celebratedRecords)
         try c.encode(recordDays, forKey: .recordDays)
-        try c.encode(usageStatsEnabled, forKey: .usageStatsEnabled)
-        try c.encode(usageStatsEndpoint, forKey: .usageStatsEndpoint)
-        try c.encode(installID, forKey: .installID)
-        try c.encode(lastUsagePingDay, forKey: .lastUsagePingDay)
         try c.encode(notificationDay, forKey: .notificationDay)
         try c.encode(notificationCountToday, forKey: .notificationCountToday)
         try c.encode(hasCompletedOnboarding, forKey: .hasCompletedOnboarding)

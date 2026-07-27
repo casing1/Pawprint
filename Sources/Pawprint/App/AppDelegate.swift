@@ -31,8 +31,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         UpdateChecker.shared.startPeriodicChecks(settings: settings)
-        // Inert unless an endpoint has been configured; see UsageReporter.
-        UsageReporter.reportIfDue()
 
         // End-to-end exercise of the update pipeline: check → download → ditto → signature
         // verification → swap. There is no other way to prove the install path works, since it
@@ -69,6 +67,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 updated.language = language == "en" ? .english : .korean
                 ActivityCenter.shared.updateSettings(updated)
                 SettingsOpener.open()
+                if ProcessInfo.processInfo.environment["PAWPRINT_SETTINGS_SHOT"] != nil {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                        DebugSnapshot.captureSettingsWindow()
+                    }
+                }
             }
         }
 
@@ -86,8 +89,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { DebugSnapshot.openItemCatalogWindow() }
         }
 
-        if ProcessInfo.processInfo.environment["PAWPRINT_PRIVACY"] != nil {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { DebugSnapshot.probePrivacyAndRewards() }
+        if ProcessInfo.processInfo.environment["PAWPRINT_REWARDS"] != nil {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { DebugSnapshot.probeRecordRewards() }
         }
 
         if ProcessInfo.processInfo.environment["PAWPRINT_ITEMS"] != nil {

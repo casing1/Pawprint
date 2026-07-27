@@ -98,7 +98,7 @@ enum PawpetItemCatalog {
             title: L10n.t("itemCatalog.frames"), icon: "square.dashed",
             summary: L10n.t("itemCatalog.frames.summary"), maximum: 32,
             items: [
-                item(.prismatic, L10n.t("itemCatalog.frame.prismatic", 85)),
+                item(.prismatic, L10n.t("itemCatalog.frame.atLeast", 85)),
                 item(.gold, L10n.t("itemCatalog.frame.range", 70, 84)),
                 item(.silver, L10n.t("itemCatalog.frame.range", 50, 69)),
                 item(.bronze, L10n.t("itemCatalog.frame.range", 30, 49))
@@ -197,7 +197,7 @@ enum PawpetItemCatalog {
             title: L10n.t("itemCatalog.expressions"), icon: "face.smiling",
             summary: L10n.t("itemCatalog.expressions.summary"), maximum: 4,
             items: [
-                item(.sparkle, L10n.t("itemCatalog.face.sparkle")),
+                item(.sparkle, L10n.t("itemCatalog.face.sparkle", 90)),
                 item(.determined, L10n.t("itemCatalog.face.determined", 100)),
                 item(.dizzy, L10n.t("itemCatalog.face.dizzy", 30)),
                 item(.chaotic, L10n.t("itemCatalog.face.chaotic", 70)),
