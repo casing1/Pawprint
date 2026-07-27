@@ -64,7 +64,16 @@ jobs:
             -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN" >/dev/null
           security list-keychain -d user -s "$KEYCHAIN" login.keychain-db
           rm -f "$RUNNER_TEMP/cert.p12"
-          security find-identity -v -p codesigning "$KEYCHAIN"
+          # Not `-v`: a self-signed certificate has no trust settings in a fresh keychain, so the
+          # validity filter hides it even though it can sign perfectly well.
+          security find-identity -p codesigning "$KEYCHAIN"
+          NAME=$(security find-certificate -a -Z "$KEYCHAIN" | awk -F'"' '/"labl"/ {print $4; exit}')
+          if [ -z "$NAME" ]; then
+            echo "::error::Certificate imported but no label could be read from the keychain."
+            exit 1
+          fi
+          echo "PAWPRINT_SIGN_IDENTITY=$NAME" >> "$GITHUB_ENV"
+          echo "Signing identity: $NAME"
 
       - name: Build, sign and package
         env:
@@ -75,6 +84,18 @@ jobs:
             exit 1
           fi
           ./scripts/make_dmg.sh --build
+
+      # A release that quietly fell back to ad-hoc after the secrets were configured is the exact
+      # failure that went unnoticed once already: it publishes fine and only bites users later,
+      # when the update resets their permissions.
+      - name: Confirm the release is not ad-hoc signed
+        if: env.CERTIFICATE_P12 != ''
+        run: |
+          if codesign -dvv "build/Pawprint.app" 2>&1 | grep -q "Signature=adhoc"; then
+            echo "::error::Certificate secrets are set but the app was ad-hoc signed."
+            exit 1
+          fi
+          codesign -dvv "build/Pawprint.app" 2>&1 | grep -E "^Authority|^Signature" || true
 
       - name: Verify the archive against the pinned public key
         run: |

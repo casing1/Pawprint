@@ -45,11 +45,16 @@ if [ -d "$RESOURCE_BUNDLE" ]; then
     cp -R "$RESOURCE_BUNDLE" "$STAGING/Contents/Resources/"
 fi
 
-# Prefer the stable local "Pawprint Dev" identity (see README-less setup note in this repo's
-# chat history) so Accessibility/Input Monitoring grants in System Settings survive rebuilds.
-# Falls back to ad-hoc signing if that identity hasn't been imported into the keychain yet —
-# in that case TCC permissions must be re-granted after every rebuild.
-if security find-identity -v -p codesigning 2>/dev/null | grep -q "Pawprint Dev"; then
+# Prefer a stable identity so Accessibility/Input Monitoring grants survive rebuilds: macOS keys
+# those permissions off the code signature, and an ad-hoc signature changes with every build.
+#
+# `PAWPRINT_SIGN_IDENTITY` lets CI name the identity outright. That matters because a self-signed
+# certificate imported into a fresh keychain has no trust settings, so `find-identity -v` reports
+# it as invalid and the search below would miss it — which silently produced ad-hoc release builds.
+# Trust is only needed to *verify* a signature, not to create one, so signing with it is fine.
+if [ -n "${PAWPRINT_SIGN_IDENTITY:-}" ]; then
+    SIGN_IDENTITY="$PAWPRINT_SIGN_IDENTITY"
+elif security find-identity -p codesigning 2>/dev/null | grep -q "Pawprint Dev"; then
     SIGN_IDENTITY="Pawprint Dev"
 else
     SIGN_IDENTITY="-"
