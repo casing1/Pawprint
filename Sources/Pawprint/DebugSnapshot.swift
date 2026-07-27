@@ -463,6 +463,102 @@ enum DebugSnapshot {
         exit(broken == 0 ? 0 : 1)
     }
 
+    // MARK: - Item catalog + hidden achievements (PAWPRINT_ITEMS)
+
+    /// Checks the two new reference sheets without a screen.
+    ///
+    /// Three things can silently go wrong here and none of them are visible from a screenshot:
+    /// a condition string can lose its substituted threshold, the rarity points can stop adding
+    /// up to 100, and a hidden achievement can be written so it never fires (or fires for
+    /// everyone on day one). All three are checked.
+    @MainActor
+    static func probeItemCatalog() {
+        var failures = 0
+
+        for language in [AppLanguage.korean, .english] {
+            LocalizationManager.shared.apply(language)
+            write("\n=== \(language) ===\n")
+
+            var groupPoints = 0
+            for group in PawpetItemCatalog.groups {
+                let cap = group.maximum.map { "  (max \($0))" } ?? ""
+                write("[\(group.title)]\(cap) \(group.summary)\n")
+                groupPoints += group.maximum ?? 0
+                for item in group.items {
+                    let points = item.points.map { String(format: "%3d", $0) } ?? "  -"
+                    write("   \(points)  \(item.name) — \(item.condition)\n")
+                    // A condition that still contains %@ never got its threshold substituted.
+                    if item.condition.contains("%@") || item.name.contains("%@") {
+                        write("FAIL unsubstituted placeholder: \(item.name)\n"); failures += 1
+                    }
+                    // A raw key means the pack is missing an entry.
+                    if item.name.contains(".") && item.name.range(of: "^[a-zA-Z]+\\.", options: .regularExpression) != nil {
+                        write("FAIL raw key: \(item.name)\n"); failures += 1
+                    }
+                }
+            }
+            if groupPoints != 100 {
+                write("FAIL rarity points total \(groupPoints), expected 100\n"); failures += 1
+            }
+
+            write("\n[hidden achievements]\n")
+            for id in AchievementID.hidden {
+                write("   \(id.emoji) \(id.title) — \(id.detail)\n")
+                if id.title.contains(".") { write("FAIL raw key: \(id.title)\n"); failures += 1 }
+            }
+        }
+
+        // Every hidden condition must fire for a day built to satisfy it, and no hidden condition
+        // may fire for a blank day — the two ways a condition can be wrong without looking wrong.
+        LocalizationManager.shared.apply(.korean)
+        let engine = AchievementEngine.shared
+        let blank = DailySummary(day: "2026-01-01")
+        for id in AchievementID.hidden where engine.satisfies(id, summary: blank, currentStreak: 0) {
+            write("FAIL \(id.rawValue) fires on an empty day\n"); failures += 1
+        }
+        for (id, summary) in hiddenAchievementFixtures() {
+            if !engine.satisfies(id, summary: summary, currentStreak: 0) {
+                write("FAIL \(id.rawValue) does not fire on its own fixture\n"); failures += 1
+            }
+        }
+
+        // The sheets themselves — `content` is exposed on both views precisely because
+        // ImageRenderer draws a ScrollView's contents empty.
+        capture(PawpetItemCatalogView(onClose: {}).content.frame(width: 430)
+            .background(Color(white: 0.11)), name: "itemcatalog", bare: true)
+        capture(HiddenAchievementsView(onClose: {}).content.frame(width: 430)
+            .background(Color(white: 0.11)), name: "achievements", bare: true)
+        capture(PawpetGalleryView().frame(width: 360), name: "gallerybar")
+
+        write(failures == 0 ? "\nITEMS OK\n" : "\nITEMS \(failures) FAILURES\n")
+        exit(failures == 0 ? 0 : 1)
+    }
+
+    /// One day per hidden achievement, built to sit just past its threshold.
+    @MainActor
+    private static func hiddenAchievementFixtures() -> [(AchievementID, DailySummary)] {
+        func day(_ configure: (inout DailySummary) -> Void) -> DailySummary {
+            var summary = DailySummary(day: "2026-01-01")
+            configure(&summary)
+            return summary
+        }
+        return [
+            (.witchingHour, day { s in
+                var minutes = [Int](repeating: 0, count: 1440)
+                minutes[200] = 5           // 03:20
+                s.activityPerMinute = minutes
+            }),
+            (.oneHandedWonder, day { $0.totalKeyPresses = 2_000; $0.leftHandPercent = 78 }),
+            (.tunnelVision, day { $0.appConcentration = 96; $0.activeSeconds = 4 * 3600 }),
+            (.stormMinute, day { $0.busiestMinuteCount = 400 }),
+            (.lidFlipper, day { $0.lidOpenCount = 10 }),
+            (.fullyIndependent, day { $0.secondsOnBattery = 8 * 3600; $0.chargerConnectCount = 0 }),
+            (.perfectBalance, day { $0.scrollScreens = 120; $0.scrollUpPoints = 5_000; $0.scrollDownPoints = 5_100 }),
+            (.fullKeyboard, day { $0.distinctKeysUsed = 60 }),
+            (.quietKeys, day { $0.activeSeconds = 4 * 3600; $0.totalKeyPresses = 3_000; $0.totalClicks = 40 })
+        ]
+    }
+
     // MARK: - Cat wall for the README (PAWPRINT_WALL)
 
     /// A dense wall of high-grade cats.

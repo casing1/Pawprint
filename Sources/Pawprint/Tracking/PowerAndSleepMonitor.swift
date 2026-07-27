@@ -152,8 +152,15 @@ final class PowerAndSleepMonitor {
         let duration = lastSleepAt.map { Int(now.timeIntervalSince($0)) } ?? 0
         ActivityCenter.shared.recordMacState(SleepWakeRecord(type: .wake, timestamp: now, durationSeconds: duration))
         lastSleepAt = nil
-        // Clamshell reads around sleep transitions proved unreliable (they produced phantom
-        // close/open pairs for ordinary idle sleep), so re-baseline silently instead of counting.
+        // A lid close that put the Mac to sleep is only half an event until it is reopened, and
+        // reopening is what wakes it. Silently re-baselining here meant every close on a laptop
+        // with no external display was counted while its matching open never was.
+        //
+        // Only our own tracked state is consulted, never a clamshell read at the sleep boundary:
+        // those proved unreliable and produced phantom close/open pairs for ordinary idle sleep.
+        // Since an open is only counted when we previously saw a genuine close, a phantom would
+        // need a phantom close first.
+        countLidOpenIfPending()
         resyncLidBaseline()
         sampleBattery()
         // Time spent asleep shouldn't be billed to battery/AC or screen-on usage.
@@ -176,6 +183,16 @@ final class PowerAndSleepMonitor {
         return (value as? Bool) ?? (value as? NSNumber)?.boolValue
     }
 
+    /// Counts the open half of a close/open pair that straddled a sleep. No-op when the lid was
+    /// already open — that is ordinary idle sleep, not a lid action.
+    private func countLidOpenIfPending() {
+        guard lidClosed == true, Self.readClamshellClosed() == false else { return }
+        let closedFor = lidClosedAt.map { Int(Date().timeIntervalSince($0)) } ?? 0
+        lidClosedAt = nil
+        lidClosed = false
+        ActivityCenter.shared.recordLidChange(closed: false, closedForSeconds: closedFor)
+    }
+
     /// Adopts the current lid state as the new baseline without counting a transition. Used after
     /// wake, where we can't tell what actually happened while the machine was asleep.
     private func resyncLidBaseline() {
@@ -185,10 +202,12 @@ final class PowerAndSleepMonitor {
         }
     }
 
-    /// Counts lid transitions observed while the Mac is awake — i.e. clamshell mode (lid closed
-    /// with an external display attached) and reopening. A lid close that immediately puts the
-    /// Mac to sleep is intentionally *not* counted, because the only signal available then is
-    /// the unreliable sleep-boundary read.
+    /// Counts lid transitions observed while the Mac is awake: clamshell mode (lid closed with an
+    /// external display attached), reopening, and a close the 15s poll happens to catch in the
+    /// moment before the machine goes down.
+    ///
+    /// Deliberately not called at the sleep boundary. Reads there misreport, and a phantom close
+    /// recorded on the way down would now produce a phantom open on the way back up.
     private func checkLid() {
         guard let closedNow = Self.readClamshellClosed() else { return }
         guard closedNow != lidClosed else { return }

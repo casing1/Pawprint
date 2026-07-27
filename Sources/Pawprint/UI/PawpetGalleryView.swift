@@ -15,6 +15,8 @@ struct PawpetGalleryView: View {
     @State private var filter: Filter = .all
     @State private var sort: SortField = .rarity
     @State private var descending = true
+    @State private var showingItemCatalog = false
+    @State private var showingAchievements = false
 
     /// Ways to narrow the collection. Rarity filters answer "which days did I actually earn
     /// something"; the grade filter answers "show me only the good ones".
@@ -93,6 +95,7 @@ struct PawpetGalleryView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             summaryStrip
+            browseBar
             filterChips
             sortBar
 
@@ -111,6 +114,37 @@ struct PawpetGalleryView: View {
         .sheet(item: $selected) { summary in
             PawpetDetailView(summary: summary, streakDays: streak(for: summary)) { selected = nil }
         }
+        .sheet(isPresented: $showingItemCatalog) {
+            PawpetItemCatalogView { showingItemCatalog = false }
+        }
+        .sheet(isPresented: $showingAchievements) {
+            HiddenAchievementsView { showingAchievements = false }
+        }
+    }
+
+    /// The two reference sheets. Both belong here rather than in Records: one explains how the
+    /// cats are put together, the other is the one-time counterpart to the endless level tracks.
+    private var browseBar: some View {
+        HStack(spacing: 6) {
+            browseButton(L10n.t("itemCatalog.button"), "square.grid.2x2") { showingItemCatalog = true }
+            browseButton(L10n.t("achievements.button"), "rosette") { showingAchievements = true }
+            Spacer(minLength: 0)
+        }
+    }
+
+    private func browseButton(_ label: String, _ icon: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 4) {
+                Image(systemName: icon).font(.system(size: 9, weight: .semibold))
+                Text(label).font(.system(size: 10, weight: .medium))
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 5)
+            .background(RoundedRectangle(cornerRadius: 7, style: .continuous)
+                .fill(Color.accentColor.opacity(0.12)))
+            .foregroundStyle(Color.accentColor)
+        }
+        .buttonStyle(.plain)
     }
 
     // MARK: - Pieces

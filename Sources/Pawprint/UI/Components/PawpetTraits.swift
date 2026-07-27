@@ -357,8 +357,8 @@ struct PawpetTraits {
         ]
     }
 
-    private var framePoints: Double {
-        switch frame {
+    static func framePoints(_ value: Frame) -> Double {
+        switch value {
         case .none: return 0
         case .bronze: return 8
         case .silver: return 16
@@ -367,8 +367,10 @@ struct PawpetTraits {
         }
     }
 
-    private var backdropPoints: Double {
-        switch backdrop {
+    private var framePoints: Double { Self.framePoints(frame) }
+
+    static func backdropPoints(_ value: Backdrop) -> Double {
+        switch value {
         case .none: return 0
         case .orbit: return 6
         case .constellation: return 8
@@ -376,8 +378,10 @@ struct PawpetTraits {
         }
     }
 
-    private var collarPoints: Double {
-        switch collar {
+    private var backdropPoints: Double { Self.backdropPoints(backdrop) }
+
+    static func collarPoints(_ value: Collar) -> Double {
+        switch value {
         case .none: return 0
         case .cloth: return 1
         case .blue: return 2
@@ -387,8 +391,10 @@ struct PawpetTraits {
         }
     }
 
-    private var headwearPoints: Double {
-        switch headwear {
+    private var collarPoints: Double { Self.collarPoints(collar) }
+
+    static func headwearPoints(_ value: Headwear) -> Double {
+        switch value {
         case .none: return 0
         case .bandana, .beanie: return 2
         case .nightcap, .headphones: return 3
@@ -398,9 +404,11 @@ struct PawpetTraits {
         }
     }
 
+    private var headwearPoints: Double { Self.headwearPoints(headwear) }
+
     /// Expressions you only see on an unusual day score higher than the everyday ones.
-    private var expressionPoints: Double {
-        switch expression {
+    static func expressionPoints(_ value: Expression) -> Double {
+        switch value {
         case .content: return 0
         case .wide, .sleepy: return 1
         case .tired, .zen, .mischief: return 2
@@ -408,6 +416,8 @@ struct PawpetTraits {
         case .determined, .sparkle: return 4
         }
     }
+
+    private var expressionPoints: Double { Self.expressionPoints(expression) }
 
     /// S / A / B / C / D, matching how the day's score grades read elsewhere in the app.
     var rarityGrade: String {
@@ -442,8 +452,34 @@ struct PawpetTraits {
 
     // MARK: - Trait names
 
-    var wingsName: String {
-        switch wings {
+    static func expressionName(_ value: Expression) -> String {
+        switch value {
+        case .content: return L10n.t("itemCatalog.expression.content")
+        case .sleepy: return L10n.t("itemCatalog.expression.sleepy")
+        case .dizzy: return L10n.t("itemCatalog.expression.dizzy")
+        case .chaotic: return L10n.t("itemCatalog.expression.chaotic")
+        case .surprised: return L10n.t("itemCatalog.expression.surprised")
+        case .determined: return L10n.t("itemCatalog.expression.determined")
+        case .focused: return L10n.t("itemCatalog.expression.focused")
+        case .mischief: return L10n.t("itemCatalog.expression.mischief")
+        case .tired: return L10n.t("itemCatalog.expression.tired")
+        case .zen: return L10n.t("itemCatalog.expression.zen")
+        case .wide: return L10n.t("itemCatalog.expression.wide")
+        case .sparkle: return L10n.t("itemCatalog.expression.sparkle")
+        }
+    }
+
+    static func cheekMarkName(_ value: CheekMark) -> String {
+        switch value {
+        case .none: return L10n.t("pawpetTraits.d58fa73a")
+        case .blush: return L10n.t("itemCatalog.cheek.blush")
+        case .sweat: return L10n.t("itemCatalog.cheek.sweat")
+        case .flushed: return L10n.t("itemCatalog.cheek.flushed")
+        }
+    }
+
+    static func wingsName(_ value: Wings) -> String {
+        switch value {
         case .none: return L10n.t("pawpetTraits.d58fa73a")
         case .feathered: return L10n.t("pawpetTraits.e75e6f55")
         case .crystal: return L10n.t("pawpetTraits.18aa0a59")
@@ -451,8 +487,10 @@ struct PawpetTraits {
         }
     }
 
-    var backdropName: String {
-        switch backdrop {
+    var wingsName: String { Self.wingsName(wings) }
+
+    static func backdropName(_ value: Backdrop) -> String {
+        switch value {
         case .none: return L10n.t("pawpetTraits.d58fa73a")
         case .rays: return L10n.t("pawpetTraits.d5b81e3a")
         case .orbit: return L10n.t("pawpetTraits.f7108d6b")
@@ -460,8 +498,10 @@ struct PawpetTraits {
         }
     }
 
-    var collarName: String {
-        switch collar {
+    var backdropName: String { Self.backdropName(backdrop) }
+
+    static func collarName(_ value: Collar) -> String {
+        switch value {
         case .none: return L10n.t("pawpetTraits.d58fa73a")
         case .cloth: return L10n.t("pawpetTraits.a449c92e")
         case .blue: return L10n.t("pawpetTraits.b3b21fe3")
@@ -471,8 +511,10 @@ struct PawpetTraits {
         }
     }
 
-    var headwearName: String {
-        switch headwear {
+    var collarName: String { Self.collarName(collar) }
+
+    static func headwearName(_ value: Headwear) -> String {
+        switch value {
         case .none: return L10n.t("pawpetTraits.d58fa73a")
         case .crown: return L10n.t("pawpetTraits.06b5d92a")
         case .partyHat: return L10n.t("pawpetTraits.792ef7d9")
@@ -484,8 +526,10 @@ struct PawpetTraits {
         }
     }
 
-    var floatersName: String {
-        switch floaters {
+    var headwearName: String { Self.headwearName(headwear) }
+
+    static func floatersName(_ value: Floaters) -> String {
+        switch value {
         case .none: return L10n.t("pawpetTraits.d58fa73a")
         case .zzz: return "zzz"
         case .sparkles: return L10n.t("pawpetTraits.298fcc03")
@@ -494,16 +538,20 @@ struct PawpetTraits {
         }
     }
 
-    var eyewearName: String {
-        switch eyewear {
+    var floatersName: String { Self.floatersName(floaters) }
+
+    static func eyewearName(_ value: Eyewear) -> String {
+        switch value {
         case .none: return L10n.t("pawpetTraits.d58fa73a")
         case .readingGlasses: return L10n.t("pawpetTraits.36fd982f")
         case .sunglasses: return L10n.t("pawpetTraits.4ba1da9d")
         }
     }
 
-    var propName: String {
-        switch prop {
+    var eyewearName: String { Self.eyewearName(eyewear) }
+
+    static func propName(_ value: Prop) -> String {
+        switch value {
         case .none: return L10n.t("pawpetTraits.d58fa73a")
         case .coffee: return L10n.t("pawpetTraits.98bb79d2")
         case .mouse: return L10n.t("pawpetTraits.fcf9e282")
@@ -514,6 +562,8 @@ struct PawpetTraits {
         case .fish: return L10n.t("pawpetTraits.b6f5983b")
         }
     }
+
+    var propName: String { Self.propName(prop) }
 
     // MARK: - Explanations
 
@@ -649,8 +699,8 @@ struct PawpetTraits {
         }
     }
 
-    var pawCharmName: String {
-        switch pawCharm {
+    static func pawCharmName(_ value: PawCharm) -> String {
+        switch value {
         case .none: return ""
         case .orb: return L10n.t("pawpetTraits.6e85059f")
         case .gauntlet: return L10n.t("pawpetTraits.3cbcba5c")
@@ -661,6 +711,8 @@ struct PawpetTraits {
         case .feather: return L10n.t("pawpetTraits.99d5a5fb")
         }
     }
+
+    var pawCharmName: String { Self.pawCharmName(pawCharm) }
 
     private var pawCharmReason: String {
         L10n.t("pawpetTraits.d9687f00", pawCharmName)
@@ -675,8 +727,8 @@ struct PawpetTraits {
         }
     }
 
-    var frameName: String {
-        switch frame {
+    static func frameName(_ value: Frame) -> String {
+        switch value {
         case .none: return ""
         case .bronze: return L10n.t("pawpetTraits.99dfaa5d")
         case .silver: return L10n.t("pawpetTraits.6cc903d4")
@@ -684,6 +736,8 @@ struct PawpetTraits {
         case .prismatic: return L10n.t("pawpetTraits.327fbaba")
         }
     }
+
+    var frameName: String { Self.frameName(frame) }
 
     private var frameReason: String {
         switch frame {

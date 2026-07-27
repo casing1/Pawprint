@@ -57,7 +57,9 @@ final class AchievementEngine {
         store.saveUnlockedAchievements([])
     }
 
-    private func satisfies(_ id: AchievementID, summary: DailySummary, currentStreak: Int) -> Bool {
+    /// Pure: reads nothing but its arguments. Not private so `DebugSnapshot` can check every
+    /// condition against a purpose-built summary without writing unlocks to the real store.
+    func satisfies(_ id: AchievementID, summary: DailySummary, currentStreak: Int) -> Bool {
         switch id {
         case .firstTenThousandKeys:
             return summary.totalKeyPresses >= 10_000
@@ -79,6 +81,36 @@ final class AchievementEngine {
             return summary.secondsOnBattery >= 4 * 3600
         case .multiDisplay:
             return summary.maxSimultaneousDisplays >= 3
+
+        // Hidden. Each looks for an unusual *shape* in the day rather than a bigger number, so
+        // they can't be reached by simply doing more of something — which is what keeps them
+        // worth discovering. None of them judge the day; they only notice it.
+        case .witchingHour:
+            // Any activity inside the 3am hour. `activityPerMinute` is indexed by minute of day.
+            return summary.activityPerMinute.count > 240
+                && summary.activityPerMinute[180..<240].contains { $0 > 0 }
+        case .oneHandedWonder:
+            return summary.totalKeyPresses >= 2_000
+                && (summary.leftHandPercent >= 75 || summary.leftHandPercent <= 25)
+        case .tunnelVision:
+            return summary.appConcentration >= 95 && summary.activeSeconds >= 4 * 3600
+        case .stormMinute:
+            return summary.busiestMinuteCount >= 400
+        case .lidFlipper:
+            return summary.lidOpenCount >= 10
+        case .fullyIndependent:
+            return summary.secondsOnBattery >= 8 * 3600 && summary.chargerConnectCount == 0
+        case .perfectBalance:
+            // Scrolled a long way and ended up almost exactly where you started.
+            let total = summary.scrollUpPoints + summary.scrollDownPoints
+            guard summary.scrollScreens >= 100, total > 0 else { return false }
+            return abs(summary.scrollUpPoints - summary.scrollDownPoints) / total <= 0.03
+        case .fullKeyboard:
+            return summary.distinctKeysUsed >= 60
+        case .quietKeys:
+            return summary.activeSeconds >= 4 * 3600
+                && summary.totalKeyPresses >= 3_000
+                && summary.totalClicks <= 100
         }
     }
 }

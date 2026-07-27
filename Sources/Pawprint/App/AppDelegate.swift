@@ -78,6 +78,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { DebugSnapshot.probeClipboard() }
         }
 
+        if ProcessInfo.processInfo.environment["PAWPRINT_ITEMS"] != nil {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { DebugSnapshot.probeItemCatalog() }
+        }
+
         if ProcessInfo.processInfo.environment["PAWPRINT_L10N"] != nil {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { DebugSnapshot.auditLocalization() }
         }
