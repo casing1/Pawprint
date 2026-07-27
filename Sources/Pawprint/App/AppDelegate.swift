@@ -35,6 +35,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // End-to-end exercise of the update pipeline: check → download → ditto → signature
         // verification → swap. There is no other way to prove the install path works, since it
         // replaces the running bundle and can't be unit-tested in-process.
+        if ProcessInfo.processInfo.environment["PAWPRINT_UPDATE_PROBE"] != nil {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { DebugSnapshot.probeAutomaticUpdate() }
+        }
+
         if let feed = ProcessInfo.processInfo.environment["PAWPRINT_UPDATE_TEST"] {
             Task { @MainActor in DebugSnapshot.runUpdateFlow(feed: feed) }
         }

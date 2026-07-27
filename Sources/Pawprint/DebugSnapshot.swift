@@ -80,6 +80,28 @@ enum DebugSnapshot {
         write(out)
     }
 
+    // MARK: - Automatic scheduler probe (PAWPRINT_UPDATE_PROBE)
+
+    /// Waits out the launch delay and reports what the *scheduler* found, with no manual check
+    /// involved — the path a real user is on, which is otherwise entirely silent.
+    @MainActor
+    static func probeAutomaticUpdate() {
+        Task { @MainActor in
+            let settings = ActivityCenter.shared.settings
+            write("AUTOUPDATE enabled=\(settings.updateCheckEnabled) "
+                  + "automatic=\(settings.updateCheckAutomatically) feed=\(settings.updateFeedURL)\n")
+            for _ in 0..<12 {
+                try? await Task.sleep(for: .seconds(2))
+                if case .available(let release) = UpdateChecker.shared.state {
+                    write("AUTOUPDATE scheduler offered \(release.version)\n")
+                    exit(0)
+                }
+            }
+            write("AUTOUPDATE no update offered — state=\(UpdateChecker.shared.state)\n")
+            exit(1)
+        }
+    }
+
     // MARK: - Update pipeline exercise (PAWPRINT_UPDATE_TEST)
 
     @MainActor
