@@ -344,6 +344,92 @@ enum DebugSnapshot {
         capture(background, name: "dmg_background", scale: 2, bare: true)
     }
 
+    // MARK: - Cat wall for the README (PAWPRINT_WALL)
+
+    /// A dense wall of high-grade cats.
+    ///
+    /// A tidy 4x4 of identically-framed cats undersold the point: the interesting claim is the
+    /// *range*, so this deliberately mixes grades (bronze through prismatic) to vary the frame
+    /// colours, and greedily picks for distinct coat, charm, wings and expression rather than
+    /// taking the first N dates that match.
+    @MainActor
+    static func renderCatWall(columns: Int = 8, rows: Int = 6) {
+        let wanted = columns * rows
+
+        /// Score bands, cycled so frames alternate instead of being a field of rainbows.
+        let bands: [Int] = [92, 88, 78, 95, 62, 74, 90, 45, 86, 71, 96, 55]
+
+        /// Metric tweaks that push the expression around, cycled independently of the bands.
+        let moods: [(String, (inout DailySummary) -> Void)] = [
+            ("determined", { $0.maxWPM = 135 }),
+            ("focused", { $0.longestFocusSeconds = 95 * 60 }),
+            ("surprised", { $0.maxClicksPerMinute = 82; $0.longestFocusSeconds = 15 * 60 }),
+            ("mischief", { $0.totalAppSwitches = 260; $0.longestFocusSeconds = 15 * 60 }),
+            ("zen", { $0.longestBreakSeconds = 3 * 3600; $0.longestFocusSeconds = 15 * 60 }),
+            ("dizzy", { $0.backspaceRatio = 0.36 }),
+            ("chaotic", { $0.chaosIndex = 84 }),
+            ("wide", { $0.longestFocusSeconds = 15 * 60 }),
+            ("tired", { $0.screenOnSeconds = 9 * 3600; $0.screenUtilizationPercent = 22;
+                        $0.longestFocusSeconds = 15 * 60 }),
+            ("content", { $0.longestFocusSeconds = 15 * 60; $0.maxWPM = 70 })
+        ]
+
+        var chosen: [(DailySummary, Bool)] = []
+        var seenSignature: Set<String> = []
+        var index = 0
+
+        // Two passes: the first insists every cat is a new combination, the second fills any
+        // shortfall without that constraint so the grid is always complete.
+        for requireNew in [true, false] {
+            for month in 1...12 where chosen.count < wanted {
+                for day in 1...28 where chosen.count < wanted {
+                    var summary = excellentDay()
+                    summary.day = String(format: "2026-%02d-%02d", month, day)
+                    let band = bands[index % bands.count]
+                    let mood = moods[(index / bands.count + index) % moods.count]
+                    summary.score = PawprintScore(total: band, grade: "S", gradeColorHint: .gold,
+                                                  headline: "", components: [])
+                    mood.1(&summary)
+                    summary.goldenHour = (index * 5) % 24
+                    let celebrating = index % 11 == 0
+                    let traits = PawpetTraits(day: summary.day, summary: summary,
+                                              streakDays: 40, isCelebrating: celebrating)
+                    let signature = "\(traits.paletteIndex)/\(traits.pattern)/\(traits.pawCharm)"
+                        + "/\(traits.wings)/\(traits.frame)/\(traits.expression)"
+                    if requireNew && seenSignature.contains(signature) { continue }
+                    seenSignature.insert(signature)
+                    chosen.append((summary, celebrating))
+                    index += 1
+                }
+            }
+        }
+
+        write("WALL \(chosen.count) cats, \(seenSignature.count) distinct combinations\n")
+
+        let wall = VStack(spacing: 14) {
+            ForEach(0..<rows, id: \.self) { row in
+                HStack(spacing: 14) {
+                    ForEach(0..<columns, id: \.self) { column in
+                        let entry = chosen[row * columns + column]
+                        PawpetView(summary: entry.0, size: 104, streakDays: 40,
+                                   isCelebrating: entry.1)
+                    }
+                }
+            }
+        }
+        .padding(22)
+        .background(
+            LinearGradient(
+                colors: [Color(red: 0.07, green: 0.08, blue: 0.13),
+                         Color(red: 0.12, green: 0.10, blue: 0.19),
+                         Color(red: 0.08, green: 0.12, blue: 0.18)],
+                startPoint: .topLeading, endPoint: .bottomTrailing
+            )
+        )
+
+        capture(wall, name: "catwall", scale: 2, bare: true)
+    }
+
     // MARK: - Best-combination showcase (PAWPRINT_SHOWCASE)
 
     /// Renders the *top-tier* cats: S-grade frames, every paw charm, every wing type.

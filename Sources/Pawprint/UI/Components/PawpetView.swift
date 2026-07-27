@@ -918,10 +918,12 @@ struct PawpetView: View {
 
         for side in [-1.0, 1.0] {
             let direction = CGFloat(side)
-            let root = CGPoint(x: w * 0.5 + direction * w * 0.17, y: anchorY)
+            // Kept inside the frame: at the old reach the outermost feather ended past the
+            // canvas edge, so in a grid the wings hung over the gaps like stickers.
+            let root = CGPoint(x: w * 0.5 + direction * w * 0.15, y: anchorY)
             for i in 0..<3 {
-                let reach = w * (0.24 + CGFloat(i) * 0.05)
-                let lift = h * (0.10 + CGFloat(i) * 0.07)
+                let reach = w * (0.17 + CGFloat(i) * 0.035)
+                let lift = h * (0.09 + CGFloat(i) * 0.06)
                 var feather = Path()
                 feather.move(to: root)
                 feather.addQuadCurve(

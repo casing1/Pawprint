@@ -42,9 +42,9 @@ which charm is a surprise, drawn from the date. Cover enough distance and it gro
 well and it gets a frame: bronze, silver, gold, or the rainbow one.
 
 <div align="center">
-<img src="docs/images/cats.png" alt="Top-tier cats" width="620">
+<img src="docs/images/cats.png" alt="48 high-grade cats" width="100%">
 <br>
-<sub>Top-grade cats: rainbow frames, paw charms, wings and sunburst backdrops</sub>
+<sub>48 high-grade days — bronze through rainbow frames, seven paw charms, three kinds of wings</sub>
 </div>
 
 <br>
