@@ -1,4 +1,5 @@
 import AppKit
+import CryptoKit
 import Observation
 import Security
 
@@ -11,7 +12,41 @@ struct UpdateRelease: Codable, Equatable {
     var minimumSystemVersion: String?
     var publishedAt: String?
 
+    /// Base64 Ed25519 signature of the downloaded archive, produced by `scripts/updatekeys.swift`.
+    var signature: String?
+
     var downloadLink: URL? { URL(string: downloadURL) }
+}
+
+/// The shape GitHub's Releases API returns. Mapped onto `UpdateRelease` so the app can point
+/// straight at `api.github.com` with no extra file to publish and keep in sync.
+private struct GitHubRelease: Decodable {
+    struct Asset: Decodable {
+        let name: String
+        let browser_download_url: String
+    }
+    let tag_name: String
+    let name: String?
+    let body: String?
+    let draft: Bool?
+    let prerelease: Bool?
+    let published_at: String?
+    let assets: [Asset]
+
+    /// GitHub has no field for our signature, so the workflow uploads it as a tiny `.sig` asset
+    /// alongside the archive and the app fetches it separately.
+    func asUpdateRelease() -> UpdateRelease? {
+        guard let archive = assets.first(where: { $0.name.hasSuffix(".zip") }) else { return nil }
+        return UpdateRelease(
+            version: tag_name.hasPrefix("v") ? String(tag_name.dropFirst()) : tag_name,
+            build: nil,
+            notes: body,
+            downloadURL: archive.browser_download_url,
+            minimumSystemVersion: "14.0",
+            publishedAt: published_at,
+            signature: assets.first(where: { $0.name.hasSuffix(".zip.sig") })?.browser_download_url
+        )
+    }
 }
 
 /// Checks for, downloads, and installs updates for a directly-distributed build.
@@ -21,10 +56,19 @@ struct UpdateRelease: Codable, Equatable {
 /// default**, and the only request it ever makes is a plain GET for the feed and the download. No
 /// identifiers, no usage data, no telemetry: the feed URL is fetched exactly as typed.
 ///
-/// Installing verifies that the downloaded app satisfies the *running* app's designated code
-/// signing requirement before anything is swapped. An update that isn't signed by the same
-/// identity is refused — otherwise a hijacked feed URL would be a straight path to running
-/// arbitrary code as the user.
+/// **Trust model.** The feed is plain JSON over the network and could be substituted, so what
+/// decides whether code is trusted is a signature, never a URL. Two independent checks:
+///
+///  1. **Ed25519 over the archive bytes**, against a public key compiled into this app. The
+///     matching private key lives only in the release workflow's secrets. This is the primary
+///     gate and the one that works everywhere.
+///  2. **Code signing**, when it can say anything useful: the downloaded app must satisfy the
+///     running app's designated requirement. Skipped for ad-hoc-signed builds, whose requirement
+///     is a content hash that by construction never matches a different build — demanding it
+///     there would reject every update rather than add safety.
+///
+/// Without check 1 passing, nothing is installed. A release published without a signature is
+/// treated as untrusted and offered as a manual browser download only.
 @MainActor
 @Observable
 final class UpdateChecker {
@@ -47,7 +91,25 @@ final class UpdateChecker {
     private var stagedAppURL: URL?
     private var stagingRoot: URL?
 
+    static var updatePublicKey: String { UpdateDistribution.publicKey }
+
     private init() {}
+}
+
+/// Distribution constants, kept outside the `@MainActor` class so non-isolated types such as
+/// `AppSettings` can read them without hopping actors.
+enum UpdateDistribution {
+    /// Public half of the update signing key. The private half is a GitHub Actions secret.
+    /// Changing this invalidates every previously published release — rotate deliberately.
+    static let publicKey = "WFrwhuof35wfjgGTjm5WwGXW8BlHb6DnXYKNcfoOiBc="
+
+    /// GitHub Releases for this repository. Ships as the default so a fresh install already
+    /// knows where updates come from; the setting itself is still off until the user opts in.
+    static let feedURL = "https://api.github.com/repos/yhcho0405/Pawprint/releases/latest"
+}
+
+extension UpdateChecker {
+    static var defaultFeedURL: String { UpdateDistribution.feedURL }
 
     // MARK: - Current version
 
@@ -85,7 +147,20 @@ final class UpdateChecker {
                 return
             }
 
-            let release = try JSONDecoder().decode(UpdateRelease.self, from: data)
+            let release: UpdateRelease
+            if let github = try? JSONDecoder().decode(GitHubRelease.self, from: data) {
+                if github.draft == true {
+                    state = .failed("최신 릴리즈가 아직 초안 상태예요")
+                    return
+                }
+                guard let mapped = github.asUpdateRelease() else {
+                    state = .failed("릴리즈에 업데이트용 .zip 파일이 없어요")
+                    return
+                }
+                release = mapped
+            } else {
+                release = try JSONDecoder().decode(UpdateRelease.self, from: data)
+            }
             lastCheckedAt = Date()
 
             guard release.downloadLink != nil else {
@@ -162,6 +237,11 @@ final class UpdateChecker {
             let archive = root.appendingPathComponent("update.zip")
             try FileManager.default.moveItem(at: temporaryFile, to: archive)
 
+            // Signature first: nothing gets unpacked, let alone executed, until the bytes are
+            // proven to have come from the holder of the update key.
+            try await verifyArchiveSignature(archive, release: release)
+            state = .downloading(progress: 0.8)
+
             let unpacked = root.appendingPathComponent("unpacked")
             try unzip(archive, to: unpacked)
             state = .downloading(progress: 0.9)
@@ -184,6 +264,56 @@ final class UpdateChecker {
     }
 
     struct UpdateError: Error { let message: String }
+
+    /// Ed25519 check of the archive against the pinned public key.
+    ///
+    /// `release.signature` may be the signature itself or a URL to a `.sig` file — GitHub has no
+    /// field for arbitrary metadata, so the workflow uploads it as an asset and this fetches it.
+    private func verifyArchiveSignature(_ archive: URL, release: UpdateRelease) async throws {
+        guard let reference = release.signature, !reference.isEmpty else {
+            throw UpdateError(message: "이 릴리즈에는 서명이 없어요. 자동 설치를 중단했어요 — 브라우저로 직접 받아주세요.")
+        }
+
+        let encodedSignature: String
+        if reference.hasPrefix("https://") {
+            guard let url = URL(string: reference) else {
+                throw UpdateError(message: "서명 주소가 올바르지 않아요")
+            }
+            var request = URLRequest(url: url)
+            request.httpShouldHandleCookies = false
+            request.timeoutInterval = 15
+            let (data, _) = try await URLSession.shared.data(for: request)
+            encodedSignature = String(decoding: data, as: UTF8.self)
+        } else {
+            encodedSignature = reference
+        }
+
+        guard let signature = Data(base64Encoded: encodedSignature.trimmingCharacters(in: .whitespacesAndNewlines)),
+              let rawKey = Data(base64Encoded: Self.updatePublicKey),
+              let key = try? Curve25519.Signing.PublicKey(rawRepresentation: rawKey) else {
+            throw UpdateError(message: "서명 형식을 읽을 수 없어요")
+        }
+        guard let payload = FileManager.default.contents(atPath: archive.path) else {
+            throw UpdateError(message: "내려받은 파일을 읽을 수 없어요")
+        }
+        guard key.isValidSignature(signature, for: payload) else {
+            throw UpdateError(message: "서명이 일치하지 않아요. 파일이 변조되었을 수 있어 설치를 중단했어요.")
+        }
+    }
+
+    /// True when the running app carries only an ad-hoc signature, whose designated requirement is
+    /// a hash of this exact build and therefore can never be satisfied by a newer one.
+    private func runningAppIsAdHocSigned() -> Bool {
+        var code: SecStaticCode?
+        guard SecStaticCodeCreateWithPath(Bundle.main.bundleURL as CFURL, [], &code) == errSecSuccess,
+              let code else { return false }
+        var information: CFDictionary?
+        guard SecCodeCopySigningInformation(code, SecCSFlags(rawValue: kSecCSSigningInformation), &information) == errSecSuccess,
+              let dictionary = information as? [String: Any] else { return false }
+        // An ad-hoc signature has no certificate chain at all.
+        let certificates = dictionary[kSecCodeInfoCertificates as String] as? [Any]
+        return (certificates?.isEmpty ?? true)
+    }
 
     /// `ditto` rather than `unzip`: it is the tool that round-trips macOS archives without
     /// mangling symlinks and extended attributes, and a mangled bundle fails signature checks.
@@ -218,6 +348,10 @@ final class UpdateChecker {
     /// the network and could be substituted, so the signature — not the URL — is what decides
     /// whether the code is trusted.
     private func verifySignature(of app: URL) throws {
+        // For an ad-hoc build this check can only ever fail, so skip it and lean on the Ed25519
+        // signature, which has already passed by the time we get here.
+        guard !runningAppIsAdHocSigned() else { return }
+
         var selfCode: SecCode?
         guard SecCodeCopySelf([], &selfCode) == errSecSuccess, let selfCode else {
             throw UpdateError(message: "현재 앱의 서명을 확인할 수 없어요")

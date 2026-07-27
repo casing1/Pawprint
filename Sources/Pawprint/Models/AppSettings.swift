@@ -112,8 +112,10 @@ struct AppSettings: Codable {
     /// Off by default. Pawprint promises to work fully offline and to make no request the user
     /// didn't ask for — an update check is still a network request, so it stays opt-in.
     var updateCheckEnabled: Bool = false
-    /// Feed URL. Ships empty so a fresh install can't be pointed anywhere unexpected.
-    var updateFeedURL: String = ""
+    /// Feed URL. Defaults to this project's GitHub Releases so a fresh install already knows
+    /// where updates come from — but `updateCheckEnabled` is still off until the user opts in,
+    /// so nothing is fetched until they say so.
+    var updateFeedURL: String = UpdateDistribution.feedURL
     /// Skip the daily background check but keep the manual button working.
     var updateCheckAutomatically: Bool = true
 

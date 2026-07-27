@@ -1,0 +1,100 @@
+name: Release
+
+# Publishing is driven by tags: `scripts/release.sh 0.2.0` bumps the version, tags, and pushes,
+# and everything below runs from that tag. `workflow_dispatch` exists so a release can be retried
+# without inventing a new version number.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing tag to (re)publish, e.g. v0.2.0'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.tag || github.ref }}
+          fetch-depth: 0
+
+      - name: Resolve version
+        id: version
+        run: |
+          TAG="${{ github.event.inputs.tag || github.ref_name }}"
+          VERSION="${TAG#v}"
+          echo "tag=$TAG"          >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION"  >> "$GITHUB_OUTPUT"
+
+      # The tag is the single source of truth for the version — the checked-in Info.plist is only
+      # a default, so stamping it here keeps a re-tagged build from shipping a stale number.
+      - name: Stamp version into Info.plist
+        run: |
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString ${{ steps.version.outputs.version }}" scripts/Info.plist
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${{ github.run_number }}" scripts/Info.plist
+
+      - name: Build, sign and package
+        env:
+          PAWPRINT_UPDATE_PRIVATE_KEY: ${{ secrets.PAWPRINT_UPDATE_PRIVATE_KEY }}
+        run: |
+          if [ -z "$PAWPRINT_UPDATE_PRIVATE_KEY" ]; then
+            echo "::error::PAWPRINT_UPDATE_PRIVATE_KEY secret is not set — in-app updates would refuse this build."
+            exit 1
+          fi
+          ./scripts/make_dmg.sh --build
+
+      - name: Verify the archive against the pinned public key
+        run: |
+          # Catches a mismatched key pair here rather than on every user's machine.
+          PUBLIC_KEY=$(grep -o 'static let publicKey = "[^"]*"' Sources/Pawprint/Engine/UpdateChecker.swift | cut -d'"' -f2)
+          swift scripts/updatekeys.swift verify \
+            "dist/Pawprint-${{ steps.version.outputs.version }}.zip" \
+            "$(cat dist/Pawprint-${{ steps.version.outputs.version }}.zip.sig)" \
+            "$PUBLIC_KEY"
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          TAG="${{ steps.version.outputs.tag }}"
+          NOTES_FILE=$(mktemp)
+          {
+            echo "### 설치"
+            echo ""
+            echo "\`Pawprint-$VERSION.dmg\`를 열고 Pawprint를 Applications로 끌어다 놓으세요."
+            echo "처음 실행할 때는 **우클릭 → 열기**가 필요합니다 (Apple Developer ID 서명이 없어 Gatekeeper가 막습니다)."
+            echo ""
+            echo "이미 설치되어 있다면 설정 > 업데이트에서 바로 받을 수 있습니다."
+            echo ""
+            echo "### 변경사항"
+            echo ""
+            PREVIOUS=$(git describe --tags --abbrev=0 "$TAG^" 2>/dev/null || true)
+            if [ -n "$PREVIOUS" ]; then
+              git log --pretty='- %s' "$PREVIOUS..$TAG"
+            else
+              git log --pretty='- %s' -20 "$TAG"
+            fi
+          } > "$NOTES_FILE"
+
+          # `--clobber` so a re-run of workflow_dispatch replaces assets instead of failing.
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" \
+              "dist/Pawprint-$VERSION.dmg" \
+              "dist/Pawprint-$VERSION.zip" \
+              "dist/Pawprint-$VERSION.zip.sig" --clobber
+            gh release edit "$TAG" --notes-file "$NOTES_FILE"
+          else
+            gh release create "$TAG" \
+              "dist/Pawprint-$VERSION.dmg" \
+              "dist/Pawprint-$VERSION.zip" \
+              "dist/Pawprint-$VERSION.zip.sig" \
+              --title "Pawprint $VERSION" \
+              --notes-file "$NOTES_FILE"
+          fi
