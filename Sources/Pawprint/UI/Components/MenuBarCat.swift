@@ -85,7 +85,15 @@ enum MenuBarCat {
     private static func drawTail(phase: CGFloat, asleep: Bool) {
         let samples = 30
         // Asleep the tail still moves, but barely — a completely still one looks like a stuck icon.
-        let amplitude: CGFloat = asleep ? 0.34 : 0.72
+        let amplitude: CGFloat = asleep ? 0.7 : 1.55
+
+        // The whole tail leans as well as rippling. The travelling wave alone only nudges the
+        // outline sideways, which is legible at 8x and almost invisible at 19pt — swinging the
+        // tip through a real arc is what makes the movement read at menu bar size.
+        // Biased outward by a sixth of the swing. Centred on the resting position, the inward
+        // extreme pressed the tail against the flank and the gap between them closed into what
+        // looked like a loop; the arc is the same size, just shifted clear of the body.
+        let sweep = (CGFloat(sin(Double(phase) * 2 * .pi)) + 0.18) * (asleep ? 0.35 : 1)
 
         // The spine is a cubic bezier, evaluated directly. Trigonometric and power curves both
         // fought the shape wanted here: a gentle S that leaves the hip, sweeps out and up, and
@@ -101,8 +109,12 @@ enum MenuBarCat {
         // it, so nothing about it can be mistaken for a limb.
         let p0 = CGPoint(x: 1.0, y: 2.0)
         let p1 = CGPoint(x: 6.5, y: 1.1)
-        let p2 = CGPoint(x: asleep ? 10.4 : 11.2, y: asleep ? 3.0 : 5.0)
-        let p3 = CGPoint(x: asleep ? 9.2 : 9.6, y: asleep ? 6.2 : 11.2)
+        let p2 = CGPoint(x: (asleep ? 10.4 : 11.2) + sweep * 1.3,
+                         y: asleep ? 3.0 : 5.0)
+        // The tip travels furthest and dips a little at the extremes, the way a tail loses height
+        // as it swings out.
+        let p3 = CGPoint(x: (asleep ? 9.2 : 9.6) + sweep * 2.6,
+                         y: (asleep ? 6.2 : 11.2) - abs(sweep) * 0.8)
 
         func spine(_ t: CGFloat) -> CGPoint {
             let u = 1 - t
