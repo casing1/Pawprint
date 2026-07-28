@@ -101,9 +101,9 @@ final class MenuBarIconAnimator {
     /// The menu bar caps height at about 18pt but does not care about width, so the cat is drawn
     /// at the height limit and given a wider canvas to be bulky in. At 17pt in a square canvas it
     /// was legible but small next to the paw.
-    static let catHeight: CGFloat = 18
+    static let catHeight: CGFloat = 19
     /// Wide enough for the tail's full sweep on one side and the sleep marks on the other.
-    static let catCanvasWidth: CGFloat = 34
+    static let catCanvasWidth: CGFloat = 38
 
     let filledFrames: [NSImage]
     let restingImage: NSImage

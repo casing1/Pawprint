@@ -37,6 +37,8 @@ enum MenuBarCat {
 
     /// Unit-space height of the drawing, base to ear tips.
     private static let artHeight: CGFloat = 19.0
+    /// Widens everything without making it taller.
+    private static let xStretch: CGFloat = 1.1
 
     static func image(pose: Pose, height: CGFloat = 18, canvasWidth: CGFloat = 30,
                       canvasHeight: CGFloat = 22) -> NSImage {
@@ -50,9 +52,14 @@ enum MenuBarCat {
         context.imageInterpolation = .high
         context.cgContext.saveGState()
 
+        // Stretched horizontally: the menu bar limits height but not width, so the cat gets a
+        // little wider than it is tall. Shifted left of centre because everything that hangs off
+        // the silhouette — the tail, the sleep marks — hangs off the right, and centring the
+        // canvas on the body alone left the cat looking pushed to one side.
         let scale = height / artHeight
-        context.cgContext.translateBy(x: canvasWidth / 2, y: (canvasHeight - height) / 2)
-        context.cgContext.scaleBy(x: scale, y: scale)
+        context.cgContext.translateBy(x: canvasWidth / 2 - 2.2 * scale * xStretch,
+                                      y: (canvasHeight - height) / 2)
+        context.cgContext.scaleBy(x: scale * xStretch, y: scale)
 
         NSColor.black.setFill()
         drawTail(phase: pose.tailPhase, asleep: pose.asleep)
@@ -76,49 +83,54 @@ enum MenuBarCat {
     /// A wave running from root to tip, with amplitude growing along the length, is what a tail
     /// actually does: the base stays put, the middle follows late, and the tip trails furthest.
     private static func drawTail(phase: CGFloat, asleep: Bool) {
-        let samples = 28
+        let samples = 30
         // Asleep the tail still moves, but barely — a completely still one looks like a stuck icon.
-        //
-        // Amplitude is modest and the tail is long: at 1.7 over a short spine the wave folded the
-        // tail back across itself and the whole thing read as a bent arm rather than a tail.
-        let amplitude: CGFloat = asleep ? 0.42 : 0.95
-        let reach: CGFloat = asleep ? 6.0 : 9.6
-        let root = CGPoint(x: 3.2, y: 0.7)
+        let amplitude: CGFloat = asleep ? 0.34 : 0.72
 
-        // A quarter arc: leaves the hip horizontally and turns upward at an even rate.
+        // The spine is a cubic bezier, evaluated directly. Trigonometric and power curves both
+        // fought the shape wanted here: a gentle S that leaves the hip, sweeps out and up, and
+        // curls back at the tip. A bezier states that shape outright, and being a polynomial its
+        // derivative is continuous, so there is no point along it that can pinch into a corner.
         //
-        // This was `pow(s, 0.7)` in x, whose derivative is *infinite* at s = 0 — the tail left the
-        // body through what was very nearly a corner, and no amount of extra sampling or curve
-        // fitting could smooth a kink that was in the path itself. Sine and cosine have bounded
-        // derivatives everywhere, so the bend is spread along the whole length.
-        let sweep = CGFloat.pi / 2 * 0.92
-        func spine(_ s: CGFloat) -> CGPoint {
-            CGPoint(x: root.x + 6.8 * sin(s * sweep),
-                    y: root.y + reach * (1 - cos(s * sweep)))
+        // The root sits *inside* the body at haunch height, so the body hides the first third and
+        // the tail appears from behind the cat — which is where a tail comes from.
+        //
+        // Height matters as much as the root. Rooted at the feet it emerged beside the front paws
+        // and read as an arm reaching down; swept up to head height it read as an arm raised. It
+        // now leaves low, at the hip, and rises well to the right of the head rather than beside
+        // it, so nothing about it can be mistaken for a limb.
+        let p0 = CGPoint(x: 1.0, y: 2.0)
+        let p1 = CGPoint(x: 6.5, y: 1.1)
+        let p2 = CGPoint(x: asleep ? 10.4 : 11.2, y: asleep ? 3.0 : 5.0)
+        let p3 = CGPoint(x: asleep ? 9.2 : 9.6, y: asleep ? 6.2 : 11.2)
+
+        func spine(_ t: CGFloat) -> CGPoint {
+            let u = 1 - t
+            let a = u * u * u, b = 3 * u * u * t, c = 3 * u * t * t, d = t * t * t
+            return CGPoint(x: a * p0.x + b * p1.x + c * p2.x + d * p3.x,
+                           y: a * p0.y + b * p1.y + c * p2.y + d * p3.y)
         }
 
         var points: [CGPoint] = []
         for step in 0...samples {
             let s = CGFloat(step) / CGFloat(samples)
             let here = spine(s)
-            let ahead = spine(min(s + 0.01, 1))
+            let ahead = spine(min(s + 0.004, 1))
 
-            // Perpendicular to the spine, so the wave displaces across the tail rather than
-            // stretching it.
             var tx = ahead.x - here.x
             var ty = ahead.y - here.y
             let length = max(sqrt(tx * tx + ty * ty), 0.0001)
             tx /= length; ty /= length
 
-            // A single wavelength along the tail: one clean S that travels to the tip. More than
-            // one turned it into a squiggle at 18pt.
-            let wave = CGFloat(sin(Double((1.0 * s - phase) * 2 * .pi)))
-            let offset = amplitude * pow(s, 1.4) * wave
+            // Three quarters of a wavelength: one broad, unhurried S rather than a full sine,
+            // which put two bends into a tail this short and read as a squiggle.
+            let wave = CGFloat(sin(Double((0.75 * s - phase) * 2 * .pi)))
+            let offset = amplitude * pow(s, 1.5) * wave
             points.append(CGPoint(x: here.x - ty * offset, y: here.y + tx * offset))
         }
 
         let path = NSBezierPath()
-        path.lineWidth = 2.0
+        path.lineWidth = 2.1
         path.lineCapStyle = .round
         path.lineJoinStyle = .round
         appendSmoothCurve(through: points, to: path)
