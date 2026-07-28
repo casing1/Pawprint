@@ -185,6 +185,20 @@ final class ActivityCenter {
 
     /// Snapshot of the previous 7 days, used for the "vs. recent average" sentence. Reloaded
     /// only on launch and day rollover — not per event.
+    /// Re-reads everything after the database was written behind the app's back. Only the
+    /// screenshot harness does that, when it seeds a demo history into a throwaway file.
+    func reloadAfterExternalChange() {
+        today = store.loadDay(currentDayString) ?? DailyRawCounters(day: currentDayString)
+        SummaryCache.shared.invalidateAll()
+        reloadRecentDaysCache()
+        todaySummary = StatsEngine.summary(for: today, recentDays: recentDaysCache,
+                                           dayStartHour: settings.dayStartHour)
+        recomputeStreak()
+        // Rebuilds bests, percentiles, lifetime totals and quest levels from every stored day.
+        refreshLifetimeStats(force: true)
+        AchievementEngine.shared.evaluate(summary: todaySummary, currentStreak: currentStreak)
+    }
+
     private func reloadRecentDaysCache() {
         let start = DayKey.addingDays(-7, to: currentDayString)
         recentDaysCache = store.loadDays(from: start, to: currentDayString).filter { $0.day != currentDayString }

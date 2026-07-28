@@ -15,10 +15,6 @@ struct PawprintScore {
         var label: String
         var earned: Int
         var maximum: Int
-        /// Today's measured figure, in its own units.
-        var measured: String = ""
-        /// The figure at which this component stops adding more.
-        var reference: String = ""
     }
 
     enum GradeTone {
@@ -49,18 +45,10 @@ struct PawprintScore {
             gradeColorHint: tone,
             headline: headlineFor(total: total, summary: summary),
             components: [
-                Component(label: L10n.t("pawprintScore.2a22907d"), earned: activity, maximum: 30,
-                          measured: Formatters.longDuration(summary.activeSeconds),
-                          reference: Formatters.longDuration(Int(Reference.activeSeconds))),
-                Component(label: L10n.t("pawprintScore.56fb8019"), earned: focus, maximum: 30,
-                          measured: Formatters.longDuration(summary.totalFocusSeconds),
-                          reference: Formatters.longDuration(Int(Reference.focusSeconds))),
-                Component(label: L10n.t("pawprintScore.24ad1fbd"), earned: typing, maximum: 20,
-                          measured: Formatters.compactNumber(summary.totalKeyPresses),
-                          reference: Formatters.compactNumber(Int(Reference.keyPresses))),
-                Component(label: L10n.t("pawprintScore.e8a20d8c"), earned: speed, maximum: 20,
-                          measured: Formatters.wpm(summary.maxWPM),
-                          reference: Formatters.wpm(Reference.wpm)),
+                Component(label: L10n.t("pawprintScore.2a22907d"), earned: activity, maximum: 30),
+                Component(label: L10n.t("pawprintScore.56fb8019"), earned: focus, maximum: 30),
+                Component(label: L10n.t("pawprintScore.24ad1fbd"), earned: typing, maximum: 20),
+                Component(label: L10n.t("pawprintScore.e8a20d8c"), earned: speed, maximum: 20),
             ]
         )
     }

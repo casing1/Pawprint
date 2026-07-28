@@ -4,8 +4,6 @@
 
 [English](../README.md) · **한국어**
 
-<br>
-
 <a href="https://github.com/yhcho0405/Pawprint/releases/latest/download/Pawprint.dmg">
 <img src="https://img.shields.io/badge/macOS용%20다운로드-.dmg-1a7f37?style=for-the-badge&logo=apple&logoColor=white" alt="macOS용 다운로드" height="42">
 </a>
@@ -18,54 +16,63 @@
 <img src="https://img.shields.io/badge/license-Apache%202.0-blue?style=flat-square" alt="Apache 2.0">
 <a href="https://github.com/yhcho0405/Pawprint/releases/latest"><img src="https://img.shields.io/github/v/release/yhcho0405/Pawprint?style=flat-square&color=8957e5" alt="최신 릴리즈"></a>
 
-</div>
+<br><br>
+
+**메뉴 막대에 앉아, 오늘 Mac을 어떻게 썼는지를 고양이 한 마리로 돌려줍니다.**<br>
+횟수와 시간만 남깁니다 — 무엇을 입력했는지는 절대 기록하지 않고, 모든 데이터는 이 Mac에만 있습니다.
 
 <br>
 
-Pawprint는 메뉴 바에 조용히 앉아 Mac을 어떻게 쓰는지 기록합니다 — 누른 키, 스크롤한 거리,
-집중한 시간, 쓴 배터리까지. 하루가 끝나면 그 전부를 **고양이 한 마리**로 돌려줍니다.
+<table>
+<tr>
+<td align="center"><img src="images/shots/menubar-paw.gif" alt="발바닥 아이콘" width="230"></td>
+<td align="center"><img src="images/shots/menubar-cat.gif" alt="고양이 아이콘" width="230"></td>
+<td align="center"><img src="images/shots/menubar-cat-asleep.gif" alt="자는 고양이 아이콘" width="230"></td>
+</tr>
+<tr>
+<td align="center"><sub>타이핑하면 발바닥이 움직이고</sub></td>
+<td align="center"><sub>고양이를 고르면 꼬리를 흔들고</sub></td>
+<td align="center"><sub>손을 떼면 웅크려 잠듭니다</sub></td>
+</tr>
+</table>
 
-**무엇을 입력했는지는 절대 기록하지 않습니다.** 횟수와 시간, 집계값만 남습니다 — 글자도, 그 순서도
-남지 않습니다. 모든 데이터는 이 Mac에만 있습니다.
+<sub>둘 다 타자 속도에 맞춰 빨라집니다. 설정에서 고를 수 있습니다.</sub>
 
 <br>
 
-## 고양이
+<table>
+<tr>
+<td width="50%"><img src="images/shots/ko-popover-today.png" alt="오늘"></td>
+<td width="50%"><img src="images/shots/ko-popover-calendar.png" alt="활동 달력"></td>
+</tr>
+<tr>
+<td align="center"><b>오늘</b><br><sub>100점 만점 점수와 그날의 유형, 지금까지 기록한 모든 날 중 몇 번째인지, 그리고 언제 바빴는지를 보여주는 24시간 시계.</sub></td>
+<td align="center"><b>활동 달력</b><br><sub>원하는 지표를 기준으로 하루하루를 색으로. 연속 기록과 평균, 그리고 특정 하루의 이야기까지.</sub></td>
+</tr>
+<tr>
+<td><img src="images/shots/ko-popover-gallery.png" alt="도감"></td>
+<td><img src="images/shots/ko-popover-records.png" alt="기록"></td>
+</tr>
+<tr>
+<td align="center"><b>하루에 한 마리, 모아둡니다</b><br><sub>매일 100점 만점 희귀도로 채점된 고양이가 생깁니다. 정렬하거나, 날개를 얻어낸 날만 골라 볼 수 있습니다.</sub></td>
+<td align="center"><b>끝나지 않는 레벨</b><br><sub>목표치가 계속 커지는 11개 트랙, 누적 기록, 그리고 한 달을 돌아보는 회고.</sub></td>
+</tr>
+<tr>
+<td><img src="images/shots/ko-achievements.png" alt="업적"></td>
+<td><img src="images/shots/ko-items.png" alt="아이템 목록"></td>
+</tr>
+<tr>
+<td align="center"><b>히든 업적 9개</b><br><sub>열리기 전까지는 빈 칸입니다. 조건은 더 큰 숫자가 아니라 그날의 특이한 모양을 봅니다.</sub></td>
+<td align="center"><b>모든 아이템 설명</b><br><sub>액자·발 장식·목걸이·표정이 각각 무엇이고, 언제 붙고, 몇 점인지.</sub></td>
+</tr>
+</table>
 
-하루에 한 마리가 만들어집니다. 털색은 날짜로 정해져서 자정부터 자정까지 같은 고양이지만,
-표정·모자·안경·소품·목걸이·주변 효과가 **각각 다른 지표**를 따라갑니다. 숫자 하나를 여덟 가지로
-바꿔 그린 게 아니라, 하루 전체의 요약으로 읽히도록요.
-
-일부는 **얻어야** 나타납니다. 충분히 타이핑하면 발치에 빛나는 장식이 붙고 — 어떤 장식일지는
-날짜가 정하는 깜짝 요소입니다. 멀리 이동하면 날개가 돋습니다. 점수가 높으면 액자가 붙습니다:
-동·은·금, 그리고 무지개.
-
-<div align="center">
 <img src="images/cat-wall.png" alt="높은 등급 고양이 48마리" width="100%">
-<br>
-<sub>높은 등급의 하루 48개 — 동부터 무지개까지의 액자, 7가지 발 장식, 3가지 날개</sub>
+
+<sub>높은 등급의 하루 48개 — 동부터 무지개까지의 액자, 7가지 발 장식, 3가지 날개.<br>
+나올 수 있는 조합은 약 <b>171조</b> 가지입니다.</sub>
+
 </div>
-
-<br>
-
-각 고양이는 100점 만점의 희귀도와 S~D 등급을 받습니다. **도감**에 쌓이고, 희귀도·날짜·점수순으로
-정렬하거나 뭔가 얻어낸 날만 골라 볼 수 있습니다.
-
-나올 수 있는 조합은 약 **171조** 가지입니다.
-
-<br>
-
-## 그 밖에
-
-| | |
-|---|---|
-| **무한 레벨** | 타건·스크롤·집중·전력 등 11개 트랙, 계속 커지는 목표치. 끝나버리는 체크리스트가 아닙니다. |
-| **라이브 HUD** | 실시간 WPM, 세션 시간, 원하는 지표를 띄우는 떠 있는 패널. |
-| **활동 달력** | 원하는 지표를 기준으로 하루하루를 색으로. |
-| **Pawprint Wrapped** | 한 달을 슬라이드로 돌아보기. |
-| **공유 카드** | 오늘 또는 누적 기록을 이미지로 만들어 클립보드에 바로 복사. |
-| **키보드 히트맵** | 실제 키보드 배열 위에 어떤 키를 많이 쓰는지 — 횟수만, 글자는 절대 안 남김. |
-| **백분위** | 오늘이 지금까지 기록한 모든 날 중 어디쯤인지. |
 
 <br>
 
@@ -84,10 +91,6 @@ Pawprint는 메뉴 바에 조용히 앉아 Mac을 어떻게 쓰는지 기록합�
 둘 다 설정 → 업데이트의 같은 스위치로 함께 꺼지고, 사용자나 기기에 대한 정보는 아무것도 보내지 않습니다.
 꺼두면 앱은 완전히 오프라인으로 동작합니다. 사용 통계 수집 기능은 없습니다.
 
-<br>
-
-macOS 14 이상에서 동작하며, Apple Silicon과 Intel Mac 모두 지원합니다.
-
 ## 필요한 권한
 
 | 권한 | 이유 |
@@ -97,7 +100,7 @@ macOS 14 이상에서 동작하며, Apple Silicon과 Intel Mac 모두 지원합�
 
 첫 실행 시 설정 마법사가 안내하고, 설정 → 일반에서 언제든 다시 열 수 있습니다.
 
-<br>
+macOS 14 이상에서 동작하며, Apple Silicon과 Intel Mac 모두 지원합니다.
 
 ## 업데이트
 
@@ -105,9 +108,8 @@ macOS 14 이상에서 동작하며, Apple Silicon과 Intel Mac 모두 지원합�
 끝납니다.
 
 모든 릴리즈 아카이브는 Ed25519 키로 서명되고, 공개키는 앱에 박혀 있습니다. 서명이 확인되기
-전에는 압축조차 풀지 않습니다 — 다운로드 주소가 바뀌어도 다른 앱이 설치될 수 없도록.
-
-<br>
+전에는 압축조차 풀지 않습니다 — 다운로드 주소가 바뀌어도 다른 앱이 설치될 수 없도록. 직접 검증하는
+방법은 [SECURITY.md](../SECURITY.md)에 있습니다.
 
 ## 직접 빌드하기
 
@@ -137,8 +139,6 @@ open ./build/Pawprint.app
 
 릴리즈 절차는 [RELEASING.md](RELEASING.md)에 있습니다.
 
-<br>
-
 ## 문제 해결
 
 <details>
@@ -160,7 +160,16 @@ open ./build/Pawprint.app
 
 </details>
 
+<details>
+<summary>히트맵에 수정키만 나와요</summary>
+
 <br>
+
+Pawprint가 실행된 뒤에 입력 모니터링을 허용하면, 그 전에 만들어진 감시자는 되살아나지 않습니다.
+시스템 설정 → 개인정보 보호 및 보안 → 입력 모니터링에서 Pawprint를 껐다 켜고, 앱을 완전히 종료한 뒤
+다시 실행하세요.
+
+</details>
 
 ## 라이선스
 

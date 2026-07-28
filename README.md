@@ -4,8 +4,6 @@
 
 **English** · [한국어](docs/README.ko.md)
 
-<br>
-
 <a href="https://github.com/yhcho0405/Pawprint/releases/latest/download/Pawprint.dmg">
 <img src="https://img.shields.io/badge/Download%20for%20macOS-.dmg-1a7f37?style=for-the-badge&logo=apple&logoColor=white" alt="Download for macOS" height="42">
 </a>
@@ -18,56 +16,63 @@
 <img src="https://img.shields.io/badge/license-Apache%202.0-blue?style=flat-square" alt="Apache 2.0">
 <a href="https://github.com/yhcho0405/Pawprint/releases/latest"><img src="https://img.shields.io/github/v/release/yhcho0405/Pawprint?style=flat-square&color=8957e5" alt="Latest release"></a>
 
-</div>
+<br><br>
+
+**Pawprint sits in your menu bar and turns how you used your Mac into a cat.**<br>
+Counts and durations only — never what you type. Everything stays on your Mac.
 
 <br>
 
-Pawprint sits in your menu bar and quietly notes how you use your Mac — keys pressed, distance
-scrolled, time spent in focus, battery burned. At the end of the day it hands all of that back to
-you as a cat.
+<table>
+<tr>
+<td align="center"><img src="docs/images/shots/menubar-paw.gif" alt="Paw icon" width="230"></td>
+<td align="center"><img src="docs/images/shots/menubar-cat.gif" alt="Cat icon" width="230"></td>
+<td align="center"><img src="docs/images/shots/menubar-cat-asleep.gif" alt="Sleeping cat icon" width="230"></td>
+</tr>
+<tr>
+<td align="center"><sub>The paw wiggles as you type</sub></td>
+<td align="center"><sub>…or a cat, swishing its tail</sub></td>
+<td align="center"><sub>…which curls up when you stop</sub></td>
+</tr>
+</table>
 
-**It never records what you type.** Counts, durations and aggregates only — never characters,
-never the order they came in. Everything stays on your Mac.
+<sub>Both keep pace with how fast you're typing. Pick either in Settings.</sub>
 
 <br>
 
-## The cat
+<table>
+<tr>
+<td width="50%"><img src="docs/images/shots/en-popover-today.png" alt="Today"></td>
+<td width="50%"><img src="docs/images/shots/en-popover-calendar.png" alt="Calendar"></td>
+</tr>
+<tr>
+<td align="center"><b>Today</b><br><sub>A score out of 100, the persona your day fits, where it ranks against every day you've recorded, and a 24-hour clock of when you were busy.</sub></td>
+<td align="center"><b>Calendar</b><br><sub>Every day coloured by whichever metric you pick. Streaks, averages, and the story of any single day.</sub></td>
+</tr>
+<tr>
+<td><img src="docs/images/shots/en-popover-gallery.png" alt="Cats"></td>
+<td><img src="docs/images/shots/en-popover-records.png" alt="Records"></td>
+</tr>
+<tr>
+<td align="center"><b>One cat per day, kept</b><br><sub>Each day generates a cat scored out of 100 for rarity. Sort the collection, or filter down to the days you earned wings.</sub></td>
+<td align="center"><b>Levels that never run out</b><br><sub>Eleven tracks with targets that keep growing, plus lifetime totals and a monthly retrospective.</sub></td>
+</tr>
+<tr>
+<td><img src="docs/images/shots/en-achievements.png" alt="Achievements"></td>
+<td><img src="docs/images/shots/en-items.png" alt="Item list"></td>
+</tr>
+<tr>
+<td align="center"><b>Nine hidden achievements</b><br><sub>Empty slots until they fire. Their conditions look for an unusual shape in a day, not a bigger number.</sub></td>
+<td align="center"><b>Every item, explained</b><br><sub>What each frame, charm, collar and expression means, when it appears, and what it is worth.</sub></td>
+</tr>
+</table>
 
-Every day generates one cat. Its coat is fixed by the date, so it stays the same animal from
-midnight to midnight — but its expression, hat, glasses, prop, collar and surroundings each track
-a *different* metric, so the drawing reads as a summary of the whole day rather than one number
-restyled eight ways.
-
-A handful of traits have to be **earned**. Type enough and a glowing charm appears at its paw —
-which charm is a surprise, drawn from the date. Cover enough distance and it grows wings. Score
-well and it gets a frame: bronze, silver, gold, or the rainbow one.
-
-<div align="center">
 <img src="docs/images/cat-wall.png" alt="48 high-grade cats" width="100%">
-<br>
-<sub>48 high-grade days — bronze through rainbow frames, seven paw charms, three kinds of wings</sub>
+
+<sub>48 high-grade days — bronze through rainbow frames, seven paw charms, three kinds of wings.<br>
+Around <b>171 trillion</b> combinations are reachable.</sub>
+
 </div>
-
-<br>
-
-Each one is scored out of 100 for rarity and graded S through D. They collect in a **gallery**
-you can sort by rarity, date or score, and filter down to just the days you earned something.
-
-There are around **171 trillion** reachable combinations.
-
-<br>
-
-## What else it does
-
-| | |
-|---|---|
-| **Endless levels** | 11 tracks — typing, scrolling, focus, power and more — with targets that keep growing. No checklist that runs out. |
-| **Live HUD** | A floating panel with your current WPM, session time and whichever stats you pick. |
-| **Activity calendar** | Every day coloured by any metric you choose. |
-| **Pawprint Wrapped** | A monthly retrospective, slide by slide. |
-| **Share cards** | Turn today or your lifetime totals into an image, copied straight to the clipboard. |
-| **Keyboard heatmap** | A real keyboard layout showing which keys you lean on — counts only, never characters. |
-| **Percentile ranking** | Where today sits against every day you've recorded. |
 
 <br>
 
@@ -88,10 +93,6 @@ Settings → Updates: it checks for a new version, and it fetches the notices sh
 Neither sends anything about you or your Mac. Turn that switch off and the app is entirely
 offline. There is no analytics or usage reporting of any kind.
 
-<br>
-
-Runs on macOS 14 or later, on both Apple Silicon and Intel Macs.
-
 ## Permissions
 
 | Permission | Why |
@@ -102,7 +103,7 @@ Runs on macOS 14 or later, on both Apple Silicon and Intel Macs.
 A setup wizard walks you through both on first launch, and you can reopen it any time from
 Settings → General.
 
-<br>
+Runs on macOS 14 or later, on both Apple Silicon and Intel Macs.
 
 ## Updates
 
@@ -111,9 +112,7 @@ verifies and installs.
 
 Every release archive is signed with an Ed25519 key whose public half is compiled into the app.
 Nothing is unpacked, let alone run, until that signature checks out — so a substituted download
-URL cannot become a substituted app.
-
-<br>
+URL cannot become a substituted app. See [SECURITY.md](SECURITY.md) to verify a download yourself.
 
 ## Building from source
 
@@ -143,8 +142,6 @@ To package a `.dmg`:
 
 The release process is documented in [docs/RELEASING.md](docs/RELEASING.md).
 
-<br>
-
 ## Troubleshooting
 
 <details>
@@ -166,7 +163,16 @@ of both, and the setup wizard can be reopened from the same place.
 
 </details>
 
+<details>
+<summary>Only modifier keys appear in the heatmap</summary>
+
 <br>
+
+Input Monitoring was granted after Pawprint started, and the listener created before it stays
+dead. Turn Pawprint off and on again in System Settings → Privacy & Security → Input Monitoring,
+then quit and reopen the app.
+
+</details>
 
 ## License
 

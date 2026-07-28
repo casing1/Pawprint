@@ -19,7 +19,21 @@ struct PopoverRootView: View {
     @Bindable var permissions = PermissionsManager.shared
     @Bindable var activityCenter = ActivityCenter.shared
     @Bindable var achievements = AchievementEngine.shared
-    @State private var tab: PopoverTab = .today
+    @State private var tab: PopoverTab
+
+    /// Capture only; the app itself always opens the gallery on rarity.
+    static let gallerySort: PawpetGalleryView.SortField =
+        ProcessInfo.processInfo.environment["PAWPRINT_SHOT_SORT"] == "date" ? .date : .rarity
+
+    static let scrollHeight: CGFloat =
+        ProcessInfo.processInfo.environment["PAWPRINT_SHOT_HEIGHT"].flatMap { CGFloat(Double($0) ?? 0) }
+            ?? 520
+
+    /// Screenshot capture opens the popover directly on the tab it wants; everywhere else this
+    /// defaults to Today exactly as before.
+    init(startOn: PopoverTab = .today) {
+        _tab = State(initialValue: startOn)
+    }
 
     private var colorScheme: ColorScheme? {
         switch activityCenter.settings.theme {
@@ -82,13 +96,16 @@ struct PopoverRootView: View {
                     switch tab {
                     case .today: TodayView()
                     case .calendar: CalendarView()
-                    case .gallery: PawpetGalleryView()
+                    case .gallery: PawpetGalleryView(initialSort: PopoverRootView.gallerySort)
                     case .records: RecordsView()
                     }
                 }
                 .frame(maxWidth: .infinity)
             }
-            .frame(height: 520)
+            // Tall enough for the whole tab when capturing README screenshots: the popover is a
+            // scrolling view, and a shot of its first 520 points leaves out the heatmap, the
+            // activity clock and everything else below the fold.
+            .frame(height: PopoverRootView.scrollHeight)
         }
         .frame(width: 380)
     }

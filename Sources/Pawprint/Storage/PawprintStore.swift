@@ -26,7 +26,17 @@ final class PawprintStore {
         let supportDir = fm.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("Pawprint", isDirectory: true)
         try? fm.createDirectory(at: supportDir, withIntermediateDirectories: true)
-        let url = supportDir.appendingPathComponent("pawprint.sqlite3")
+        // Screenshots need a history that looks lived-in, and the only honest way to get one is
+        // to run the real app against a real database. `PAWPRINT_DB` points it at a throwaway
+        // file so the documentation can be captured without touching anyone's own records.
+        let url: URL
+        if let override = ProcessInfo.processInfo.environment["PAWPRINT_DB"], !override.isEmpty {
+            url = URL(fileURLWithPath: (override as NSString).expandingTildeInPath)
+            try? fm.createDirectory(at: url.deletingLastPathComponent(),
+                                    withIntermediateDirectories: true)
+        } else {
+            url = supportDir.appendingPathComponent("pawprint.sqlite3")
+        }
         self.databaseURL = url
         do {
             self.db = try SQLiteDatabase(path: url.path)

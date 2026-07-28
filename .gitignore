@@ -15,3 +15,7 @@ Package.resolved
 *.cer
 *.key
 /.secrets/
+
+# Screenshot workbench: throwaway demo database, raw captures and the capture guide.
+# Regenerate with .demo/CAPTURE.md; never a build input.
+.demo/

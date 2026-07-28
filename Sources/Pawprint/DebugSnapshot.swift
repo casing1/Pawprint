@@ -1,5 +1,7 @@
 import AppKit
 import ApplicationServices
+import ImageIO
+import UniformTypeIdentifiers
 import IOKit.hid
 import SwiftUI
 
@@ -775,12 +777,6 @@ enum DebugSnapshot {
         capture(HiddenAchievementsView(onClose: {}).content.frame(width: 430)
             .background(Color(white: 0.11)), name: "achievements", bare: true)
 
-        // The score breakdown, and a record day's traits — the pair that used to disagree.
-        var recordDay = excellentDay()
-        recordDay.day = "2026-03-10"
-        capture(ScoreBreakdownView(score: PawprintScore.build(from: recordDay), onClose: {})
-            .content.frame(width: 380).background(Color(white: 0.11)),
-                name: "scorebreakdown", bare: true)
         capture(PawpetGalleryView().frame(width: 360), name: "gallerybar")
         // A few rows at full size — the tall catalog capture is only good for checking that it
         // renders at all, not for reading it.
@@ -908,6 +904,179 @@ enum DebugSnapshot {
         task.waitUntilExit()
         write("SETTINGS SHOT window \(window.windowNumber) \(window.title)\n")
         exit(0)
+    }
+
+    // MARK: - Menu bar animations (PAWPRINT_GIF)
+
+    /// Writes animated GIFs of the menu bar icons, drawn on a strip that looks like a menu bar.
+    ///
+    /// The frames are the ones the app actually displays — the same arrays the status item cycles
+    /// through — so the animation in the README cannot drift from the animation on screen.
+    @MainActor
+    static func renderMenuBarGIFs() {
+        guard let directory = ProcessInfo.processInfo.environment["PAWPRINT_GIF"] else { return }
+        try? FileManager.default.createDirectory(atPath: directory, withIntermediateDirectories: true)
+
+        for (style, name) in [(MenuBarIconStyle.paw, "paw"), (.cat, "cat")] {
+            for asleep in [false, true] {
+                let frames = MenuBarIconAnimator.animationFrames(for: style, asleep: asleep)
+                guard frames.count > 1 else { continue }
+                // Sleep runs at its own slow pace; showing it at typing speed would misrepresent it.
+                let interval = asleep ? 0.28 : MenuBarIconAnimator.showcaseInterval
+                writeGIF(frames: frames.map { menuBarStrip($0) },
+                         interval: interval,
+                         to: "\(directory)/menubar-\(name)\(asleep ? "-asleep" : "").gif")
+            }
+        }
+        write("GIFS DONE\n")
+        exit(0)
+    }
+
+    /// Composites a template icon onto a menu-bar-like strip, tinted the way macOS tints it.
+    @MainActor
+    private static func menuBarStrip(_ icon: NSImage, scale: CGFloat = 3) -> NSImage {
+        let size = NSSize(width: 132, height: 26)
+        let output = NSImage(size: NSSize(width: size.width * scale, height: size.height * scale))
+        output.lockFocus()
+        NSColor(calibratedWhite: 0.12, alpha: 1).setFill()
+        NSRect(origin: .zero, size: output.size).fill()
+
+        // Template images carry no colour of their own; the bar tints them white on dark.
+        let tinted = NSImage(size: icon.size)
+        tinted.lockFocus()
+        NSColor.white.set()
+        NSRect(origin: .zero, size: icon.size).fill()
+        icon.draw(at: .zero, from: NSRect(origin: .zero, size: icon.size),
+                  operation: .destinationIn, fraction: 1)
+        tinted.unlockFocus()
+
+        let target = NSRect(x: (output.size.width - icon.size.width * scale) / 2,
+                            y: (output.size.height - icon.size.height * scale) / 2,
+                            width: icon.size.width * scale, height: icon.size.height * scale)
+        NSGraphicsContext.current?.imageInterpolation = .high
+        tinted.draw(in: target)
+        output.unlockFocus()
+        return output
+    }
+
+    private static func writeGIF(frames: [NSImage], interval: TimeInterval, to path: String) {
+        let url = URL(fileURLWithPath: path) as CFURL
+        guard let destination = CGImageDestinationCreateWithURL(
+            url, "com.compuserve.gif" as CFString, frames.count, nil) else { return }
+
+        CGImageDestinationSetProperties(destination, [
+            kCGImagePropertyGIFDictionary: [kCGImagePropertyGIFLoopCount: 0]
+        ] as CFDictionary)
+
+        for frame in frames {
+            guard let cgImage = frame.cgImage(forProposedRect: nil, context: nil, hints: nil)
+            else { continue }
+            CGImageDestinationAddImage(destination, cgImage, [
+                kCGImagePropertyGIFDictionary: [kCGImagePropertyGIFUnclampedDelayTime: interval]
+            ] as CFDictionary)
+        }
+        CGImageDestinationFinalize(destination)
+        write("gif \((path as NSString).lastPathComponent) — \(frames.count) frames\n")
+    }
+
+    // MARK: - README screenshots (PAWPRINT_SHOTS)
+
+    /// Captures the real app, window by window, for the README.
+    ///
+    /// Real windows rather than `ImageRenderer`: the popover is a `ScrollView` full of AppKit-backed
+    /// controls, and the renderer draws those empty or as placeholders. Each shot is taken by window
+    /// id, so it is exactly the window and nothing around it — no desktop, no cropping guesswork.
+    @MainActor
+    static func captureReadmeShots(controller: StatusItemController) {
+        guard let directory = ProcessInfo.processInfo.environment["PAWPRINT_SHOTS"] else { return }
+        try? FileManager.default.createDirectory(atPath: directory, withIntermediateDirectories: true)
+        let language = ProcessInfo.processInfo.environment["PAWPRINT_SHOT_LANG"] ?? "en"
+
+        // A celebration banner is genuine app behaviour but it floats over the top of whichever
+        // tab is showing, and which one fires depends on the generated history. Cleared so every
+        // shot frames its own tab.
+        AchievementEngine.shared.clearCelebration()
+        RecordTracker.shared.clearCelebration()
+        ActivityCenter.shared.clearLevelUp()
+        // The live notice feed is real behaviour, but a screenshot of the Records tab should show
+        // the Records tab — not whatever happens to be announced that week.
+        AnnouncementCenter.shared.announcements = []
+
+        var steps: [(String, () -> Void)] = []
+        for tab in PopoverTab.allCases {
+            steps.append(("popover-\(tab)", { controller.showPopover(on: tab) }))
+        }
+
+        // The sheets and the settings window are their own windows, so they are captured after
+        // the popover rather than inside it.
+        var extraWindows: [NSWindow] = []
+        func sheetWindow(_ view: some View, width: CGFloat, height: CGFloat) -> NSWindow {
+            let hosting = NSHostingController(rootView: view)
+            let window = NSWindow(contentViewController: hosting)
+            window.styleMask = [.titled, .closable]
+            window.titlebarAppearsTransparent = true
+            window.titleVisibility = .hidden
+            window.setContentSize(NSSize(width: width, height: height))
+            window.center()
+            extraWindows.append(window)
+            return window
+        }
+
+        steps.append(("achievements", {
+            controller.closePopover()
+            sheetWindow(HiddenAchievementsView(onClose: {}), width: 430, height: 620)
+                .makeKeyAndOrderFront(nil)
+        }))
+        steps.append(("items", {
+            extraWindows.forEach { $0.orderOut(nil) }
+            sheetWindow(PawpetItemCatalogView(onClose: {}), width: 430, height: 620)
+                .makeKeyAndOrderFront(nil)
+        }))
+        steps.append(("settings", {
+            extraWindows.forEach { $0.orderOut(nil) }
+            SettingsOpener.open()
+        }))
+
+        var index = 0
+        func next() {
+            guard index < steps.count else {
+                write("SHOTS DONE\n")
+                exit(0)
+            }
+            let (name, action) = steps[index]
+            index += 1
+            // Close, let the transition finish, then open: AppKit silently refuses to show a
+            // popover that is still animating out, which lost every other screenshot.
+            controller.closePopover()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) {
+                action()
+                // The popover animates in and the SwiftUI tree settles a frame or two later;
+                // shooting immediately caught a half-built view.
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+                    let target = name.hasPrefix("popover-")
+                        ? controller.popoverWindow
+                        : NSApp.windows.last { $0.isVisible && $0.frame.width > 300 }
+                    shoot(target, to: "\(directory)/\(language)-\(name).png")
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3, execute: next)
+                }
+            }
+        }
+        next()
+    }
+
+    /// Screenshots one named window by id, so nothing else on screen can end up in the file.
+    @MainActor
+    private static func shoot(_ window: NSWindow?, to path: String) {
+        guard let window else {
+            write("no window for \(path)\n")
+            return
+        }
+        let task = Process()
+        task.executableURL = URL(fileURLWithPath: "/usr/sbin/screencapture")
+        task.arguments = ["-x", "-o", "-l", String(window.windowNumber), path]
+        try? task.run()
+        task.waitUntilExit()
+        write("shot \((path as NSString).lastPathComponent)\n")
     }
 
     // MARK: - Session accounting (PAWPRINT_SESSIONS)

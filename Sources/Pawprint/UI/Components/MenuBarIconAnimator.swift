@@ -158,6 +158,24 @@ final class MenuBarIconAnimator {
         onFrame?(currentImage)
     }
 
+    /// Every frame of a style's cycle, for the README animations. Same images the menu bar shows.
+    static func animationFrames(for style: MenuBarIconStyle, asleep: Bool) -> [NSImage] {
+        switch style {
+        case .paw:
+            return asleep ? [shared.restingImage] : shared.filledFrames
+        case .cat:
+            return asleep ? sleepPoses.map(catImage) : catPoses.map(catImage)
+        }
+    }
+
+    private static func catImage(_ pose: MenuBarCat.Pose) -> NSImage {
+        MenuBarCat.image(pose: pose, height: catHeight,
+                         canvasWidth: catCanvasWidth, canvasHeight: canvasSize)
+    }
+
+    /// Seconds per frame at a typing pace, for the README animations.
+    static let showcaseInterval: TimeInterval = 0.05
+
     /// A representative still of a style, for the Settings picker.
     static func previewImage(for style: MenuBarIconStyle) -> NSImage {
         switch style {

@@ -13,7 +13,14 @@ struct PawpetGalleryView: View {
     @State private var days: [DailySummary] = []
     @State private var selected: DailySummary?
     @State private var filter: Filter = .all
-    @State private var sort: SortField = .rarity
+    @State private var sort: SortField
+
+    /// Screenshot capture asks for date order. Sorted by rarity the grid opens on the best cats,
+    /// which all look alike — same crown, same sunglasses — and hides the variety that is the
+    /// point of the collection.
+    init(initialSort: SortField = .rarity) {
+        _sort = State(initialValue: initialSort)
+    }
     @State private var descending = true
     @State private var showingItemCatalog = false
     @State private var showingAchievements = false

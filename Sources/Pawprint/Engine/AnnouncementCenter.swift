@@ -101,6 +101,9 @@ final class AnnouncementCenter {
     }
 
     func refresh() async {
+        // The update check fires a few seconds after launch and would repopulate the feed part
+        // way through a capture run, putting a live notice over whichever tab was being shot.
+        guard ProcessInfo.processInfo.environment["PAWPRINT_SHOTS"] == nil else { return }
         guard ActivityCenter.shared.settings.updateCheckEnabled else { return }
         guard let url = URL(string: Self.feedURL) else { return }
         var request = URLRequest(url: url)

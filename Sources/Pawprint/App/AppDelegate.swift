@@ -146,6 +146,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { DebugSnapshot.openItemCatalogWindow() }
         }
 
+        // Seeds a throwaway history and photographs the real app for the README.
+        if ProcessInfo.processInfo.environment["PAWPRINT_SEED_DEMO"] != nil {
+            DemoData.generate()
+            ActivityCenter.shared.reloadAfterExternalChange()
+        }
+        if let shotLanguage = ProcessInfo.processInfo.environment["PAWPRINT_SHOT_LANG"] {
+            var updated = ActivityCenter.shared.settings
+            updated.language = shotLanguage == "ko" ? .korean : .english
+            ActivityCenter.shared.updateSettings(updated)
+        }
+        if ProcessInfo.processInfo.environment["PAWPRINT_GIF"] != nil {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { DebugSnapshot.renderMenuBarGIFs() }
+        }
+        if ProcessInfo.processInfo.environment["PAWPRINT_SHOTS"] != nil {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                DebugSnapshot.captureReadmeShots(controller: self.statusItemController)
+            }
+        }
+
         if ProcessInfo.processInfo.environment["PAWPRINT_SESSIONS"] != nil {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { DebugSnapshot.probeSessionAccounting() }
         }
