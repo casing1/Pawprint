@@ -978,6 +978,61 @@ enum DebugSnapshot {
         }
         ActivityCenter.shared.updateSettings(restore)
 
+        // Rotation. With several undismissed notices every one has to come round; showing only
+        // the newest meant the ones behind it waited forever, since dismissal is deliberate.
+        do {
+            var settings = ActivityCenter.shared.settings
+            settings.dismissedAnnouncements = []
+            ActivityCenter.shared.updateSettings(settings)
+
+            func notice(_ id: String, _ day: String) -> Announcement {
+                Announcement(id: id, severity: "info", publishedAt: day,
+                             title: ["en": id], body: ["en": String(repeating: "x", count: 50)])
+            }
+            center.announcements = [notice("a", "2026-07-03"),
+                                    notice("b", "2026-07-02"),
+                                    notice("c", "2026-07-01")]
+            center.resetRotationForTesting()
+
+            var seen: [String] = []
+            for _ in 0..<6 {
+                seen.append(center.current?.id ?? "nil")
+                center.advance()
+            }
+            write("\nrotation over 3: \(seen.joined(separator: " -> "))\n")
+            if Set(seen).count != 3 {
+                write("FAIL rotation does not reach every notice\n"); failures += 1
+            }
+            if seen.prefix(3) != ["a", "b", "c"] {
+                write("FAIL rotation order is not newest-first\n"); failures += 1
+            }
+
+            // Dismissing mid-rotation must leave a valid selection, not a stale index.
+            center.resetRotationForTesting()
+            center.advance()
+            guard let middle = center.current else {
+                write("FAIL nothing selected\n"); failures += 1; return
+            }
+            center.dismiss(middle)
+            let after = center.current?.id ?? "nil"
+            write("dismissed \(middle.id) -> now \(after), \(center.visibleCount) left\n")
+            if center.visibleCount != 2 || after == middle.id {
+                write("FAIL dismissal left a bad selection\n"); failures += 1
+            }
+
+            // One notice must not rotate at all.
+            center.announcements = [notice("solo", "2026-07-01")]
+            settings.dismissedAnnouncements = []
+            ActivityCenter.shared.updateSettings(settings)
+            center.resetRotationForTesting()
+            center.advance()
+            if center.current?.id != "solo" {
+                write("FAIL a single notice moved\n"); failures += 1
+            } else {
+                write("single notice stays put: ok\n")
+            }
+        }
+
         // Restore so the banner has something to draw, then snapshot both surfaces.
         center.announcements = feed.announcements
         var clean = ActivityCenter.shared.settings

@@ -25,14 +25,63 @@ final class AnnouncementCenter {
 
     private init() {}
 
-    /// The notice to show, or nil. Newest first among those that apply and aren't dismissed.
-    var current: Announcement? {
+    /// Everything still worth showing: applies to this version, not dismissed, newest first.
+    var visible: [Announcement] {
         let version = UpdateChecker.shared.currentVersion
         let dismissed = Set(ActivityCenter.shared.settings.dismissedAnnouncements)
         return announcements
             .filter { !dismissed.contains($0.id) && $0.applies(to: version) }
             .sorted { ($0.publishedAt ?? "") > ($1.publishedAt ?? "") }
-            .first
+    }
+
+    /// Which of `visible` the banner is currently on.
+    ///
+    /// Only the newest used to be shown, so a second undismissed notice sat behind the first and
+    /// was never seen — and since the only way to clear a notice is to dismiss it deliberately,
+    /// the one behind could wait indefinitely.
+    private(set) var rotationIndex = 0
+
+    /// The notice to show, or nil.
+    var current: Announcement? {
+        let items = visible
+        guard !items.isEmpty else { return nil }
+        return items[rotationIndex % items.count]
+    }
+
+    /// How many are waiting, for the banner's position dots.
+    var visibleCount: Int { visible.count }
+
+    /// Moves to the next notice. Called on a timer while the popover is open, and once each time
+    /// it opens — a popover is often shut again within a few seconds, so waiting purely on the
+    /// timer would mean short visits always showed the same one.
+    func advance() {
+        let count = visibleCount
+        guard count > 1 else { return }
+        rotationIndex = (rotationIndex + 1) % count
+    }
+
+    static let rotationInterval: TimeInterval = 8
+
+    /// Verification only.
+    func resetRotationForTesting() { rotationIndex = 0 }
+
+    @ObservationIgnored private var rotationTimer: Timer?
+
+    /// Rotates while the banner is on screen. Pointless with one notice, and pointless while the
+    /// popover is closed, so it is started and stopped by the banner's lifecycle.
+    func startRotation() {
+        stopRotation()
+        guard visibleCount > 1 else { return }
+        let timer = Timer(timeInterval: Self.rotationInterval, repeats: true) { [weak self] _ in
+            MainActor.assumeIsolated { self?.advance() }
+        }
+        RunLoop.main.add(timer, forMode: .common)
+        rotationTimer = timer
+    }
+
+    func stopRotation() {
+        rotationTimer?.invalidate()
+        rotationTimer = nil
     }
 
     func dismiss(_ announcement: Announcement) {
@@ -45,6 +94,10 @@ final class AnnouncementCenter {
             settings.dismissedAnnouncements.removeFirst(settings.dismissedAnnouncements.count - 100)
         }
         ActivityCenter.shared.updateSettings(settings)
+        // The list just got shorter; land on a valid entry rather than wherever the old index
+        // happens to point, and stop rotating if only one is left.
+        rotationIndex = 0
+        startRotation()
     }
 
     func refresh() async {

@@ -10,12 +10,17 @@ struct AnnouncementBanner: View {
     @Bindable var center = AnnouncementCenter.shared
     @Bindable var localization = LocalizationManager.shared
 
-    @State private var showingDetail = false
+    /// The notice being read, captured when the sheet opens.
+    ///
+    /// Not `center.current`: that rotates on a timer, and binding the sheet to it would swap the
+    /// text out from under whoever is reading it.
+    @State private var viewing: Announcement?
 
     var body: some View {
         if let announcement = center.current {
             Button {
-                showingDetail = true
+                center.stopRotation()
+                viewing = announcement
             } label: {
                 HStack(spacing: 6) {
                     Image(systemName: announcement.isWarning
@@ -26,6 +31,19 @@ struct AnnouncementBanner: View {
                         .font(.system(size: 11, weight: .medium))
                         .lineLimit(1)
                     Spacer(minLength: 0)
+                    // Position dots, so a second notice is visibly *there* rather than only
+                    // appearing when the rotation happens to reach it.
+                    if center.visibleCount > 1 {
+                        HStack(spacing: 3) {
+                            ForEach(0..<center.visibleCount, id: \.self) { index in
+                                Circle()
+                                    .fill(index == center.rotationIndex % center.visibleCount
+                                          ? Color.primary.opacity(0.55)
+                                          : Color.primary.opacity(0.2))
+                                    .frame(width: 4, height: 4)
+                            }
+                        }
+                    }
                     Image(systemName: "chevron.right")
                         .font(.system(size: 9, weight: .semibold))
                         .foregroundStyle(.tertiary)
@@ -38,10 +56,24 @@ struct AnnouncementBanner: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .sheet(isPresented: $showingDetail) {
-                AnnouncementDetailView(announcement: announcement) { dismissForever in
-                    if dismissForever { center.dismiss(announcement) }
-                    showingDetail = false
+            .animation(.easeInOut(duration: 0.25), value: announcement.id)
+            // The popover's contents are torn down when it closes, so this is also the rotation's
+            // lifecycle: no point cycling notices nobody is looking at.
+            //
+            // The step happens on the way *out*, not the way in. A popover is often shut again
+            // within a few seconds, so leaving it to the timer alone would show the same notice
+            // every visit — but advancing on the way in meant the very first open skipped straight
+            // past the newest one.
+            .onAppear { center.startRotation() }
+            .onDisappear {
+                center.stopRotation()
+                center.advance()
+            }
+            .sheet(item: $viewing) { item in
+                AnnouncementDetailView(announcement: item) { dismissForever in
+                    if dismissForever { center.dismiss(item) }
+                    viewing = nil
+                    center.startRotation()
                 }
             }
         }
