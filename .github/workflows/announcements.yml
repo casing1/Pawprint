@@ -35,21 +35,41 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build the feed from open announcement issues
+      # Regenerated inside the retry loop rather than once up front. Opening an issue with two
+      # labels fires three `issues` events at nearly the same instant; the concurrency group stops
+      # them running at once, but a run can still check out before the previous one's push lands
+      # and then be rejected as non-fast-forward. Rebuilding from the live API on each attempt
+      # means whichever run pushes last has read the current state, so the feed is correct by
+      # construction instead of by luck.
+      - name: Build the feed and publish it
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
           OWNER: ${{ github.repository_owner }}
-        run: python3 scripts/build_announcements.py
-
-      - name: Commit if it changed
         run: |
-          if git diff --quiet -- docs/announcements.json; then
-            echo "feed unchanged"
-            exit 0
-          fi
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/announcements.json
-          git commit -m "Update announcement feed"
-          git push
+
+          for attempt in 1 2 3; do
+            git fetch --quiet origin "${GITHUB_REF_NAME:-main}"
+            git reset --quiet --hard "origin/${GITHUB_REF_NAME:-main}"
+
+            python3 scripts/build_announcements.py
+
+            if git diff --quiet -- docs/announcements.json; then
+              echo "feed unchanged"
+              exit 0
+            fi
+
+            git add docs/announcements.json
+            git commit -q -m "Update announcement feed"
+            if git push --quiet; then
+              echo "published on attempt $attempt"
+              exit 0
+            fi
+            echo "push rejected, retrying"
+            sleep $(( attempt * 3 ))
+          done
+
+          echo "::error::could not publish the announcement feed after 3 attempts"
+          exit 1
