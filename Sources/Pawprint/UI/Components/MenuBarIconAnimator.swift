@@ -221,12 +221,12 @@ final class MenuBarIconAnimator {
 
     private func interval(forWPM wpm: Double) -> TimeInterval {
         switch wpm {
-        case 70...: return 0.027
-        case 45..<70: return 0.037
-        case 25..<45: return 0.05
-        case 10..<25: return 0.075
-        case 1..<10: return 0.11
-        default: return 0.17      // idle sway — still alive, just lazy
+        case 70...: return 0.021
+        case 45..<70: return 0.028
+        case 25..<45: return 0.038
+        case 10..<25: return 0.052
+        case 1..<10: return 0.072
+        default: return 0.10      // idle sway — still alive, just lazy
         }
     }
 

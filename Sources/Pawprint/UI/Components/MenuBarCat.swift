@@ -76,7 +76,7 @@ enum MenuBarCat {
     /// A wave running from root to tip, with amplitude growing along the length, is what a tail
     /// actually does: the base stays put, the middle follows late, and the tip trails furthest.
     private static func drawTail(phase: CGFloat, asleep: Bool) {
-        let samples = 20
+        let samples = 28
         // Asleep the tail still moves, but barely — a completely still one looks like a stuck icon.
         //
         // Amplitude is modest and the tail is long: at 1.7 over a short spine the wave folded the
@@ -85,8 +85,16 @@ enum MenuBarCat {
         let reach: CGFloat = asleep ? 6.0 : 9.6
         let root = CGPoint(x: 3.2, y: 0.7)
 
+        // A quarter arc: leaves the hip horizontally and turns upward at an even rate.
+        //
+        // This was `pow(s, 0.7)` in x, whose derivative is *infinite* at s = 0 — the tail left the
+        // body through what was very nearly a corner, and no amount of extra sampling or curve
+        // fitting could smooth a kink that was in the path itself. Sine and cosine have bounded
+        // derivatives everywhere, so the bend is spread along the whole length.
+        let sweep = CGFloat.pi / 2 * 0.92
         func spine(_ s: CGFloat) -> CGPoint {
-            CGPoint(x: root.x + 6.4 * pow(s, 0.7), y: root.y + reach * pow(s, 1.5))
+            CGPoint(x: root.x + 6.8 * sin(s * sweep),
+                    y: root.y + reach * (1 - cos(s * sweep)))
         }
 
         var points: [CGPoint] = []
@@ -113,9 +121,38 @@ enum MenuBarCat {
         path.lineWidth = 2.0
         path.lineCapStyle = .round
         path.lineJoinStyle = .round
-        path.move(to: points[0])
-        for point in points.dropFirst() { path.line(to: point) }
+        appendSmoothCurve(through: points, to: path)
         path.stroke()
+    }
+
+    /// Strokes a smooth curve through the sampled points, as a Catmull-Rom spline converted to
+    /// cubic beziers.
+    ///
+    /// The samples used to be joined with straight lines. That is invisible where the tail is
+    /// nearly straight and obvious where it bends hardest — the wave's peaks came out as distinct
+    /// angular corners rather than an S. Raising the sample count alone only makes the corners
+    /// smaller; interpolating between them is what removes them.
+    private static func appendSmoothCurve(through points: [CGPoint], to path: NSBezierPath) {
+        guard points.count > 2 else {
+            guard let first = points.first else { return }
+            path.move(to: first)
+            points.dropFirst().forEach { path.line(to: $0) }
+            return
+        }
+        path.move(to: points[0])
+        for index in 0..<(points.count - 1) {
+            // The endpoints have no neighbour to look back or forward to, so they stand in for
+            // themselves; the curve then starts and ends cleanly instead of overshooting.
+            let p0 = points[max(index - 1, 0)]
+            let p1 = points[index]
+            let p2 = points[index + 1]
+            let p3 = points[min(index + 2, points.count - 1)]
+            path.curve(to: p2,
+                       controlPoint1: CGPoint(x: p1.x + (p2.x - p0.x) / 6,
+                                              y: p1.y + (p2.y - p0.y) / 6),
+                       controlPoint2: CGPoint(x: p2.x - (p3.x - p1.x) / 6,
+                                              y: p2.y - (p3.y - p1.y) / 6))
+        }
     }
 
     // MARK: - Body and head
