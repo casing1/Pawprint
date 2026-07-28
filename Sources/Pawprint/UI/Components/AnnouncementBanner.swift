@@ -56,6 +56,15 @@ private struct AnnouncementDetailView: View {
 
     @Bindable private var localization = LocalizationManager.shared
 
+    /// Parses **bold**, *italic* and links, leaving everything else alone. Whitespace is
+    /// preserved so an empty line stays an empty line and paragraphs keep their spacing.
+    static func inlineMarkdown(_ line: String) -> AttributedString {
+        (try? AttributedString(
+            markdown: line,
+            options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace)))
+            ?? AttributedString(line)
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .top, spacing: 8) {
@@ -80,12 +89,21 @@ private struct AnnouncementDetailView: View {
             Divider()
 
             ScrollView {
-                Text(announcement.body(for: localization.languageCode))
-                    .font(.callout)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .textSelection(.enabled)
-                    .padding(14)
+                VStack(alignment: .leading, spacing: 6) {
+                    // Rendered line by line rather than as one string: notices are written in a
+                    // GitHub issue, so the body is markdown. `Text` understands inline markup but
+                    // not block structure, so lists and blank lines are kept as literal lines and
+                    // only the inline markup is parsed.
+                    ForEach(Array(announcement.body(for: localization.languageCode)
+                        .components(separatedBy: "\n").enumerated()), id: \.offset) { _, line in
+                        Text(Self.inlineMarkdown(line))
+                            .font(.callout)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                }
+                .textSelection(.enabled)
+                .padding(14)
             }
 
             Divider()
