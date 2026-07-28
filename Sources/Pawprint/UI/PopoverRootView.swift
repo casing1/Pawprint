@@ -48,6 +48,9 @@ struct PopoverRootView: View {
 
     private var mainContent: some View {
         VStack(spacing: 0) {
+            KeyboardStallBanner(compact: true)
+                .padding(.horizontal, 12)
+                .padding(.top, 10)
             topBar
 
             // Above the tabs so it is visible whichever tab was last open.

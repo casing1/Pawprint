@@ -126,6 +126,7 @@ private struct GeneralSettingsTab: View {
 
     var body: some View {
         Form {
+            KeyboardStallBanner()
             Section {
                 Toggle(L10n.t("settingsRootView.24530a7a"), isOn: Binding(
                     get: { launchAtLoginEnabled },
@@ -656,6 +657,7 @@ private struct PermissionStatusRows: View {
         VStack(alignment: .leading, spacing: 6) {
             row(L10n.t("settingsRootView.2008ca0e"), permissions.accessibilityGranted) { permissions.openAccessibilitySettings() }
             row(L10n.t("settingsRootView.e87e0ec4"), permissions.inputMonitoringGranted) { permissions.openInputMonitoringSettings() }
+
         }
         .onAppear { permissions.refresh() }
     }

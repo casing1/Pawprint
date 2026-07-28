@@ -48,6 +48,13 @@ final class MouseMonitor {
         flushTimer = timer
     }
 
+    /// Re-registers the monitors. Needed when Accessibility is granted after launch: a monitor
+    /// created without it stays dead once it arrives.
+    func restart() {
+        stop()
+        start()
+    }
+
     func stop() {
         for m in monitors { NSEvent.removeMonitor(m) }
         monitors.removeAll()

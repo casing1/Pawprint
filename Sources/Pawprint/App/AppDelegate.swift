@@ -66,6 +66,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 var updated = ActivityCenter.shared.settings
                 updated.language = language == "en" ? .english : .korean
                 ActivityCenter.shared.updateSettings(updated)
+                if ProcessInfo.processInfo.environment["PAWPRINT_FORCE_STALL"] != nil {
+                    PermissionsManager.shared.setKeyboardEventsStalled(true)
+                }
                 SettingsOpener.open()
                 if ProcessInfo.processInfo.environment["PAWPRINT_SETTINGS_SHOT"] != nil {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
@@ -87,6 +90,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // synthetic mouse move and screenshotted — ImageRenderer has no pointer.
         if ProcessInfo.processInfo.environment["PAWPRINT_ITEMS_WINDOW"] != nil {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { DebugSnapshot.openItemCatalogWindow() }
+        }
+
+        if ProcessInfo.processInfo.environment["PAWPRINT_KEYS"] != nil {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { DebugSnapshot.probeKeyboardDelivery() }
         }
 
         if ProcessInfo.processInfo.environment["PAWPRINT_REWARDS"] != nil {

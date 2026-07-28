@@ -9,14 +9,44 @@ final class KeyboardMonitor {
     private var flagsChangedMonitor: Any?
     private var lastCapsLockState = false
 
+    /// Events seen since the monitors were last registered.
+    ///
+    /// These exist to catch a failure the permission APIs cannot report. `.keyDown` and
+    /// `.flagsChanged` are gated differently by TCC: a global `.keyDown` monitor needs Input
+    /// Monitoring, while `.flagsChanged` is delivered with Accessibility alone. A monitor
+    /// registered before Input Monitoring was granted stays dead afterwards — granting the
+    /// permission does not revive an existing registration — so the app kept counting modifier
+    /// keys and silently counted no letters at all. `IOHIDCheckAccess` reports "granted" the whole
+    /// time, because by then it is.
+    ///
+    /// Comparing the two counters detects exactly that state: modifiers arriving, characters not.
+    private(set) var keyDownsSeen = 0
+    private(set) var flagsSeen = 0
+
+    /// True when modifier events are arriving but key events are not — the signature of a dead
+    /// `.keyDown` registration. Needs a few modifier events before it will claim anything, so a
+    /// genuinely idle keyboard is never mistaken for a broken one.
+    var looksStalled: Bool { flagsSeen >= 3 && keyDownsSeen == 0 }
+
     func start() {
         guard keyDownMonitor == nil else { return }
+        keyDownsSeen = 0
+        flagsSeen = 0
         keyDownMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.keyDown]) { [weak self] event in
+            self?.keyDownsSeen += 1
             self?.handleKeyDown(event)
         }
         flagsChangedMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.flagsChanged]) { [weak self] event in
+            self?.flagsSeen += 1
             self?.handleFlagsChanged(event)
         }
+    }
+
+    /// Tears the monitors down and registers them again. This is the only way to pick up an Input
+    /// Monitoring grant that arrived after the original registration.
+    func restart() {
+        stop()
+        start()
     }
 
     func stop() {

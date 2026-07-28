@@ -16,25 +16,67 @@ final class PermissionsManager {
 
     var allGranted: Bool { accessibilityGranted && inputMonitoringGranted }
 
+    /// Set by `TrackingCoordinator` when modifier events are arriving but key events are not.
+    ///
+    /// Lives here, on the observable object the permission UI already watches, rather than on the
+    /// coordinator — which is a plain class, so a flag there would change without redrawing
+    /// anything and the warning would only appear if you happened to reopen the window.
+    ///
+    /// It is not a permission in TCC's sense: `IOHIDCheckAccess` reports granted throughout. It is
+    /// the state where the grant exists but this process's `.keyDown` registration predates it.
+    private(set) var keyboardEventsStalled = false
+
+    func setKeyboardEventsStalled(_ stalled: Bool) {
+        guard stalled != keyboardEventsStalled else { return }
+        keyboardEventsStalled = stalled
+    }
+
     private var pollTimer: Timer?
+
+    /// Called whenever a permission flips, in either direction. Event monitors registered while a
+    /// permission was missing stay dead after it is granted, so somebody has to re-register them.
+    var onChange: ((_ accessibility: Bool, _ inputMonitoring: Bool) -> Void)?
 
     private init() {}
 
-    func refresh() {
-        accessibilityGranted = AXIsProcessTrusted()
-        inputMonitoringGranted = IOHIDCheckAccess(kIOHIDRequestTypeListenEvent) == kIOHIDAccessTypeGranted
+    @discardableResult
+    func refresh() -> Bool {
+        let ax = AXIsProcessTrusted()
+        let hid = IOHIDCheckAccess(kIOHIDRequestTypeListenEvent) == kIOHIDAccessTypeGranted
+        let changed = ax != accessibilityGranted || hid != inputMonitoringGranted
+        accessibilityGranted = ax
+        inputMonitoringGranted = hid
+        if changed { onChange?(ax, hid) }
+        return changed
     }
 
-    /// Starts polling permission state (system APIs offer no change notification for these).
-    /// `AXIsProcessTrusted`/`IOHIDCheckAccess` are cross-process calls, so polling stops as soon
-    /// as both are granted — the common steady state — instead of running for the whole session.
+    /// Polls permission state; the system offers no change notification for either of these.
+    ///
+    /// Polling used to stop for good once both were granted. That saved two cross-process calls
+    /// and cost the app its only chance to notice a permission being revoked later — after which
+    /// it would keep running with dead monitors and no idea. It now drops to a slow cadence
+    /// instead of stopping, which is cheap enough to leave on for the session.
     func startPolling(interval: TimeInterval = 2.0) {
         pollTimer?.invalidate()
-        guard !allGranted else { return }
+        schedule(every: allGranted ? Self.settledInterval : interval, fast: !allGranted)
+    }
+
+    /// Once everything is granted there is nothing to wait for, only revocation to notice.
+    private static let settledInterval: TimeInterval = 30
+
+    private func schedule(every interval: TimeInterval, fast: Bool) {
         pollTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
             guard let self else { return }
             self.refresh()
-            if self.allGranted { self.stopPolling() }
+            // Swap cadence when the situation changes, so waiting for a grant stays responsive
+            // and the settled state stays quiet.
+            if fast && self.allGranted {
+                self.pollTimer?.invalidate()
+                self.schedule(every: Self.settledInterval, fast: false)
+            } else if !fast && !self.allGranted {
+                self.pollTimer?.invalidate()
+                self.schedule(every: 2.0, fast: true)
+            }
         }
     }
 

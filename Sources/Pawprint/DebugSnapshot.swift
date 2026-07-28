@@ -1,4 +1,6 @@
 import AppKit
+import ApplicationServices
+import IOKit.hid
 import SwiftUI
 
 /// Debug-only helpers, all gated behind environment variables so they never run in normal use.
@@ -656,6 +658,48 @@ enum DebugSnapshot {
         task.waitUntilExit()
         write("SETTINGS SHOT window \(window.windowNumber) \(window.title)\n")
         exit(0)
+    }
+
+    // MARK: - Keyboard event delivery (PAWPRINT_KEYS)
+
+    /// Reports which of the two keyboard monitors is actually receiving events.
+    ///
+    /// This is the only way to tell the reported failure apart from an idle keyboard: both look
+    /// like "no letters counted". Type for the duration and read the two counters — modifiers
+    /// climbing while keys stay at zero is a dead `.keyDown` registration, not a quiet user.
+    @MainActor
+    static func probeKeyboardDelivery() {
+        write("AXIsProcessTrusted       = \(AXIsProcessTrusted())\n")
+        write("IOHIDCheckAccess(listen) = \(IOHIDCheckAccess(kIOHIDRequestTypeListenEvent).rawValue)"
+              + "  (0 granted / 1 denied / 2 unknown)\n")
+
+        let monitor = KeyboardMonitor()
+        monitor.start()
+        let seconds = Int(ProcessInfo.processInfo.environment["PAWPRINT_KEYS"].flatMap { Int($0) } ?? 15)
+        write("\nType anything for \(seconds)s — including plain letters...\n")
+
+        var elapsed = 0
+        Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { timer in
+            MainActor.assumeIsolated {
+                elapsed += 1
+                write("  \(elapsed)s  keyDown=\(monitor.keyDownsSeen)  flagsChanged=\(monitor.flagsSeen)\n")
+                guard elapsed >= seconds else { return }
+                timer.invalidate()
+                write("\nkeyDown total      = \(monitor.keyDownsSeen)\n")
+                write("flagsChanged total = \(monitor.flagsSeen)\n")
+                if monitor.looksStalled {
+                    write("\nSTALLED — modifiers arrive, key events do not."
+                          + " Input Monitoring was granted after the monitor was registered.\n")
+                    exit(1)
+                }
+                if monitor.keyDownsSeen == 0 && monitor.flagsSeen == 0 {
+                    write("\nNOTHING RECEIVED — no typing, or neither permission is live.\n")
+                    exit(2)
+                }
+                write("\nKEYS OK — both monitors are delivering.\n")
+                exit(0)
+            }
+        }
     }
 
     // MARK: - Record reward size (PAWPRINT_REWARDS)
