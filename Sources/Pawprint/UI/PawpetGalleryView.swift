@@ -55,7 +55,7 @@ struct PawpetGalleryView: View {
     }
 
     private func traits(for summary: DailySummary) -> PawpetTraits {
-        PawpetTraits(day: summary.day, summary: summary, streakDays: streak(for: summary))
+        PawpetTraits.forDay(summary, streakDays: streak(for: summary))
     }
 
     private func matches(_ summary: DailySummary, _ option: Filter) -> Bool {
@@ -293,7 +293,7 @@ struct PawpetDetailView: View {
     var onClose: () -> Void
 
     private var traits: PawpetTraits {
-        PawpetTraits(day: summary.day, summary: summary, streakDays: streakDays)
+        PawpetTraits.forDay(summary, streakDays: streakDays)
     }
 
     var body: some View {

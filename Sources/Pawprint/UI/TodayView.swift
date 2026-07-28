@@ -136,8 +136,6 @@ struct TodayView: View {
                     HStack(spacing: 4) {
                         Text(L10n.t("todayView.f04f7e9b")).font(.caption).foregroundStyle(.secondary)
                         Spacer()
-                        Text(L10n.t("todayView.69d55f85", summary.funFacts.count))
-                            .font(.system(size: 9)).foregroundStyle(.tertiary)
                         Button {
                             withAnimation(.easeInOut(duration: 0.25)) { factOffset += 1 }
                         } label: {

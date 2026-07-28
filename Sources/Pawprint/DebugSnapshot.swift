@@ -774,6 +774,13 @@ enum DebugSnapshot {
             .background(Color(white: 0.11)), name: "itemcatalog", bare: true)
         capture(HiddenAchievementsView(onClose: {}).content.frame(width: 430)
             .background(Color(white: 0.11)), name: "achievements", bare: true)
+
+        // The score breakdown, and a record day's traits — the pair that used to disagree.
+        var recordDay = excellentDay()
+        recordDay.day = "2026-03-10"
+        capture(ScoreBreakdownView(score: PawprintScore.build(from: recordDay), onClose: {})
+            .content.frame(width: 380).background(Color(white: 0.11)),
+                name: "scorebreakdown", bare: true)
         capture(PawpetGalleryView().frame(width: 360), name: "gallerybar")
         // A few rows at full size — the tall catalog capture is only good for checking that it
         // renders at all, not for reading it.
@@ -1295,6 +1302,41 @@ enum DebugSnapshot {
             write("FAIL a record changed the grade \(plain.rarityGrade) -> \(record.rarityGrade)\n")
             failures += 1
         }
+
+        // The portrait and the rarity sheet must describe the same cat. They did not: the drawing
+        // asked ActivityCenter whether the day set a record, while the gallery built traits
+        // directly and let the flag default to false — so a party hat was scored, and listed, as
+        // a crown, and sparkles were reported as zzz.
+        var recordSummary = excellentDay()
+        recordSummary.day = "2026-03-11"
+        var settings = ActivityCenter.shared.settings
+        let restoreSettings = settings
+        settings.recordDays = [recordSummary.day]
+        ActivityCenter.shared.updateSettings(settings)
+
+        let viaFactory = PawpetTraits.forDay(recordSummary, streakDays: 40)
+        write("\nrecord day via forDay: head \(viaFactory.headwear), float \(viaFactory.floaters)\n")
+        if viaFactory.headwear != .partyHat {
+            write("FAIL the record day is not wearing the party hat\n"); failures += 1
+        }
+        if viaFactory.floaters != .sparkles {
+            write("FAIL the record day has no sparkles\n"); failures += 1
+        }
+
+        // The breakdown quotes trait names, so a mismatch shows up as the wrong word beside the
+        // points — which is exactly how this was noticed.
+        let breakdown = viaFactory.rarityBreakdown
+        let headRow = breakdown.first { $0.detail == PawpetTraits.headwearName(.partyHat) }
+        let floatRow = breakdown.first { $0.detail == PawpetTraits.floatersName(.sparkles) }
+        write("breakdown head row: \(headRow.map { "\($0.detail) \(Int($0.earned))" } ?? "MISSING")\n")
+        write("breakdown float row: \(floatRow.map { "\($0.detail) \(Int($0.earned))" } ?? "MISSING")\n")
+        if headRow == nil || floatRow == nil {
+            write("FAIL the rarity breakdown names a different cat than the drawing\n"); failures += 1
+        }
+        if let headRow, Int(headRow.earned) != Int(PawpetTraits.headwearPoints(.partyHat)) {
+            write("FAIL the party hat is scored as something else\n"); failures += 1
+        }
+        ActivityCenter.shared.updateSettings(restoreSettings)
 
         write(failures == 0 ? "\nREWARDS OK\n" : "\nREWARDS \(failures) FAILURES\n")
         exit(failures == 0 ? 0 : 1)

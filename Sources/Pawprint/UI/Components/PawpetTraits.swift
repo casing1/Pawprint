@@ -168,6 +168,19 @@ struct PawpetTraits {
     /// `setARecord` is a fact about the day, read from `AppSettings.recordDays`. It used to be
     /// `isCelebrating` — literally "is the congratulation banner on screen" — which meant the cat
     /// changed when you dismissed a banner, and reverted on relaunch.
+    /// Traits for a real recorded day, with the record bonus looked up rather than passed in.
+    ///
+    /// Every caller that needs a day's cat must come through here. Two of them used to build
+    /// `PawpetTraits` directly and simply omit `setARecord`, defaulting it to false — so the
+    /// portrait wore the party hat while the rarity sheet beside it listed the crown and scored
+    /// it, and the sparkles were reported as `zzz`. The picture and the numbers described
+    /// different cats, and nothing in the types said they had to agree.
+    @MainActor
+    static func forDay(_ summary: DailySummary, streakDays: Int = 0) -> PawpetTraits {
+        PawpetTraits(day: summary.day, summary: summary, streakDays: streakDays,
+                     setARecord: ActivityCenter.shared.setARecord(on: summary.day))
+    }
+
     init(day: String, summary: DailySummary, streakDays: Int = 0, setARecord: Bool = false) {
         // --- Identity: date only ---
         var generator = SeededGenerator(seed: Self.daySeed(day))

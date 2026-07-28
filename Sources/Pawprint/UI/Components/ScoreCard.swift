@@ -7,6 +7,7 @@ struct ScoreCard: View {
     let persona: DailyPersona?
 
     @State private var animatedProgress: Double = 0
+    @State private var showingBreakdown = false
 
     private var tone: Color {
         switch score.gradeColorHint {
@@ -40,6 +41,19 @@ struct ScoreCard: View {
             }
 
             componentBars
+
+            // The four bars say which parts contributed but not what any of them measured, so the
+            // total arrives as an assertion. This opens the arithmetic behind it.
+            Button {
+                showingBreakdown = true
+            } label: {
+                HStack(spacing: 3) {
+                    Image(systemName: "function").font(.system(size: 9))
+                    Text(L10n.t("score.howCalculated")).font(.system(size: 10, weight: .medium))
+                }
+                .foregroundStyle(tone)
+            }
+            .buttonStyle(.plain)
         }
         .padding(12)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -47,6 +61,9 @@ struct ScoreCard: View {
             RoundedRectangle(cornerRadius: 14, style: .continuous)
                 .fill(tone.opacity(0.10))
         )
+        .sheet(isPresented: $showingBreakdown) {
+            ScoreBreakdownView(score: score) { showingBreakdown = false }
+        }
         .overlay(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
                 .stroke(tone.opacity(0.3), lineWidth: 1)

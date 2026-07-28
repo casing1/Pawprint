@@ -10,7 +10,6 @@ struct EnergyCard: View {
     let lines: [String]
     let drainedPercent: Int
 
-    @State private var expanded = false
     /// Randomised at first appearance so two consecutive days don't open on the same line.
     @State private var offset = Int.random(in: 0..<1000)
     private let rotation = Timer.publish(every: 12, on: .main, in: .common).autoconnect()
@@ -32,8 +31,6 @@ struct EnergyCard: View {
                     .font(.caption).foregroundStyle(.secondary)
                 Spacer()
                 if lines.count > 1 {
-                    Text(L10n.t("energyCard.839fa6d7", lines.count))
-                        .font(.system(size: 9)).foregroundStyle(.tertiary)
                     Button {
                         withAnimation(.easeInOut(duration: 0.25)) { offset += 1 }
                     } label: {
@@ -42,8 +39,6 @@ struct EnergyCard: View {
                     .buttonStyle(.plain)
                     .help(L10n.t("energyCard.2b3d69c1"))
                 }
-                Image(systemName: expanded ? "chevron.up" : "chevron.down")
-                    .font(.caption2).foregroundStyle(.tertiary)
             }
 
             if let headline {
@@ -54,27 +49,7 @@ struct EnergyCard: View {
                     .id(headline)
             }
 
-            if expanded {
-                VStack(alignment: .leading, spacing: 5) {
-                    ForEach(lines, id: \.self) { line in
-                        HStack(alignment: .top, spacing: 6) {
-                            Image(systemName: "arrow.turn.down.right")
-                                .font(.system(size: 8))
-                                .foregroundStyle(.tertiary)
-                                .padding(.top, 3)
-                            Text(line)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
-                    }
-                    Text(L10n.t("energyCard.c9b28598"))
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
-                        .padding(.top, 2)
-                }
-                .transition(.opacity.combined(with: .move(edge: .top)))
-            } else if let secondary {
+            if let secondary {
                 Text(secondary)
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -93,12 +68,7 @@ struct EnergyCard: View {
             RoundedRectangle(cornerRadius: 12, style: .continuous)
                 .stroke(Color.yellow.opacity(0.3), lineWidth: 1)
         )
-        .contentShape(Rectangle())
-        .onTapGesture {
-            withAnimation(.easeInOut(duration: 0.18)) { expanded.toggle() }
-        }
         .onReceive(rotation) { _ in
-            guard !expanded else { return }
             withAnimation(.easeInOut(duration: 0.4)) { offset += 1 }
         }
     }

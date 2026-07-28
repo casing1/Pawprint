@@ -231,6 +231,16 @@ enum Formatters {
         return formatter.string(from: date)
     }
 
+    /// "2026. 3. 10." — for anything permanent, where the year is part of the fact.
+    static func dayWithYearLabel(_ day: String) -> String {
+        guard let date = DayKey.date(fromDayString: day) else { return day }
+        let formatter = DateFormatter()
+        formatter.locale = LocalizationManager.activeLocale
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .none
+        return formatter.string(from: date)
+    }
+
     static func dayLabel(_ day: String) -> String {
         guard let date = DayKey.date(fromDayString: day) else { return day }
         let formatter = DateFormatter()

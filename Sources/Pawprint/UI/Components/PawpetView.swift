@@ -25,11 +25,7 @@ struct PawpetView: View {
     var traitsOverride: PawpetTraits? = nil
 
     var traits: PawpetTraits {
-        // The record flag is looked up here rather than passed in, so no call site can forget it
-        // and quietly draw a record day without its party hat.
-        traitsOverride
-            ?? PawpetTraits(day: summary.day, summary: summary, streakDays: streakDays,
-                            setARecord: ActivityCenter.shared.setARecord(on: summary.day))
+        traitsOverride ?? PawpetTraits.forDay(summary, streakDays: streakDays)
     }
 
     var caption: String { traits.caption }

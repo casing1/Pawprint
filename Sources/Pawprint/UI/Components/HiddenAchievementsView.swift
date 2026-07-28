@@ -124,7 +124,7 @@ struct HiddenAchievementsView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             if let unlockedOn {
-                Text(Formatters.shortDayLabel(unlockedOn))
+                Text(Formatters.dayWithYearLabel(unlockedOn))
                     .font(.system(size: 9).monospacedDigit())
                     .foregroundStyle(Color.accentColor)
             }
@@ -158,7 +158,7 @@ struct HiddenAchievementsView: View {
                 .minimumScaleFactor(0.75)
 
             if let unlockedOn {
-                Text(Formatters.shortDayLabel(unlockedOn))
+                Text(Formatters.dayWithYearLabel(unlockedOn))
                     .font(.system(size: 8).monospacedDigit())
                     .foregroundStyle(.tertiary)
             }
