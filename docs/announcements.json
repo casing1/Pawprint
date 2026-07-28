@@ -1,18 +1,3 @@
 {
-  "announcements": [
-    {
-      "id": "issue-1",
-      "severity": "warning",
-      "publishedAt": "2026-07-28",
-      "link": "https://github.com/yhcho0405/Pawprint/issues/1",
-      "title": {
-        "ko": "글자 키가 기록되지 않는 문제 — 확인 방법",
-        "en": "Character keys may not be counted — how to check"
-      },
-      "body": {
-        "ko": "일부 Mac에서 키보드 히트맵에 Shift·Command 같은 수정키만 나타나고 글자 키는 하나도 세어지지 않는 문제가 있었습니다.\n\n원인은 macOS의 권한 처리 방식입니다. 글자 키를 받으려면 **입력 모니터링** 권한이 필요한데, 이 권한을 허용하기 **전에** 만들어진 감시자는 나중에 허용해도 되살아나지 않습니다. 그동안 시스템은 계속 \"허용됨\"이라고 표시하기 때문에 앱에서도 티가 나지 않았습니다.\n\n0.3.4부터는 앱이 이 상태를 스스로 감지해 다시 등록하고, 그래도 안 되면 경고를 띄웁니다. 다만 권한 항목 자체가 오래된 경우에는 한 번 손을 봐주셔야 합니다.\n\n**확인하고 고치는 방법**\n\n1. 키보드 히트맵을 열어 글자 키에 색이 들어오는지 봅니다.\n2. 수정키만 색이 들어온다면, 시스템 설정 → 개인정보 보호 및 보안 → 입력 모니터링을 엽니다.\n3. Pawprint를 껐다가 다시 켭니다.\n4. Pawprint를 완전히 종료한 뒤 다시 실행합니다.\n\n이미 지나간 날의 글자 키 기록은 애초에 수집되지 않았기 때문에 복구할 수 없습니다. 불편을 드려 죄송합니다.",
-        "en": "On some Macs the keyboard heatmap showed only modifier keys — Shift, Command and so on — with no character keys counted at all.\n\nThe cause is how macOS handles permissions. Receiving character keys requires **Input Monitoring**, and a listener created *before* that permission is granted stays dead afterwards; granting it does not revive one. Throughout, the system keeps reporting the permission as granted, so nothing in the app looked wrong.\n\nFrom 0.3.4 the app detects this state, re-registers automatically, and warns you if that doesn't work. A genuinely stale permission entry still needs a moment of your time.\n\n**How to check and fix it**\n\n1. Open the keyboard heatmap and see whether character keys are shaded at all.\n2. If only modifier keys are, open System Settings → Privacy & Security → Input Monitoring.\n3. Turn Pawprint off and on again there.\n4. Quit Pawprint completely and reopen it.\n\nCharacter keys from earlier days cannot be recovered — they were never collected. Sorry for the trouble."
-      }
-    }
-  ]
+  "announcements": []
 }
