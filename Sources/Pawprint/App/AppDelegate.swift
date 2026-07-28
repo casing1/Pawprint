@@ -58,9 +58,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if let style = ProcessInfo.processInfo.environment["PAWPRINT_ICON_STYLE"] {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                 var updated = ActivityCenter.shared.settings
-                updated.menuBarIcon = style == "cat" ? .cat : .paw
+                updated.menuBarIcon = style.hasPrefix("cat") ? .cat : .paw
                 ActivityCenter.shared.updateSettings(updated)
+
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                    // "catsleep" drives the idle path — what the icon shows whenever nobody is at
+                    // the keyboard. Forced here rather than earlier because the controller's pace
+                    // timer re-checks real activity every 1.5s and would wake it straight back up
+                    // (it did: the first attempt screenshotted an awake cat).
+                    if style.hasSuffix("sleep") {
+                        MenuBarIconAnimator.shared.updatePace(liveWPM: 0, isRecording: true,
+                                                              secondsSinceActivity: 600)
+                    }
                     // Ask the status item where it ended up; its x depends on what else is in the
                     // menu bar, and a guessed rect came back as a strip of pure black.
                     let frame = self.statusItemController.buttonScreenFrame

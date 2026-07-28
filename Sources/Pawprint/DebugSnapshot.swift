@@ -250,8 +250,9 @@ enum DebugSnapshot {
             ("tail left",  .init(tail: -1, blink: 0)),
             ("centre",     .init(tail: 0, blink: 0)),
             ("tail right", .init(tail: 1, blink: 0)),
-            ("half blink", .init(tail: 0.4, blink: 0.55)),
-            ("blink",      .init(tail: 0.4, blink: 1))
+            ("blink",      .init(tail: 0.4, blink: 1)),
+            ("ear half",   .init(tail: 0.2, blink: 0, earFold: 0.45)),
+            ("ear folded", .init(tail: 0.2, blink: 0, earFold: 1))
         ]
 
         // Drawn at a large point size rather than scaled up from 17pt, so this shows the geometry
@@ -259,8 +260,9 @@ enum DebugSnapshot {
         let big = HStack(spacing: 18) {
             ForEach(Array(poses.enumerated()), id: \.offset) { _, pose in
                 VStack(spacing: 8) {
-                    Image(nsImage: tinted(MenuBarCat.image(pose: pose.1, height: 128, canvas: 176)))
-                        .frame(width: 176, height: 176)
+                    Image(nsImage: tinted(MenuBarCat.image(
+                        pose: pose.1, height: 128, canvasWidth: 200, canvasHeight: 160)))
+                        .frame(width: 200, height: 160)
                     Text(pose.0).font(.system(size: 13)).foregroundStyle(.white.opacity(0.7))
                 }
             }
@@ -277,7 +279,9 @@ enum DebugSnapshot {
                     ForEach(Array(MenuBarIconAnimator.catPoses.enumerated()), id: \.offset) { _, pose in
                         Image(nsImage: tinted(
                             MenuBarCat.image(pose: pose,
-                                             height: MenuBarIconAnimator.catHeight, canvas: 22),
+                                             height: MenuBarIconAnimator.catHeight,
+                                             canvasWidth: MenuBarIconAnimator.catCanvasWidth,
+                                             canvasHeight: 22),
                             white: dark))
                     }
                     Spacer(minLength: 0)
@@ -289,6 +293,39 @@ enum DebugSnapshot {
         }
         .frame(width: 640)
         capture(cycle, name: "menucat_cycle", scale: 3, bare: true)
+
+        // Asleep, big and small. This is what the icon shows most of the time — whenever nobody
+        // is at the keyboard — so it gets the same scrutiny as the awake pose.
+        let sleepBig = HStack(spacing: 18) {
+            ForEach([0.0, 0.25, 0.5, 0.75], id: \.self) { breath in
+                Image(nsImage: tinted(MenuBarCat.sleepingImage(
+                    breath: CGFloat(breath), height: 128, canvasWidth: 200, canvasHeight: 160)))
+                    .frame(width: 200, height: 160)
+            }
+        }
+        .padding(24)
+        .background(Color(white: 0.12))
+        capture(sleepBig, name: "menucat_sleep_big", scale: 1, bare: true)
+
+        let sleepStrip = VStack(spacing: 0) {
+            ForEach([true, false], id: \.self) { dark in
+                HStack(spacing: 4) {
+                    ForEach(0..<MenuBarIconAnimator.sleepFrameCount, id: \.self) { step in
+                        Image(nsImage: tinted(MenuBarCat.sleepingImage(
+                            breath: CGFloat(step) / CGFloat(MenuBarIconAnimator.sleepFrameCount),
+                            height: MenuBarIconAnimator.catHeight,
+                            canvasWidth: MenuBarIconAnimator.catCanvasWidth, canvasHeight: 22),
+                            white: dark))
+                    }
+                    Spacer(minLength: 0)
+                }
+                .padding(.horizontal, 10)
+                .frame(height: 26)
+                .background(dark ? Color(white: 0.13) : Color(white: 0.93))
+            }
+        }
+        .frame(width: 600)
+        capture(sleepStrip, name: "menucat_sleep", scale: 3, bare: true)
 
         // Side by side with the paw, at the size and spacing of a real menu bar.
         let compare = VStack(spacing: 0) {

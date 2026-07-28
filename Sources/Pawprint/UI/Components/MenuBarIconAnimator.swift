@@ -61,13 +61,35 @@ final class MenuBarIconAnimator {
         case frameCount - 2: blink = 1
         default: blink = 0
         }
-        return MenuBarCat.Pose(tail: CGFloat(sin(t)), blink: blink)
+        // The ear flick sits well away from the blink. Overlapping them made the cat look like it
+        // was wincing rather than doing two unrelated small things.
+        let fold: CGFloat
+        switch step {
+        case 8, 11: fold = 0.45
+        case 9, 10: fold = 1
+        default: fold = 0
+        }
+        return MenuBarCat.Pose(tail: CGFloat(sin(t)), blink: blink, earFold: fold)
     }
 
-    /// Slightly taller than the paw's 16pt: the cat is a slim silhouette where the paw is a solid
-    /// blob, and at equal height it read as the smaller of the two. Still inside the 18pt the
-    /// menu bar allows.
-    static let catHeight: CGFloat = 17
+    /// Sleep is its own, much slower cycle: one long breath rather than a tail sweep.
+    static let sleepFrameCount = 16
+    private static let sleepFrames: [NSImage] = (0..<sleepFrameCount).map { step in
+        MenuBarCat.sleepingImage(breath: CGFloat(step) / CGFloat(sleepFrameCount),
+                                 height: catHeight,
+                                 canvasWidth: catCanvasWidth, canvasHeight: canvasSize)
+    }
+
+    /// One breath every ~4.5s: about four image swaps a second, forever, while the user is away.
+    /// That is negligible next to the active animation's twenty, and a slower breath also reads
+    /// more like deep sleep than the brisker rate it started at.
+    private static let sleepInterval: TimeInterval = 0.28
+
+    /// The menu bar caps height at about 18pt but does not care about width, so the cat is drawn
+    /// at the height limit and given a wider canvas to be bulky in. At 17pt in a square canvas it
+    /// was legible but small next to the paw.
+    static let catHeight: CGFloat = 18
+    static let catCanvasWidth: CGFloat = 30
 
     let filledFrames: [NSImage]
     let restingImage: NSImage
@@ -80,25 +102,45 @@ final class MenuBarIconAnimator {
         }
         restingImage = Self.renderPaw(symbol: "pawprint", angle: 0, dy: 0)
         catFrames = Self.catPoses.map {
-            MenuBarCat.image(pose: $0, height: Self.catHeight, canvas: Self.canvasSize)
+            MenuBarCat.image(pose: $0, height: Self.catHeight,
+                             canvasWidth: Self.catCanvasWidth, canvasHeight: Self.canvasSize)
         }
-        // Parked: tail settled off to one side, eyes open, still looking at you.
-        catResting = MenuBarCat.image(pose: .init(tail: 0.25, blink: 0),
-                                      height: Self.catHeight, canvas: Self.canvasSize)
+        catResting = Self.sleepFrames[0]
     }
 
     private var style: MenuBarIconStyle { ActivityCenter.shared.settings.menuBarIcon }
 
+    /// True while the icon should be showing the idle state rather than the active animation.
+    @ObservationIgnored private var isSleeping = false
+
     var currentImage: NSImage {
-        let resting = style == .cat ? catResting : restingImage
-        guard ActivityCenter.shared.isRecordingActive else { return resting }
-        let frames = style == .cat ? catFrames : filledFrames
-        return frames[frame % frames.count]
+        guard style == .cat else {
+            guard ActivityCenter.shared.isRecordingActive else { return restingImage }
+            return filledFrames[frame % filledFrames.count]
+        }
+        // The cat curls up and breathes instead of freezing — both when recording is paused and
+        // when the user has simply gone away.
+        guard ActivityCenter.shared.isRecordingActive, !isSleeping else {
+            return Self.sleepFrames[frame % Self.sleepFrames.count]
+        }
+        return catFrames[frame % catFrames.count]
     }
 
     /// Pushes the current icon out again. Needed when the chosen style changes: while parked there
     /// is no timer running at all, so a switch would otherwise not show until the next keystroke.
     func refreshIcon() {
+        // Switching to the cat while idle has to start the breath; switching to the paw has to
+        // stop it, or a paw would sit there ticking at the sleep rate for no reason.
+        if isSleeping {
+            if style == .cat {
+                retime(to: Self.sleepInterval)
+            } else {
+                timer?.invalidate()
+                timer = nil
+                currentInterval = 0
+                frame = 0
+            }
+        }
         onFrame?(currentImage)
     }
 
@@ -108,8 +150,8 @@ final class MenuBarIconAnimator {
         case .paw:
             return renderPaw(symbol: "pawprint.fill", angle: 0, dy: 0)
         case .cat:
-            return MenuBarCat.image(pose: .init(tail: 0.25, blink: 0),
-                                    height: catHeight, canvas: canvasSize)
+            return MenuBarCat.image(pose: .init(tail: 0.25, blink: 0), height: catHeight,
+                                    canvasWidth: catCanvasWidth, canvasHeight: canvasSize)
         }
     }
 
@@ -137,12 +179,22 @@ final class MenuBarIconAnimator {
             park()
             return
         }
+        isSleeping = false
         retime(to: interval(forWPM: liveWPM))
     }
 
-    /// Settles on a neutral pose and stops ticking.
+    /// Idle state. The paw settles and the timer stops outright; the cat lies down and keeps
+    /// breathing, which is the whole point of having a sleeping pose rather than a frozen one.
     private func park() {
-        guard timer != nil || frame != 0 else { return }
+        let wasSleeping = isSleeping
+        isSleeping = true
+        if style == .cat {
+            frame = 0
+            onFrame?(currentImage)
+            retime(to: Self.sleepInterval)
+            return
+        }
+        guard timer != nil || frame != 0 || !wasSleeping else { return }
         timer?.invalidate()
         timer = nil
         currentInterval = 0
