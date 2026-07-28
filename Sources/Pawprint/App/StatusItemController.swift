@@ -19,7 +19,7 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         statusItem = item
 
         if let button = item.button {
-            button.image = PawAnimator.shared.currentImage
+            button.image = MenuBarIconAnimator.shared.currentImage
             button.imagePosition = .imageLeading
             button.target = self
             button.action = #selector(togglePopover)
@@ -34,7 +34,7 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         // timers and observations — running while the popover is closed.
 
         // Push every animation frame straight into the button.
-        PawAnimator.shared.onFrame = { [weak self] image in
+        MenuBarIconAnimator.shared.onFrame = { [weak self] image in
             self?.statusItem?.button?.image = image
         }
 
@@ -53,10 +53,17 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         paceTimer = timer
     }
 
+    /// Screen rect of the status item's button, for verification screenshots. The item's position
+    /// depends on what else is in the menu bar, so it has to be asked rather than guessed.
+    var buttonScreenFrame: NSRect? {
+        guard let window = statusItem?.button?.window else { return nil }
+        return window.frame
+    }
+
     func remove() {
         paceTimer?.invalidate()
         paceTimer = nil
-        PawAnimator.shared.onFrame = nil
+        MenuBarIconAnimator.shared.onFrame = nil
         if let statusItem {
             NSStatusBar.system.removeStatusItem(statusItem)
         }
@@ -66,7 +73,7 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
     private func refreshPace() {
         let center = ActivityCenter.shared
         let idleFor = center.todaySummary.lastActivity.map { Date().timeIntervalSince($0) } ?? .greatestFiniteMagnitude
-        PawAnimator.shared.updatePace(
+        MenuBarIconAnimator.shared.updatePace(
             liveWPM: center.liveWPM,
             isRecording: center.isRecordingActive,
             secondsSinceActivity: idleFor

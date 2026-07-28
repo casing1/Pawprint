@@ -305,6 +305,7 @@ final class ActivityCenter {
         let dockIconChanged = newSettings.showDockIcon != settings.showDockIcon
         let dayStartChanged = newSettings.dayStartHour != settings.dayStartHour
         let focusThresholdChanged = newSettings.focusThresholdSeconds != settings.focusThresholdSeconds
+        let iconStyleChanged = newSettings.menuBarIcon != settings.menuBarIcon
         // Derived text is *generated*, not looked up: summary sentences, highlights, fun facts,
         // personal-best titles and the day's persona are all produced by the engines and then
         // stored or cached. Swapping the pack doesn't touch any of it, so everything computed
@@ -318,6 +319,11 @@ final class ActivityCenter {
         }
         if focusThresholdChanged {
             focusEngine.focusThresholdSeconds = TimeInterval(newSettings.focusThresholdSeconds)
+        }
+        // While parked there is no frame timer at all, so without this a style change would not
+        // appear until the next keystroke woke the animation.
+        if iconStyleChanged {
+            MainActor.assumeIsolated { MenuBarIconAnimator.shared.refreshIcon() }
         }
         if dayStartChanged || languageChanged {
             SummaryCache.shared.invalidateAll()

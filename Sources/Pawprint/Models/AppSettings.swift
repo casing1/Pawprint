@@ -1,5 +1,18 @@
 import Foundation
 
+/// Which drawing sits in the menu bar. Both animate; the paw wiggles, the cat swishes its tail.
+enum MenuBarIconStyle: String, Codable, CaseIterable {
+    case paw
+    case cat
+
+    var label: String {
+        switch self {
+        case .paw: return L10n.t("menuBarIcon.paw")
+        case .cat: return L10n.t("menuBarIcon.cat")
+        }
+    }
+}
+
 enum MenuBarMetric: String, Codable, CaseIterable {
     case iconOnly
     case wpm
@@ -49,6 +62,8 @@ struct AppSettings: Codable {
     var launchAtLogin: Bool = false
     var showDockIcon: Bool = false
     var menuBarMetric: MenuBarMetric = .wpm
+    /// The paw stays the default — it is what the app has always looked like in the menu bar.
+    var menuBarIcon: MenuBarIconStyle = .paw
     var dayStartHour: Int = 0
     var theme: AppTheme = .system
     /// `.system` follows the Mac's preferred languages, falling back to Korean when none of them
@@ -183,7 +198,7 @@ struct AppSettings: Codable {
 
     private enum CodingKeys: String, CodingKey {
         case notifiedQuestLevels, notificationDay, notificationCountToday, celebratedRecords
-        case recordDays, dismissedAnnouncements
+        case recordDays, dismissedAnnouncements, menuBarIcon
         case hasCompletedOnboarding
         case updateCheckEnabled, updateFeedURL, updateCheckAutomatically, updateDefaultsMigrated
         case launchAtLogin, showDockIcon, menuBarMetric, dayStartHour, theme, language
@@ -206,6 +221,7 @@ struct AppSettings: Codable {
         notifiedQuestLevels = try c.decodeIfPresent([String: Int].self, forKey: .notifiedQuestLevels) ?? fallback.notifiedQuestLevels
         celebratedRecords = try c.decodeIfPresent([String].self, forKey: .celebratedRecords) ?? fallback.celebratedRecords
         recordDays = try c.decodeIfPresent([String].self, forKey: .recordDays) ?? fallback.recordDays
+        menuBarIcon = try c.decodeIfPresent(MenuBarIconStyle.self, forKey: .menuBarIcon) ?? fallback.menuBarIcon
         dismissedAnnouncements = try c.decodeIfPresent([String].self, forKey: .dismissedAnnouncements)
             ?? fallback.dismissedAnnouncements
         notificationDay = try c.decodeIfPresent(String.self, forKey: .notificationDay) ?? fallback.notificationDay
@@ -271,6 +287,7 @@ struct AppSettings: Codable {
         try c.encode(notifiedQuestLevels, forKey: .notifiedQuestLevels)
         try c.encode(celebratedRecords, forKey: .celebratedRecords)
         try c.encode(recordDays, forKey: .recordDays)
+        try c.encode(menuBarIcon, forKey: .menuBarIcon)
         try c.encode(dismissedAnnouncements, forKey: .dismissedAnnouncements)
         try c.encode(notificationDay, forKey: .notificationDay)
         try c.encode(notificationCountToday, forKey: .notificationCountToday)

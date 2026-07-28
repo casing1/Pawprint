@@ -136,6 +136,17 @@ private struct GeneralSettingsTab: View {
                     }
                 ))
                 Toggle(L10n.t("settingsRootView.b9b55f4e"), isOn: activityCenter.binding(\.showDockIcon))
+                Picker(L10n.t("settings.menuBarIcon"), selection: activityCenter.binding(\.menuBarIcon)) {
+                    ForEach(MenuBarIconStyle.allCases, id: \.self) { style in
+                        // The icon itself beside its name — the words "paw" and "cat" are a poor
+                        // preview of something 17 points tall.
+                        HStack(spacing: 6) {
+                            Image(nsImage: MenuBarIconAnimator.previewImage(for: style))
+                            Text(style.label)
+                        }
+                        .tag(style)
+                    }
+                }
                 Picker(L10n.t("settingsRootView.76213e74"), selection: activityCenter.binding(\.menuBarMetric)) {
                     ForEach(MenuBarMetric.allCases, id: \.self) { Text($0.label).tag($0) }
                 }

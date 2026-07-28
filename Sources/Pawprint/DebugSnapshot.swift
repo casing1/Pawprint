@@ -236,6 +236,98 @@ enum DebugSnapshot {
         capture(banner, name: "banner", scale: 2, bare: true)
     }
 
+    // MARK: - Menu bar icon sheet (PAWPRINT_MENUCAT)
+
+    /// Draws the menu bar cat big enough to judge, and at the size it will actually be.
+    ///
+    /// A 17pt template image is far too small to design against, and a magnified view alone is
+    /// not enough to trust — a shape that looks fine at 8x can smudge into a blob at 1x. So both
+    /// are rendered: a sheet of poses, and the real animation cycle on menu-bar-like strips in
+    /// both appearances, beside the paw it is an alternative to.
+    @MainActor
+    static func renderMenuBarCatSheet() {
+        let poses: [(String, MenuBarCat.Pose)] = [
+            ("tail left",  .init(tail: -1, blink: 0)),
+            ("centre",     .init(tail: 0, blink: 0)),
+            ("tail right", .init(tail: 1, blink: 0)),
+            ("half blink", .init(tail: 0.4, blink: 0.55)),
+            ("blink",      .init(tail: 0.4, blink: 1))
+        ]
+
+        // Drawn at a large point size rather than scaled up from 17pt, so this shows the geometry
+        // rather than the rasteriser.
+        let big = HStack(spacing: 18) {
+            ForEach(Array(poses.enumerated()), id: \.offset) { _, pose in
+                VStack(spacing: 8) {
+                    Image(nsImage: tinted(MenuBarCat.image(pose: pose.1, height: 128, canvas: 176)))
+                        .frame(width: 176, height: 176)
+                    Text(pose.0).font(.system(size: 13)).foregroundStyle(.white.opacity(0.7))
+                }
+            }
+        }
+        .padding(24)
+        .background(Color(white: 0.12))
+        capture(big, name: "menucat_big", scale: 1, bare: true)
+
+        // The whole 24-frame cycle at real size, which is the only way to see whether the wag
+        // actually reads or just jitters.
+        let cycle = VStack(spacing: 0) {
+            ForEach([true, false], id: \.self) { dark in
+                HStack(spacing: 3) {
+                    ForEach(Array(MenuBarIconAnimator.catPoses.enumerated()), id: \.offset) { _, pose in
+                        Image(nsImage: tinted(
+                            MenuBarCat.image(pose: pose,
+                                             height: MenuBarIconAnimator.catHeight, canvas: 22),
+                            white: dark))
+                    }
+                    Spacer(minLength: 0)
+                }
+                .padding(.horizontal, 10)
+                .frame(height: 26)
+                .background(dark ? Color(white: 0.13) : Color(white: 0.93))
+            }
+        }
+        .frame(width: 640)
+        capture(cycle, name: "menucat_cycle", scale: 3, bare: true)
+
+        // Side by side with the paw, at the size and spacing of a real menu bar.
+        let compare = VStack(spacing: 0) {
+            ForEach([true, false], id: \.self) { dark in
+                HStack(spacing: 18) {
+                    Spacer(minLength: 0)
+                    Image(nsImage: tinted(
+                        MenuBarIconAnimator.previewImage(for: .paw), white: dark))
+                    Text("100 WPM")
+                        .font(.system(size: 12))
+                        .foregroundStyle(dark ? .white : .black)
+                    Image(nsImage: tinted(
+                        MenuBarIconAnimator.previewImage(for: .cat), white: dark))
+                    Text("100 WPM")
+                        .font(.system(size: 12))
+                        .foregroundStyle(dark ? .white : .black)
+                }
+                .padding(.horizontal, 14)
+                .frame(height: 24)
+                .background(dark ? Color(white: 0.13) : Color(white: 0.93))
+            }
+        }
+        .frame(width: 260)
+        capture(compare, name: "menucat_compare", scale: 4, bare: true)
+    }
+
+    /// Template images carry no colour of their own, so they have to be tinted to be seen.
+    @MainActor
+    private static func tinted(_ image: NSImage, white: Bool = true) -> NSImage {
+        let output = NSImage(size: image.size)
+        output.lockFocus()
+        (white ? NSColor.white : NSColor.black).set()
+        NSRect(origin: .zero, size: image.size).fill()
+        image.draw(at: .zero, from: NSRect(origin: .zero, size: image.size),
+                   operation: .destinationIn, fraction: 1)
+        output.unlockFocus()
+        return output
+    }
+
     // MARK: - GitHub social preview (PAWPRINT_SOCIAL)
 
     /// The repository's social card: 1280x640, the size GitHub asks for.

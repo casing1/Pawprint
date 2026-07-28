@@ -2,7 +2,7 @@ import AppKit
 import Observation
 import SwiftUI
 
-/// Drives the menu bar paw animation.
+/// Drives the menu bar icon animation, for whichever icon the user picked.
 ///
 /// The frames are **pre-rendered `NSImage`s**, not SwiftUI transforms. `MenuBarExtra` rasterizes
 /// its label into a template image, and geometry modifiers (`rotationEffect`, `offset`,
@@ -10,8 +10,8 @@ import SwiftUI
 /// Swapping the image itself is the one thing the menu bar reliably re-renders.
 @Observable
 @MainActor
-final class PawAnimator {
-    static let shared = PawAnimator()
+final class MenuBarIconAnimator {
+    static let shared = MenuBarIconAnimator()
 
     /// Index into `filledFrames`.
     private(set) var frame: Int = 0
@@ -27,7 +27,9 @@ final class PawAnimator {
     /// Set via the PAWPRINT_DEBUG_PAW env var to log tick/frame activity to stderr.
     @ObservationIgnored private let debugLogging = ProcessInfo.processInfo.environment["PAWPRINT_DEBUG_PAW"] != nil
 
-    static let frameCount = 12
+    /// One cycle. The paw completes two wiggles per cycle and the cat one slow tail sweep, so a
+    /// single frame clock drives both without the cat looking frantic.
+    static let frameCount = 24
     /// Point size of the rendered glyph. Menu bar icons are ~18pt tall.
     private static let glyphSize: CGFloat = 16
     /// Canvas is larger than the glyph so rotated corners aren't clipped.
@@ -35,28 +37,80 @@ final class PawAnimator {
 
     /// Wiggle poses: a soft sine sway plus a half-rate bob, so it eases at the extremes instead
     /// of ticking like a metronome.
+    /// Divided by 12, not `frameCount`, so lengthening the cycle for the cat left the paw's
+    /// rhythm exactly as it was.
     private static let angles: [CGFloat] = (0..<frameCount).map { step in
-        let t = Double(step) / Double(frameCount) * 2 * .pi
+        let t = Double(step) / 12 * 2 * .pi
         return CGFloat(sin(t) * 9)
     }
     private static let bobs: [CGFloat] = (0..<frameCount).map { step in
-        let t = Double(step) / Double(frameCount) * 2 * .pi
+        let t = Double(step) / 12 * 2 * .pi
         return CGFloat(-abs(sin(t * 2)) * 1.1)
     }
 
+    /// Cat poses: one unhurried tail sweep per cycle, with a blink near the end of it.
+    ///
+    /// The blink is two frames out of twenty-four rather than a fixed interval in seconds, so it
+    /// speeds up along with everything else — a cat blinking at a constant rate while its tail
+    /// whips about looks broken.
+    static let catPoses: [MenuBarCat.Pose] = (0..<frameCount).map { step in
+        let t = Double(step) / Double(frameCount) * 2 * .pi
+        let blink: CGFloat
+        switch step {
+        case frameCount - 3, frameCount - 1: blink = 0.55
+        case frameCount - 2: blink = 1
+        default: blink = 0
+        }
+        return MenuBarCat.Pose(tail: CGFloat(sin(t)), blink: blink)
+    }
+
+    /// Slightly taller than the paw's 16pt: the cat is a slim silhouette where the paw is a solid
+    /// blob, and at equal height it read as the smaller of the two. Still inside the 18pt the
+    /// menu bar allows.
+    static let catHeight: CGFloat = 17
+
     let filledFrames: [NSImage]
     let restingImage: NSImage
+    private let catFrames: [NSImage]
+    private let catResting: NSImage
 
     private init() {
         filledFrames = (0..<Self.frameCount).map {
             Self.renderPaw(symbol: "pawprint.fill", angle: Self.angles[$0], dy: Self.bobs[$0])
         }
         restingImage = Self.renderPaw(symbol: "pawprint", angle: 0, dy: 0)
+        catFrames = Self.catPoses.map {
+            MenuBarCat.image(pose: $0, height: Self.catHeight, canvas: Self.canvasSize)
+        }
+        // Parked: tail settled off to one side, eyes open, still looking at you.
+        catResting = MenuBarCat.image(pose: .init(tail: 0.25, blink: 0),
+                                      height: Self.catHeight, canvas: Self.canvasSize)
     }
 
+    private var style: MenuBarIconStyle { ActivityCenter.shared.settings.menuBarIcon }
+
     var currentImage: NSImage {
-        guard ActivityCenter.shared.isRecordingActive else { return restingImage }
-        return filledFrames[frame % filledFrames.count]
+        let resting = style == .cat ? catResting : restingImage
+        guard ActivityCenter.shared.isRecordingActive else { return resting }
+        let frames = style == .cat ? catFrames : filledFrames
+        return frames[frame % frames.count]
+    }
+
+    /// Pushes the current icon out again. Needed when the chosen style changes: while parked there
+    /// is no timer running at all, so a switch would otherwise not show until the next keystroke.
+    func refreshIcon() {
+        onFrame?(currentImage)
+    }
+
+    /// A representative still of a style, for the Settings picker.
+    static func previewImage(for style: MenuBarIconStyle) -> NSImage {
+        switch style {
+        case .paw:
+            return renderPaw(symbol: "pawprint.fill", angle: 0, dy: 0)
+        case .cat:
+            return MenuBarCat.image(pose: .init(tail: 0.25, blink: 0),
+                                    height: catHeight, canvas: canvasSize)
+        }
     }
 
     // MARK: - Timing

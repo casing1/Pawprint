@@ -7,7 +7,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         applyDockIconPolicy()
         TrackingCoordinator.shared.start()
-        PawAnimator.shared.start()
+        MenuBarIconAnimator.shared.start()
         statusItemController.install()
 
         // Re-arm the daily recap on every launch: the scheduled body carries the day's numbers,
@@ -50,6 +50,40 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if ProcessInfo.processInfo.environment["PAWPRINT_DMG_BG"] != nil {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                 DebugSnapshot.renderDMGBackground(); NSApp.terminate(nil)
+            }
+        }
+
+        // Presets the icon style and screenshots the real menu bar, which is the only place the
+        // status item is actually drawn — everything else is a render of the same image.
+        if let style = ProcessInfo.processInfo.environment["PAWPRINT_ICON_STYLE"] {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                var updated = ActivityCenter.shared.settings
+                updated.menuBarIcon = style == "cat" ? .cat : .paw
+                ActivityCenter.shared.updateSettings(updated)
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                    // Ask the status item where it ended up; its x depends on what else is in the
+                    // menu bar, and a guessed rect came back as a strip of pure black.
+                    let frame = self.statusItemController.buttonScreenFrame
+                        ?? NSRect(x: 1200, y: 0, width: 120, height: 24)
+                    let screenHeight = NSScreen.main?.frame.height ?? 900
+                    let pad: CGFloat = 30
+                    let region = "\(Int(frame.minX - pad)),\(Int(screenHeight - frame.maxY))," +
+                                 "\(Int(frame.width + pad * 2)),\(Int(frame.height))"
+                    let task = Process()
+                    task.executableURL = URL(fileURLWithPath: "/usr/sbin/screencapture")
+                    task.arguments = ["-x", "-R", region,
+                                      "/tmp/pawprint_menubar_\(style).png"]
+                    try? task.run()
+                    task.waitUntilExit()
+                    FileHandle.standardError.write("MENUBAR SHOT \(style)\n".data(using: .utf8)!)
+                    exit(0)
+                }
+            }
+        }
+
+        if ProcessInfo.processInfo.environment["PAWPRINT_MENUCAT"] != nil {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                DebugSnapshot.renderMenuBarCatSheet(); NSApp.terminate(nil)
             }
         }
 
@@ -164,7 +198,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationWillTerminate(_ notification: Notification) {
         statusItemController.remove()
-        PawAnimator.shared.stop()
+        MenuBarIconAnimator.shared.stop()
         TrackingCoordinator.shared.stop()
     }
 
