@@ -1,6 +1,21 @@
 {
   "announcements": [
     {
+      "id": "issue-2",
+      "severity": "info",
+      "publishedAt": "2026-07-28",
+      "link": "https://github.com/yhcho0405/Pawprint/issues/2",
+      "title": {
+        "ko": "메뉴 막대 아이콘에 고양이가 추가됐어요",
+        "en": "There's a cat for your menu bar now"
+      },
+      "body": {
+        "ko": "0.4.0부터 메뉴 막대 아이콘을 **발바닥**과 **고양이** 중에 고를 수 있습니다.\n\n고양이는 메뉴 막대에 앉아서 꼬리를 살랑이고, 가끔 눈을 깜빡이며 귀를 쫑긋거립니다. 타이핑이 빨라지면 꼬리도 빨라지고, 한동안 손을 떼면 **눈을 감고 잠듭니다.**\n\n**바꾸는 방법**\n\n1. 메뉴 막대의 Pawprint 아이콘을 누릅니다.\n2. 오른쪽 위 톱니바퀴를 눌러 설정을 엽니다.\n3. **일반** 탭 → **메뉴 막대 아이콘**에서 고양이를 고릅니다.\n\n바로 바뀌고, 언제든 발바닥으로 되돌릴 수 있습니다. 기본값은 그대로 발바닥이라 아무것도 안 하시면 지금과 똑같습니다.",
+        "en": "From 0.4.0 you can choose between the **paw** and a **cat** in the menu bar.\n\nThe cat sits on the bar swishing its tail, blinking now and then, ears tilting. Its tail speeds up as you type, and after a while away it shuts its eyes and **falls asleep**.\n\n**How to switch**\n\n1. Click the Pawprint icon in your menu bar.\n2. Open Settings with the gear button at the top right.\n3. Under **General** → **Menu bar icon**, pick the cat.\n\nIt changes straight away, and you can go back to the paw whenever you like. The paw is still the default, so doing nothing keeps everything exactly as it is."
+      },
+      "minVersion": "0.4.0"
+    },
+    {
       "id": "issue-1",
       "severity": "warning",
       "publishedAt": "2026-07-28",
