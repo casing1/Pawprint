@@ -803,6 +803,34 @@ enum DebugSnapshot {
         .background(Color(white: 0.12))
     }
 
+    // MARK: - Language resolution (PAWPRINT_LANG_PROBE)
+
+    /// Reports which pack the app starts on for the current system language.
+    ///
+    /// Run with `-AppleLanguages "(fr)"` and friends to check the unlisted-language path: the
+    /// answer has to be English, not the base pack. Reasoning about it is not enough — the base
+    /// pack being Korean made "no pack for your language" and "fall back to Korean" the same code
+    /// path, and it read as correct right up until you tried it.
+    @MainActor
+    static func probeLanguageResolution() {
+        write("preferredLanguages = \(Locale.preferredLanguages.prefix(4).joined(separator: ", "))\n")
+        write("systemPreferredCode = \(LocalizationManager.systemPreferredCode() ?? "nil")\n")
+        write("defaultCode         = \(LocalizationManager.defaultCode)\n")
+        write("active pack         = \(LocalizationManager.shared.languageCode)\n")
+
+        // A string only the packs can answer, to prove which table is really in use.
+        let sample = L10n.t("settingsRootView.aef1a1e7")
+        write("sample string       = \(sample)\n")
+
+        let expected = ProcessInfo.processInfo.environment["PAWPRINT_LANG_EXPECT"]
+        if let expected, LocalizationManager.shared.languageCode != expected {
+            write("FAIL expected \(expected), got \(LocalizationManager.shared.languageCode)\n")
+            exit(1)
+        }
+        write("LANG OK\n")
+        exit(0)
+    }
+
     // MARK: - Chaos index distribution (PAWPRINT_CHAOS)
 
     /// Prints the chaos index for every recorded day, plus a few synthetic ones.

@@ -18,17 +18,36 @@ import Observation
 final class LocalizationManager {
     static let shared = LocalizationManager()
 
-    /// The pack every other language falls back to, and the one keys are generated from.
+    /// The pack keys are generated from, and the table consulted when a translation is missing.
+    /// This is about *keys*, not about what the user sees first.
     static let baseLanguage = "ko"
+
+    /// What `.system` resolves to when macOS is set to a language Pawprint has no pack for.
+    ///
+    /// Deliberately not `baseLanguage`. The two were the same constant, which meant a Mac set to
+    /// French or German — anything unlisted — opened in Korean. English is the reasonable guess
+    /// for "some language we don't ship", and it is what the README and the repo default to.
+    static let fallbackLanguage = "en"
+
+    /// The language to start in: the first of the user's preferred languages that has a pack,
+    /// otherwise English.
+    nonisolated static var defaultCode: String {
+        systemPreferredCode() ?? fallbackLanguage
+    }
 
     /// Bumped on every language change purely so `@Observable` views re-render; the lookup
     /// itself reads `Tables`, not this.
     private(set) var revision: Int = 0
     private(set) var languageCode: String = LocalizationManager.baseLanguage
 
+
     private init() {
         Tables.setBase(Self.loadPackFile(Self.baseLanguage))
-        Tables.setActive(Tables.base, code: Self.baseLanguage)
+        // Start on the system's language rather than on the base pack. Starting on the base pack
+        // meant every string resolved before `apply` ran came out Korean, whoever you were.
+        let code = Self.defaultCode
+        Tables.setActive(code == Self.baseLanguage ? Tables.base : Self.loadPackFile(code), code: code)
+        languageCode = code
     }
 
     /// Resolves `.system` against the user's preferred languages, falling back to the base pack
@@ -40,7 +59,7 @@ final class LocalizationManager {
         let resolved: String
         switch language {
         case .system:
-            resolved = Self.systemPreferredCode() ?? Self.baseLanguage
+            resolved = Self.defaultCode
         case .korean:
             resolved = "ko"
         case .english:
@@ -139,7 +158,15 @@ enum Tables {
         guard !loadedBase else { return }
         loadedBase = true
         baseTable = LocalizationManager.loadPackFile(LocalizationManager.baseLanguage)
-        if activeTable.isEmpty { activeTable = baseTable }
+        guard activeTable.isEmpty else { return }
+        // Reached when something resolves a string before `LocalizationManager.shared` exists.
+        // It used to adopt the base pack, which showed Korean to everyone on this path; follow
+        // the system language here too so the answer is the same either way round.
+        let preferred = LocalizationManager.defaultCode
+        activeTable = preferred == LocalizationManager.baseLanguage
+            ? baseTable
+            : LocalizationManager.loadPackFile(preferred)
+        code = preferred
     }
 
     static var base: [String: String] { lock.withLock { baseTable } }

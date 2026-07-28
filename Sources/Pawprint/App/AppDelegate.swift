@@ -64,7 +64,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if let language = ProcessInfo.processInfo.environment["PAWPRINT_SETTINGS"] {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                 var updated = ActivityCenter.shared.settings
-                updated.language = language == "en" ? .english : .korean
+                switch language {
+                case "en": updated.language = .english
+                case "ko": updated.language = .korean
+                // Anything else means "leave it on system", so the resolved default can be seen.
+                default: updated.language = .system
+                }
                 ActivityCenter.shared.updateSettings(updated)
                 if ProcessInfo.processInfo.environment["PAWPRINT_FORCE_STALL"] != nil {
                     PermissionsManager.shared.setKeyboardEventsStalled(true)
@@ -94,6 +99,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         if ProcessInfo.processInfo.environment["PAWPRINT_NOTICE"] != nil {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { DebugSnapshot.probeAnnouncements() }
+        }
+
+        if ProcessInfo.processInfo.environment["PAWPRINT_LANG_PROBE"] != nil {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { DebugSnapshot.probeLanguageResolution() }
         }
 
         if ProcessInfo.processInfo.environment["PAWPRINT_CHAOS"] != nil {
