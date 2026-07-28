@@ -29,6 +29,29 @@ enum DayKey {
         return (raw - dayStartHour * 60 + 1440) % 1440
     }
 
+    /// The instant the day containing `date` starts, honouring `dayStartHour`.
+    ///
+    /// Needed to split anything that straddles a boundary. Without it a session running across
+    /// the boundary had to be filed whole under one day or the other, and whichever was chosen
+    /// was wrong by however much of it fell on the other side.
+    static func dayStart(containing date: Date, dayStartHour: Int,
+                         calendar: Calendar = .current) -> Date {
+        var cal = calendar
+        cal.timeZone = TimeZone.current
+        let shifted = cal.date(byAdding: .hour, value: -dayStartHour, to: date) ?? date
+        let midnight = cal.startOfDay(for: shifted)
+        return cal.date(byAdding: .hour, value: dayStartHour, to: midnight) ?? midnight
+    }
+
+    /// The next boundary strictly after `date`.
+    static func nextDayStart(after date: Date, dayStartHour: Int,
+                             calendar: Calendar = .current) -> Date {
+        var cal = calendar
+        cal.timeZone = TimeZone.current
+        let start = dayStart(containing: date, dayStartHour: dayStartHour, calendar: cal)
+        return cal.date(byAdding: .day, value: 1, to: start) ?? start.addingTimeInterval(86_400)
+    }
+
     static func date(fromDayString day: String) -> Date? {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"

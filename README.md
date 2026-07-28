@@ -26,8 +26,8 @@ Pawprint sits in your menu bar and quietly notes how you use your Mac — keys p
 scrolled, time spent in focus, battery burned. At the end of the day it hands all of that back to
 you as a cat.
 
-**It never records what you type.** Only counts, durations and aggregates. Everything stays on
-your Mac.
+**It never records what you type.** Counts, durations and aggregates only — never characters,
+never the order they came in. Everything stays on your Mac.
 
 <br>
 
@@ -73,20 +73,20 @@ There are around **171 trillion** reachable combinations.
 
 ## What it never stores
 
-- The characters you type, or the order you typed them
+- The characters you type, or the order you typed them — the keyboard heatmap counts presses per
+  physical key, which is not the same thing: it cannot tell an `a` in a password from an `a` in a
+  search box, and holds no sequence to reconstruct either
 - Passwords
 - Clipboard **contents**
 - Screenshots, window titles, document or web page contents
 - Long-term raw cursor paths
 
-Data lives in `~/Library/Application Support/Pawprint/` and goes nowhere else. Pawprint works
-entirely offline; the one network request it makes is checking for a new version, which you can
-turn off in Settings → Updates.
+Data lives in `~/Library/Application Support/Pawprint/` and goes nowhere else.
 
-There is also an optional daily "this install ran today" count, which sends no counters and no
-identifier — only a hash that changes every day, so two days cannot be linked. It ships with no
-endpoint configured, meaning a stock build never sends it at all. Details in
-[docs/ANALYTICS.md](docs/ANALYTICS.md).
+Pawprint makes two kinds of request, both to GitHub and both behind the same switch in
+Settings → Updates: it checks for a new version, and it fetches the notices shown in the popover.
+Neither sends anything about you or your Mac. Turn that switch off and the app is entirely
+offline. There is no analytics or usage reporting of any kind.
 
 <br>
 
@@ -97,7 +97,7 @@ Runs on macOS 14 or later, on both Apple Silicon and Intel Macs.
 | Permission | Why |
 |---|---|
 | **Accessibility** | Detect mouse events and app switches |
-| **Input Monitoring** | Detect *that* a key was pressed — never which one |
+| **Input Monitoring** | See that a key was pressed, and which physical key it was — never the character it produced |
 
 A setup wizard walks you through both on first launch, and you can reopen it any time from
 Settings → General.

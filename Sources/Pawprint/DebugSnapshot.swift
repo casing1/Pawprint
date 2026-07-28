@@ -903,6 +903,67 @@ enum DebugSnapshot {
         exit(0)
     }
 
+    // MARK: - Session accounting (PAWPRINT_SESSIONS)
+
+    /// Checks the arithmetic behind active time and typing speed.
+    ///
+    /// These are the numbers the whole app is about, and every one of them fails silently: a lost
+    /// session, a session credited to the wrong day and an average over the wrong denominator all
+    /// produce a plausible figure that is simply wrong.
+    @MainActor
+    static func probeSessionAccounting() {
+        var failures = 0
+
+        func check(_ label: String, _ condition: Bool, _ detail: String = "") {
+            write("\(condition ? "ok  " : "FAIL") \(label)\(detail.isEmpty ? "" : "  — " + detail)\n")
+            if !condition { failures += 1 }
+        }
+
+        // Day boundaries, which every split depends on.
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd HH:mm"
+        formatter.timeZone = .current
+        func at(_ text: String) -> Date { formatter.date(from: text)! }
+
+        for (hour, instant, expected) in [(0, "2026-03-10 23:30", "2026-03-11 00:00"),
+                                          (0, "2026-03-10 00:30", "2026-03-11 00:00"),
+                                          (4, "2026-03-10 23:30", "2026-03-11 04:00"),
+                                          (4, "2026-03-10 02:30", "2026-03-10 04:00")] {
+            let got = DayKey.nextDayStart(after: at(instant), dayStartHour: hour)
+            check("nextDayStart(\(instant), start \(hour)h)", got == at(expected),
+                  "got \(formatter.string(from: got)), want \(expected)")
+        }
+
+        // A session must land on the day it was actually spent.
+        let boundary = DayKey.nextDayStart(after: at("2026-03-10 23:00"), dayStartHour: 0)
+        check("boundary splits a 23:00-01:00 session in two",
+              boundary > at("2026-03-10 23:00") && boundary < at("2026-03-11 01:00"))
+
+        // Average typing speed: 500 characters typed across 10 minutes, inside an hour of
+        // otherwise mouse-driven work. Over active time that reads 1.7 WPM; over typing time, 10.
+        var raw = DailyRawCounters(day: "2026-03-10")
+        raw.characterKeyPresses = 500
+        raw.activeSeconds = 3600
+        for minute in 0..<10 { raw.charKeysPerMinute[minute] = 50 }
+        let typed = StatsEngine.summary(for: raw).avgWPM
+        write(String(format: "avgWPM over typing time = %.1f (over active time it was %.1f)\n",
+                     typed, (500.0 / 5) / 60.0))
+        check("avgWPM uses typing time", abs(typed - 10) < 0.01)
+
+        // Old records have no per-minute data and must still produce their previous figure rather
+        // than zero.
+        var legacy = DailyRawCounters(day: "2026-03-09")
+        legacy.characterKeyPresses = 600
+        legacy.activeSeconds = 3600
+        legacy.charKeysPerMinute = []
+        let fallback = StatsEngine.summary(for: legacy).avgWPM
+        check("legacy records fall back", abs(fallback - 2) < 0.01,
+              String(format: "%.2f", fallback))
+
+        write(failures == 0 ? "\nSESSIONS OK\n" : "\nSESSIONS \(failures) FAILURES\n")
+        exit(failures == 0 ? 0 : 1)
+    }
+
     // MARK: - Announcements (PAWPRINT_NOTICE)
 
     /// Exercises the notice pipeline end to end: decode, version targeting, language selection,

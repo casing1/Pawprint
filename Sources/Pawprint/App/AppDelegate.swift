@@ -146,6 +146,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { DebugSnapshot.openItemCatalogWindow() }
         }
 
+        if ProcessInfo.processInfo.environment["PAWPRINT_SESSIONS"] != nil {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { DebugSnapshot.probeSessionAccounting() }
+        }
+
         if ProcessInfo.processInfo.environment["PAWPRINT_NOTICE"] != nil {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { DebugSnapshot.probeAnnouncements() }
         }

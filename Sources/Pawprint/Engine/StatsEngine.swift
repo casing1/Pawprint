@@ -39,7 +39,20 @@ enum StatsEngine {
         })
         let backspaceCount = s.keyCategoryCounts[.backspace] ?? 0
         s.backspaceRatio = raw.totalKeyPresses > 0 ? Double(backspaceCount) / Double(raw.totalKeyPresses) : 0
-        if raw.activeSeconds > 0 {
+        // Averaged over the time actually spent typing, not over all active time.
+        //
+        // The denominator used to be `activeSeconds`, which includes reading, clicking and
+        // dragging. A day of mostly mouse work produced an "average WPM" of two or three — a true
+        // statement about input density, and nothing at all like an average typing speed, which
+        // is what the name promises and what anyone compares against.
+        //
+        // Minutes containing at least one character key are the closest honest denominator the
+        // stored data supports: it needs no new counter, it cannot exceed the day, and it degrades
+        // sensibly for old records, which fall back to the previous figure.
+        let typingMinutes = raw.charKeysPerMinute.filter { $0 > 0 }.count
+        if typingMinutes > 0 {
+            s.avgWPM = (Double(raw.characterKeyPresses) / 5.0) / Double(typingMinutes)
+        } else if raw.activeSeconds > 0 {
             s.avgWPM = (Double(raw.characterKeyPresses) / 5.0) / (Double(raw.activeSeconds) / 60.0)
         }
 

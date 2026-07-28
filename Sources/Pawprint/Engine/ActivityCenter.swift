@@ -125,6 +125,10 @@ final class ActivityCenter {
         flushTimer?.invalidate()
         tickTimer?.invalidate()
         summaryTimer?.invalidate()
+        // `activeSeconds` only accrues when a session closes, so quitting mid-session used to
+        // discard the whole thing — not a rounding error, the entire stretch since the last idle
+        // gap. Close it at the last observed activity, which is the last moment we know about.
+        closeActivitySession(endingAt: lastActivityTime ?? Date())
         persist()
     }
 
@@ -139,6 +143,7 @@ final class ActivityCenter {
         guard dirtySinceLastSummary else { return }
         dirtySinceLastSummary = false
         todaySummary = StatsEngine.summary(for: today, recentDays: recentDaysCache, dayStartHour: settings.dayStartHour)
+        addOpenSessionToSnapshot(now: now)
         if currentStreak == 0 { recomputeStreak() }
         AchievementEngine.shared.evaluate(summary: todaySummary, currentStreak: currentStreak)
         if let celebrated = RecordTracker.shared.evaluate(
@@ -160,6 +165,21 @@ final class ActivityCenter {
 
     /// Did a personal best fall on this day? Survives dismissing the banner and relaunching.
     func setARecord(on day: String) -> Bool { settings.recordDays.contains(day) }
+
+    /// Adds the session in progress to the *displayed* figures only.
+    ///
+    /// `activeSeconds` accrues when a session closes, so until then today's active time sat
+    /// unchanged however long the user had been working — it stepped forward in whole sessions
+    /// once the 90-second idle gap elapsed. The stored counters keep their old behaviour, so
+    /// nothing is double-counted when the session finally closes and the snapshot is rebuilt.
+    private func addOpenSessionToSnapshot(now: Date) {
+        guard let start = activitySessionStart else { return }
+        let end = min(max(lastActivityTime ?? start, start), now)
+        let elapsed = Int(end.timeIntervalSince(start))
+        guard elapsed > 0 else { return }
+        todaySummary.activeSeconds += elapsed
+        todaySummary.idleSeconds = max(0, todaySummary.idleSeconds - elapsed)
+    }
 
     @ObservationIgnored private var dirtySinceLastSummary = false
 
@@ -336,10 +356,22 @@ final class ActivityCenter {
         refreshSummary()
     }
 
+    /// Watches the two things that make `isRecordingActive` false, so the open session can be
+    /// closed the moment either becomes true.
+    private func suspendIfNeeded() {
+        let active = isRecordingActive
+        defer { wasRecordingActive = active }
+        guard wasRecordingActive, !active else { return }
+        endSessionForSuspension(at: Date())
+    }
+
+    @ObservationIgnored private var wasRecordingActive = true
+
     private func refreshExclusionState() {
         isCurrentAppExcluded = currentFrontmostBundleID.map { bundleID in
             settings.excludedApps.contains { $0.bundleID == bundleID }
         } ?? false
+        suspendIfNeeded()
     }
 
     // MARK: - Day rollover & persistence
@@ -347,6 +379,14 @@ final class ActivityCenter {
     private func rolloverIfNeeded(at date: Date) {
         let dayNow = DayKey.string(for: date, dayStartHour: settings.dayStartHour)
         guard dayNow != currentDayString else { return }
+        // Close the session in progress *at the boundary*, so its time lands on the day it was
+        // actually spent. This line used to be `activitySessionStart = nil` further down, which
+        // threw the whole session away — a night shift that ran past the day-start hour lost
+        // everything from its last idle gap to the boundary.
+        if let start = activitySessionStart {
+            let boundary = DayKey.nextDayStart(after: start, dayStartHour: settings.dayStartHour)
+            closeActivitySession(endingAt: max(boundary, start))
+        }
         persist()
         let finishedDay = currentDayString
         currentDayString = dayNow
@@ -354,7 +394,10 @@ final class ActivityCenter {
         recentCharKeyTimes.removeAll()
         typingStreakStart = nil
         lastCharKeyTime = nil
+        // Already closed above. The next event starts a fresh session in the new day; the gap
+        // from the boundary until then is genuinely unobserved, so it is not credited to either.
         activitySessionStart = nil
+        lastActivityTime = nil
         focusEngine.reset()
         SummaryCache.shared.invalidate(finishedDay)
         reloadRecentDaysCache()
@@ -456,6 +499,17 @@ final class ActivityCenter {
         sessionStart = date
         sessionKeyPresses = 0
         sessionClicks = 0
+    }
+
+    /// Ends the open session because recording is about to stop counting — paused, or the
+    /// frontmost app is excluded.
+    ///
+    /// Leaving it open meant the excluded stretch sat *inside* a session: coming back within the
+    /// idle gap, `markActivity` extended the same session rather than starting a new one, and the
+    /// time spent in the app the user asked not to record was billed as active anyway.
+    private func endSessionForSuspension(at date: Date) {
+        closeActivitySession(endingAt: min(lastActivityTime ?? date, date))
+        focusEngine.reset()
     }
 
     private func closeActivitySessionIfIdle(at date: Date) {
@@ -623,10 +677,36 @@ final class ActivityCenter {
     /// moved on to the next app, so the shared `beginEvent` gate would check the wrong app.
     func recordAppSession(_ session: AppSessionRecord) {
         guard !settings.isPaused, settings.collectAppUsage, !isExcluded(bundleID: session.bundleID) else { return }
+
+        // An app left open across the day-start hour belongs to both days. Rolling over first and
+        // filing the whole session under the new day credited the new day with hours nobody spent
+        // there, and left the finished day short by the same amount.
+        let boundary = DayKey.nextDayStart(after: session.start, dayStartHour: settings.dayStartHour)
+        if session.end > boundary, boundary > session.start {
+            var head = session
+            head.end = boundary
+            recordAppSessionPart(head)
+            var tail = session
+            tail.start = boundary
+            recordAppSessionPart(tail)
+            return
+        }
+        recordAppSessionPart(session)
+    }
+
+    /// Files one app session that is known to sit inside a single day.
+    private func recordAppSessionPart(_ session: AppSessionRecord) {
         rolloverIfNeeded(at: session.end)
-        today.appSessions.append(session)
-        if session.duration < 5 {
-            today.shortDwellCount += 1
+        let day = DayKey.string(for: session.start, dayStartHour: settings.dayStartHour)
+        if day == currentDayString {
+            today.appSessions.append(session)
+            if session.duration < 5 { today.shortDwellCount += 1 }
+        } else if var past = store.loadDay(day) {
+            // The head of a split session lands on a day we have already moved off.
+            past.appSessions.append(session)
+            if session.duration < 5 { past.shortDwellCount += 1 }
+            store.saveDay(past)
+            SummaryCache.shared.invalidate(day)
         }
         dirtySinceLastSummary = true
     }
