@@ -136,7 +136,7 @@ struct WrappedReport {
             (L10n.t("wrappedReport.866e0ee4"), Formatters.compactNumber(totalClicks)),
             (L10n.t("wrappedReport.da8dd921"), Formatters.longSpan(totalFocus)),
             (L10n.t("wrappedReport.7c2c694b"), Formatters.compactDistance(meters: totalCursor)),
-            (L10n.t("wrappedReport.daa69457"), Formatters.compactNumber(Int(totalScroll)) + L10n.t("wrappedReport.43c786f1")),
+            (L10n.t("wrappedReport.daa69457"), L10n.t("wrappedReport.5d3b8ef3", Formatters.compactNumber(Int(totalScroll)))),
             (L10n.t("wrappedReport.50922e57"), bestWPMDay.map { Formatters.wpm($0.maxWPM) } ?? "-"),
         ]
 

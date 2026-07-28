@@ -18,8 +18,10 @@
 
 <br><br>
 
-**Pawprint sits in your menu bar and turns how you used your Mac into a cat.**<br>
-Counts and durations only — never what you type. Everything stays on your Mac.
+**How busy was your Mac today? Pawprint keeps count, and gives you a cat for it.**<br>
+Keys and clicks, yes — but also how far your cursor walked, how many screens you scrolled past,
+how often you jumped between apps, how long you actually stayed put, and how much battery the
+whole business cost. Counts and durations only, never content. Everything stays on your Mac.
 
 <br>
 
@@ -30,40 +32,48 @@ Counts and durations only — never what you type. Everything stays on your Mac.
 <td align="center"><img src="docs/images/shots/menubar-cat-asleep.gif" alt="Sleeping cat icon" width="230"></td>
 </tr>
 <tr>
-<td align="center"><sub>The paw wiggles as you type</sub></td>
+<td align="center"><sub>A paw, wiggling along</sub></td>
 <td align="center"><sub>…or a cat, swishing its tail</sub></td>
 <td align="center"><sub>…which curls up when you stop</sub></td>
 </tr>
 </table>
 
-<sub>Both keep pace with how fast you're typing. Pick either in Settings.</sub>
+<sub>Both speed up when you do and doze off when you don't. Pick either in Settings.</sub>
 
 <br>
 
 <table>
 <tr>
 <td width="50%"><img src="docs/images/shots/en-popover-today.png" alt="Today"></td>
-<td width="50%"><img src="docs/images/shots/en-popover-calendar.png" alt="Calendar"></td>
+<td width="50%"><img src="docs/images/shots/en-popover-today-more.png" alt="Further down the Today tab"></td>
 </tr>
 <tr>
-<td align="center"><b>Today</b><br><sub>A score out of 100, the persona your day fits, where it ranks against every day you've recorded, and a 24-hour clock of when you were busy.</sub></td>
-<td align="center"><b>Calendar</b><br><sub>Every day coloured by whichever metric you pick. Streaks, averages, and the story of any single day.</sub></td>
+<td align="center"><b>One number for the whole day</b><br><sub>Scored out of 100, given a persona to match, and ranked against every day you've ever recorded — with a 24-hour clock of when you were actually at it.</sub></td>
+<td align="center"><b>Keep scrolling</b><br><sub>Your day converted into things you can picture — metres your cursor covered, screen-heights you scrolled, what the battery you spent could have charged — and which keys took the beating.</sub></td>
 </tr>
 <tr>
-<td><img src="docs/images/shots/en-popover-gallery.png" alt="Cats"></td>
+<td><img src="docs/images/shots/en-popover-calendar.png" alt="Calendar"></td>
 <td><img src="docs/images/shots/en-popover-records.png" alt="Records"></td>
 </tr>
 <tr>
-<td align="center"><b>One cat per day, kept</b><br><sub>Each day generates a cat scored out of 100 for rarity. Sort the collection, or filter down to the days you earned wings.</sub></td>
-<td align="center"><b>Levels that never run out</b><br><sub>Eleven tracks with targets that keep growing, plus lifetime totals and a monthly retrospective.</sub></td>
+<td align="center"><b>Months at a glance</b><br><sub>Every day coloured by whichever metric you pick. Streaks and averages, plus a weekly rhythm grid that shows which hours of which days are really yours.</sub></td>
+<td align="center"><b>Levels that never run out</b><br><sub>Eleven tracks — typing, clicking, scrolling, focus, screen time, power, app switching and more — with targets that keep growing. Lifetime totals and a monthly retrospective sit underneath.</sub></td>
+</tr>
+<tr>
+<td><img src="docs/images/shots/en-popover-gallery.png" alt="Cats"></td>
+<td><img src="docs/images/shots/en-share-card.png" alt="Shareable card"></td>
+</tr>
+<tr>
+<td align="center"><b>One cat per day, kept</b><br><sub>Every day mints a cat and scores it out of 100 for rarity. A quiet Sunday and a frantic Tuesday produce visibly different animals.</sub></td>
+<td align="center"><b>Worth showing off</b><br><sub>One button copies the day — or your lifetime totals — as an image, ready to paste anywhere.</sub></td>
 </tr>
 <tr>
 <td><img src="docs/images/shots/en-achievements.png" alt="Achievements"></td>
 <td><img src="docs/images/shots/en-items.png" alt="Item list"></td>
 </tr>
 <tr>
-<td align="center"><b>Nine hidden achievements</b><br><sub>Empty slots until they fire. Their conditions look for an unusual shape in a day, not a bigger number.</sub></td>
-<td align="center"><b>Every item, explained</b><br><sub>What each frame, charm, collar and expression means, when it appears, and what it is worth.</sub></td>
+<td align="center"><b>Nine hidden achievements</b><br><sub>Empty slots until they fire. Their conditions look for an unusual <i>shape</i> in a day, not simply a bigger number.</sub></td>
+<td align="center"><b>Every item, explained</b><br><sub>What each frame, charm, collar and expression means, when it shows up, and what it is worth.</sub></td>
 </tr>
 </table>
 
@@ -75,6 +85,20 @@ Around <b>171 trillion</b> combinations are reachable.</sub>
 </div>
 
 <br>
+
+## What it notices
+
+| | |
+|---|---|
+| **Keyboard** | Presses per physical key, typing speed, longest unbroken stretch, shortcuts, how much of it was backspace |
+| **Pointer** | Clicks, double-clicks, drags, distance your cursor travelled, distance you scrolled, how often you changed direction |
+| **Apps** | Which app you were in and for how long, switches, restless two-second visits, and where each key and click actually landed |
+| **Focus** | Uninterrupted stretches, and which app kept breaking them |
+| **Time** | Active time, screen-on time, first and last activity of the day |
+| **Your Mac** | Battery spent, charger and lid, locks and wakes, external displays, audio output changes, bytes moved |
+| **Clipboard** | Copy, paste and cut counts, and whether it was text, an image or a file |
+
+Everything above is a **number or a duration**. None of it describes what you were doing.
 
 ## What it never stores
 
@@ -92,6 +116,9 @@ Pawprint makes two kinds of request, both to GitHub and both behind the same swi
 Settings → Updates: it checks for a new version, and it fetches the notices shown in the popover.
 Neither sends anything about you or your Mac. Turn that switch off and the app is entirely
 offline. There is no analytics or usage reporting of any kind.
+
+Recording is always visible in the menu bar, can be paused at any time, and individual apps can be
+excluded. Deleting everything takes one button.
 
 ## Permissions
 

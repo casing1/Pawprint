@@ -62,10 +62,11 @@ struct PunchCardView: View {
         VStack(spacing: 2) {
             ForEach(0..<7, id: \.self) { weekday in
                 HStack(spacing: 2) {
-                    Text(Formatters.weekdayName(weekday))
+                    Text(Formatters.weekdayInitial(weekday))
                         .font(.system(size: 8))
                         .foregroundStyle(.tertiary)
                         .frame(width: 12, alignment: .leading)
+                        .help(Formatters.weekdayName(weekday))
                     ForEach(0..<24, id: \.self) { hour in
                         RoundedRectangle(cornerRadius: 1.5)
                             .fill(color(for: grid[weekday][hour]))

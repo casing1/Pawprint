@@ -98,22 +98,6 @@ enum QuestTrack: String, CaseIterable, Identifiable {
         }
     }
 
-    var unit: String {
-        switch self {
-        case .keys: return L10n.t("levelSystem.31618a08")
-        case .clicks: return L10n.t("levelSystem.6e3b1fc9")
-        case .cursor: return "m"
-        case .scroll: return L10n.t("levelSystem.43c786f1")
-        case .focus: return L10n.t("levelSystem.6c35133c")
-        case .screenTime: return L10n.t("levelSystem.6c35133c")
-        case .appSwitches: return L10n.t("levelSystem.2fc05c02")
-        case .clipboard: return L10n.t("levelSystem.2fc05c02")
-        case .shortcuts: return L10n.t("levelSystem.2fc05c02")
-        case .days: return L10n.t("levelSystem.06cf3e90")
-        case .energy: return "Wh"
-        }
-    }
-
     /// Level 1's threshold. Later levels multiply this by `growth` repeatedly.
     var baseThreshold: Double {
         switch self {
@@ -192,20 +176,27 @@ enum QuestTrack: String, CaseIterable, Identifiable {
         return table[min(level, table.count) - 1]
     }
 
+    /// Value with its unit, written the way the loaded language writes it.
+    ///
+    /// Each unit is a full template rather than a bare word glued onto the number. Korean attaches
+    /// its units ("32,406회") and English does not ("32,406 times"), and concatenating in code
+    /// could only be right for one of them — it printed "32,406times" and "322KClicking".
     func formatted(_ value: Double) -> String {
+        let number = Formatters.compactNumber(Int(value.rounded()))
         switch self {
         case .focus, .screenTime:
             return Formatters.hoursValue(value)
         case .cursor:
             return Formatters.compactDistance(meters: value)
-        case .scroll:
-            return Formatters.compactNumber(Int(value.rounded())) + L10n.t("levelSystem.43c786f1")
         case .energy:
             return value >= 1000
                 ? String(format: "%.1fkWh", value / 1000)
                 : String(format: "%.0fWh", value)
-        default:
-            return Formatters.compactNumber(Int(value.rounded())) + unit
+        case .keys: return L10n.t("levelSystem.a7c3c02f", number)
+        case .clicks: return L10n.t("levelSystem.8dc0c89d", number)
+        case .scroll: return L10n.t("levelSystem.5d3b8ef3", number)
+        case .appSwitches, .clipboard, .shortcuts: return L10n.t("levelSystem.cf3d71b3", number)
+        case .days: return L10n.t("levelSystem.cec3694e", number)
         }
     }
 }

@@ -27,8 +27,8 @@ final class MenuBarIconAnimator {
     /// Set via the PAWPRINT_DEBUG_PAW env var to log tick/frame activity to stderr.
     @ObservationIgnored private let debugLogging = ProcessInfo.processInfo.environment["PAWPRINT_DEBUG_PAW"] != nil
 
-    /// One cycle. The paw completes four wiggles per cycle and the cat one tail wave, so a single
-    /// frame clock drives both without the cat looking frantic.
+    /// One cycle: one paw wiggle, or one tail wave. Both icons share the frame clock, so keeping
+    /// them to one motion per cycle is what makes them move at the same pace.
     ///
     /// Doubled from 24 with the per-frame intervals halved to match, so each cycle takes the same
     /// time as before at twice the frame rate. At 24 the slow end of the range was three frames a
@@ -39,16 +39,19 @@ final class MenuBarIconAnimator {
     /// Canvas is larger than the glyph so rotated corners aren't clipped.
     private static let canvasSize: CGFloat = 22
 
-    /// Wiggle poses: a soft sine sway plus a half-rate bob, so it eases at the extremes instead
-    /// of ticking like a metronome.
-    /// Divided by 12, not `frameCount`, so lengthening the cycle for the cat left the paw's
-    /// rhythm exactly as it was.
+    /// Wiggle poses: a soft sine sway plus a bob, so it eases at the extremes instead of ticking
+    /// like a metronome.
+    ///
+    /// Divided by `frameCount`, like the cat. It used to divide by 12 — a leftover from when the
+    /// cycle *was* 12 frames — so when the cycle was lengthened for the cat, the paw kept its old
+    /// rhythm and ran four wiggles for every one of the cat's tail waves. Side by side the paw
+    /// looked frantic next to the same app's other icon.
     private static let angles: [CGFloat] = (0..<frameCount).map { step in
-        let t = Double(step) / 12 * 2 * .pi
+        let t = Double(step) / Double(frameCount) * 2 * .pi
         return CGFloat(sin(t) * 9)
     }
     private static let bobs: [CGFloat] = (0..<frameCount).map { step in
-        let t = Double(step) / 12 * 2 * .pi
+        let t = Double(step) / Double(frameCount) * 2 * .pi
         return CGFloat(-abs(sin(t * 2)) * 1.1)
     }
 

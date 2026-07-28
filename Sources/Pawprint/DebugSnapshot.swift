@@ -1002,9 +1002,36 @@ enum DebugSnapshot {
         // the Records tab — not whatever happens to be announced that week.
         AnnouncementCenter.shared.announcements = []
 
+        // The share card is an image the app generates, not a window, so it is written straight
+        // out at the size the user actually gets on their clipboard.
+        if let card = ShareCardRenderer.image(
+            for: .today(ActivityCenter.shared.todaySummary),
+            metrics: MetricCatalog.shareMetrics(settings: ActivityCenter.shared.settings)),
+           let tiff = card.tiffRepresentation,
+           let png = NSBitmapImageRep(data: tiff)?.representation(using: .png, properties: [:]) {
+            try? png.write(to: URL(fileURLWithPath: "\(directory)/\(language)-share-card.png"))
+            write("shot \(language)-share-card.png\n")
+        }
+
+        let tallHeight = PopoverRootView.scrollHeight
         var steps: [(String, () -> Void)] = []
         for tab in PopoverTab.allCases {
-            steps.append(("popover-\(tab)", { controller.showPopover(on: tab) }))
+            steps.append(("popover-\(tab)", {
+                PopoverRootView.shotScrollAnchor = nil
+                // The Calendar tab is the short one; at the height that fits the others it came
+                // out with a third of the image empty.
+                PopoverRootView.scrollHeight = tab == .calendar ? 700 : tallHeight
+                controller.showPopover(on: tab)
+            }))
+            // Today is about twice as tall as the others, so its first screen leaves out the fun
+            // facts and the keyboard heatmap entirely. Second shot, shorter and bottom-anchored.
+            if tab == .today {
+                steps.append(("popover-today-more", {
+                    PopoverRootView.shotScrollAnchor = PopoverRootView.funFactsAnchor
+                    PopoverRootView.scrollHeight = 900
+                    controller.showPopover(on: .today)
+                }))
+            }
         }
 
         // The sheets and the settings window are their own windows, so they are captured after

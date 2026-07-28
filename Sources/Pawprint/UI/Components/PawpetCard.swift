@@ -36,16 +36,20 @@ struct PawpetCard: View {
                         Spacer()
                     }
                     Text(traits.caption).font(.callout.weight(.semibold))
-                    ForEach(visible, id: \.trait) { note in
-                        HStack(alignment: .top, spacing: 4) {
-                            Text(note.trait)
-                                .font(.system(size: 9, weight: .semibold))
-                                .foregroundStyle(.tertiary)
-                                .frame(width: 26, alignment: .leading)
-                            Text(note.reason)
-                                .font(.system(size: 10))
-                                .foregroundStyle(.secondary)
-                                .fixedSize(horizontal: false, vertical: true)
+                    Grid(alignment: .leadingFirstTextBaseline,
+                         horizontalSpacing: 5, verticalSpacing: 3) {
+                        ForEach(visible, id: \.trait) { note in
+                            GridRow {
+                                Text(note.trait)
+                                    .font(.system(size: 9, weight: .semibold))
+                                    .foregroundStyle(.tertiary)
+                                    .fixedSize()
+                                    .gridColumnAlignment(.leading)
+                                Text(note.reason)
+                                    .font(.system(size: 10))
+                                    .foregroundStyle(.secondary)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
                         }
                     }
                 }

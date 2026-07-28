@@ -153,8 +153,8 @@ struct RecordsView: View {
                           exact: Formatters.exactNumber(stats.totalClicks))
                 totalTile(L10n.t("recordsView.4a489ead"), Formatters.compactDistance(meters: stats.cursorDistanceMeters), "figure.run",
                           exact: Formatters.exactNumber(Int(stats.cursorDistanceMeters)) + "m")
-                totalTile(L10n.t("recordsView.cf561eea"), Formatters.compactNumber(Int(stats.scrollScreens)) + L10n.t("recordsView.43c786f1"), "scroll",
-                          exact: Formatters.exactNumber(Int(stats.scrollScreens)) + L10n.t("recordsView.43c786f1"))
+                totalTile(L10n.t("recordsView.cf561eea"), L10n.t("recordsView.5d3b8ef3", Formatters.compactNumber(Int(stats.scrollScreens))), "scroll",
+                          exact: L10n.t("recordsView.5d3b8ef3", Formatters.exactNumber(Int(stats.scrollScreens))))
                 totalTile(L10n.t("recordsView.49d8f80b"), Formatters.longSpan(stats.totalActiveSeconds), "clock",
                           exact: Formatters.exactDuration(stats.totalActiveSeconds))
                 totalTile(L10n.t("recordsView.0c36eb4f"), Formatters.longSpan(stats.totalScreenOnSeconds), "display",

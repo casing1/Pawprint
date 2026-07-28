@@ -25,9 +25,22 @@ struct PopoverRootView: View {
     static let gallerySort: PawpetGalleryView.SortField =
         ProcessInfo.processInfo.environment["PAWPRINT_SHOT_SORT"] == "date" ? .date : .rarity
 
-    static let scrollHeight: CGFloat =
+    /// `var`, not `let`, only so the capture harness can shoot one tab at two different heights
+    /// in a single run. Nothing in the app writes it.
+    static var scrollHeight: CGFloat =
         ProcessInfo.processInfo.environment["PAWPRINT_SHOT_HEIGHT"].flatMap { CGFloat(Double($0) ?? 0) }
             ?? 520
+
+    /// Capture only: opens the popover already scrolled to a named section.
+    ///
+    /// The Today tab is roughly twice the height of the tallest screenshot worth putting in a
+    /// README, so the half below the fold — the fun facts and the keyboard heatmap — needs a shot
+    /// of its own rather than a taller version of the first one. Anchored to a section rather than
+    /// to the foot so the shot starts on a card boundary instead of halfway through one.
+    static var shotScrollAnchor: String?
+
+    /// The section the second Today screenshot starts from.
+    static let funFactsAnchor = "pawprint.scroll.funfacts"
 
     /// Screenshot capture opens the popover directly on the tab it wants; everywhere else this
     /// defaults to Today exactly as before.
@@ -91,16 +104,24 @@ struct PopoverRootView: View {
             .padding(.horizontal, 14)
             .padding(.top, 8)
 
-            ScrollView {
-                Group {
-                    switch tab {
-                    case .today: TodayView()
-                    case .calendar: CalendarView()
-                    case .gallery: PawpetGalleryView(initialSort: PopoverRootView.gallerySort)
-                    case .records: RecordsView()
+            ScrollViewReader { proxy in
+                ScrollView {
+                    Group {
+                        switch tab {
+                        case .today: TodayView()
+                        case .calendar: CalendarView()
+                        case .gallery: PawpetGalleryView(initialSort: PopoverRootView.gallerySort)
+                        case .records: RecordsView()
+                        }
                     }
+                    .frame(maxWidth: .infinity)
                 }
-                .frame(maxWidth: .infinity)
+                .onAppear {
+                    guard let anchor = Self.shotScrollAnchor else { return }
+                    // A frame later: on the first pass the tab's own content has not been laid
+                    // out yet, so there is nothing to scroll and the anchor is already on screen.
+                    DispatchQueue.main.async { proxy.scrollTo(anchor, anchor: .top) }
+                }
             }
             // Tall enough for the whole tab when capturing README screenshots: the popover is a
             // scrolling view, and a shot of its first 520 points leaves out the heatmap, the

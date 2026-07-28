@@ -182,9 +182,9 @@ enum MetricCatalog {
             explanationKey: "metricCatalog.472edd57",
             category: .mouse,
             value: { $0.scrollScreens },
-            display: { Formatters.compactNumber(Int($0.scrollScreens.rounded())) + L10n.t("metricCatalog.43c786f1") },
+            display: { L10n.t("metricCatalog.5d3b8ef3", Formatters.compactNumber(Int($0.scrollScreens.rounded()))) },
             lifetimeValue: { $0.scrollScreens },
-            lifetimeDisplay: { Formatters.compactNumber(Int($0.scrollScreens.rounded())) + L10n.t("metricCatalog.43c786f1") }
+            lifetimeDisplay: { L10n.t("metricCatalog.5d3b8ef3", Formatters.compactNumber(Int($0.scrollScreens.rounded()))) }
         ),
 
         // MARK: Apps

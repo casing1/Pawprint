@@ -189,7 +189,7 @@ enum Formatters {
     /// minutes, because "0.2시간 / 0.2시간" made a progress bar look stuck at its own target.
     static func hoursValue(_ hours: Double) -> String {
         if hours < 1 { return L10n.t("formatters.bfecc441", Int((hours * 60).rounded())) }
-        if hours >= 100 { return compactNumber(Int(hours)) + L10n.t("formatters.6c35133c") }
+        if hours >= 100 { return L10n.t("formatters.0967e5ff", compactNumber(Int(hours))) }
         return String(format: L10n.t("formatters.3dd100c4"), hours)
     }
 
@@ -215,7 +215,30 @@ enum Formatters {
         hourLabel(hour24) + L10n.t("formatters.30f39b92")
     }
 
-    /// Korean weekday name for a 0-based index where 0 = Sunday.
+    /// "3월" / "Mar" — the axis label under the monthly trend bars.
+    ///
+    /// Read from the locale rather than the language pack. Korean writes the month with the same
+    /// word it uses for Monday, so both shared one extracted key and the English axis came out as
+    /// "03Mon". Month names are something every locale already knows.
+    static func monthLabel(_ month: String) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = LocalizationManager.activeLocale
+        guard let index = Int(month.suffix(2)), (1...12).contains(index),
+              let names = formatter.shortStandaloneMonthSymbols, names.count == 12 else { return month }
+        return names[index - 1]
+    }
+
+    /// Single-letter weekday initial, for grids whose gutter fits one character.
+    ///
+    /// The punch card and the calendar gutter were laid out around Korean weekday names, which are
+    /// one character each. English ones are three, and they ran over the grid. Taking the initial
+    /// keeps the layout identical in every language; the full name is still in the tooltip.
+    static func weekdayInitial(_ index: Int) -> String {
+        let name = weekdayName(index)
+        return name.first.map(String.init) ?? name
+    }
+
+    /// Weekday name for a 0-based index where 0 = Sunday.
     static func weekdayName(_ index: Int) -> String {
         let names = [L10n.t("formatters.06cf3e90"), L10n.t("formatters.75448692"), L10n.t("formatters.adb4a282"), L10n.t("formatters.c04eb2ef"), L10n.t("formatters.5664a634"), L10n.t("formatters.cf5632c7"), L10n.t("formatters.b9e40662")]
         guard index >= 0 && index < names.count else { return "?" }

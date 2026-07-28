@@ -165,9 +165,10 @@ struct CalendarView: View {
                 Group {
                     // Only label alternating rows so the gutter stays uncluttered.
                     if index % 2 == 1 {
-                        Text(Formatters.weekdayName(index))
+                        Text(Formatters.weekdayInitial(index))
                             .font(.system(size: 8))
                             .foregroundStyle(.tertiary)
+                            .help(Formatters.weekdayName(index))
                     } else {
                         Color.clear
                     }
@@ -303,7 +304,7 @@ struct CalendarView: View {
                                 RoundedRectangle(cornerRadius: 3)
                                     .fill(Color.accentColor.opacity(value > 0 ? 0.75 : 0.2))
                                     .frame(height: peak > 0 ? max(3, 46 * value / peak) : 3)
-                                Text(String(month.suffix(2)) + L10n.t("calendarView.75448692"))
+                                Text(Formatters.monthLabel(month))
                                     .font(.system(size: 8))
                                     .foregroundStyle(.tertiary)
                             }

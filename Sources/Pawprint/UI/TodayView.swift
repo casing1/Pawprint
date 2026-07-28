@@ -79,6 +79,7 @@ struct TodayView: View {
             }
 
             funFactsSection
+                .id(PopoverRootView.funFactsAnchor)
 
             if !summary.energyFacts.isEmpty {
                 EnergyCard(lines: summary.energyFacts.map(\.text), drainedPercent: summary.batteryDrainedPercent)
