@@ -10,7 +10,8 @@ name: Announcements
 # So this workflow reads the issues once, with the runner's own token, and writes the result to a
 # static file served by raw.githubusercontent.com — a CDN with no such limit. The authoring
 # workflow is unchanged from calling the API live: open an issue to publish, close it to retract.
-# The only cost is the half-minute this takes to run.
+# The cost is propagation delay — this run plus up to 5 minutes of CDN caching, measured at about
+# six minutes end to end.
 
 on:
   issues:

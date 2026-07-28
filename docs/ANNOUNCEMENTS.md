@@ -6,7 +6,7 @@ In-app notices are **GitHub issues**. Open one to publish it; close it to retrac
 
 1. Open an issue on this repository.
 2. Add the `announcement` label.
-3. That's it — within about half a minute it appears in every running copy of Pawprint.
+3. That's it — it reaches running copies of Pawprint within about five minutes.
 
 Optional labels:
 
@@ -56,8 +56,10 @@ a few dozen installs would exhaust the quota for everyone on it, breaking announ
 update check, with nothing on screen to explain why. Reading the issues once in CI and serving a
 static file from a CDN gives the same authoring workflow with none of that exposure.
 
-The cost is a delay of roughly half a minute between closing an issue and the feed catching up,
-plus a daily scheduled run in case an issue event is ever missed.
+The cost is propagation delay: about 30 seconds for the workflow, plus up to 5 minutes of CDN
+caching (`raw.githubusercontent.com` serves `Cache-Control: max-age=300`, and a cache-busting query
+string does not defeat it — measured). Call it six minutes from closing an issue to the notice
+disappearing. There is also a daily scheduled run in case an issue event is ever missed.
 
 ## Dismissal
 

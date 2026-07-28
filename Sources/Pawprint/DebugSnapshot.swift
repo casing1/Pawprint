@@ -747,6 +747,31 @@ enum DebugSnapshot {
         }
         ActivityCenter.shared.updateSettings(restore)
 
+        // The published feed, over the network, exactly as the app fetches it. Local decoding
+        // passing says nothing about whether the workflow is actually publishing anything.
+        //
+        // Done in a Task that owns the rest of the probe rather than by blocking on a semaphore:
+        // waiting on the main thread for a `@MainActor` Task deadlocks, because the Task needs
+        // the thread being blocked. (It did, and reported an empty feed that was actually fine.)
+        guard ProcessInfo.processInfo.environment["PAWPRINT_NOTICE_LIVE"] != nil else {
+            finishAnnouncementProbe(failures)
+            return
+        }
+        Task { @MainActor in
+            var failures = failures
+            AnnouncementCenter.shared.announcements = []
+            await AnnouncementCenter.shared.refresh()
+            let live = AnnouncementCenter.shared.announcements
+            write("\nlive feed: \(live.count) announcement(s)\n")
+            for item in live { write("  \(item.id)  \(item.title(for: "ko"))\n") }
+            if live.isEmpty { write("FAIL live feed is empty\n"); failures += 1 }
+            center.announcements = feed.announcements
+            finishAnnouncementProbe(failures)
+        }
+    }
+
+    @MainActor
+    private static func finishAnnouncementProbe(_ failures: Int) {
         write(failures == 0 ? "\nNOTICE OK\n" : "\nNOTICE \(failures) FAILURES\n")
         exit(failures == 0 ? 0 : 1)
     }
