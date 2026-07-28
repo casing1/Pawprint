@@ -129,11 +129,19 @@ struct AppSettings: Codable {
     /// fix exists. It is still the app's only network request, it is disclosed in the first-run
     /// wizard, and this toggle turns it off for good — after which Pawprint is fully offline.
     var updateCheckEnabled: Bool = true
-    /// Feed URL. Defaults to this project's GitHub Releases so a fresh install already knows
-    /// where updates come from.
+    /// Where updates come from. Fixed, and no longer editable in Settings.
+    ///
+    /// It was a text field, which made "which app gets installed on your Mac" a user-editable
+    /// string — signature checking limits the damage, but there is no reason to expose it at all.
+    /// Kept as a stored property only so old settings files still decode; the value is forced back
+    /// to the constant on load.
     var updateFeedURL: String = UpdateDistribution.feedURL
     /// Skip the daily background check but keep the manual button working.
     var updateCheckAutomatically: Bool = true
+
+    /// Ids of project notices the user pressed "don't show again" on. Reading a notice does not
+    /// put its id here — only that button does.
+    var dismissedAnnouncements: [String] = []
 
 
     /// Automatic update checks shipped as opt-in first and became the default afterwards. Without
@@ -149,7 +157,7 @@ struct AppSettings: Codable {
         guard !updateDefaultsMigrated else { return nil }
         var updated = self
         updated.updateCheckEnabled = true
-        if updated.updateFeedURL.isEmpty { updated.updateFeedURL = UpdateDistribution.feedURL }
+        updated.updateFeedURL = UpdateDistribution.feedURL
         updated.updateDefaultsMigrated = true
         return updated
     }
@@ -175,7 +183,7 @@ struct AppSettings: Codable {
 
     private enum CodingKeys: String, CodingKey {
         case notifiedQuestLevels, notificationDay, notificationCountToday, celebratedRecords
-        case recordDays
+        case recordDays, dismissedAnnouncements
         case hasCompletedOnboarding
         case updateCheckEnabled, updateFeedURL, updateCheckAutomatically, updateDefaultsMigrated
         case launchAtLogin, showDockIcon, menuBarMetric, dayStartHour, theme, language
@@ -198,6 +206,8 @@ struct AppSettings: Codable {
         notifiedQuestLevels = try c.decodeIfPresent([String: Int].self, forKey: .notifiedQuestLevels) ?? fallback.notifiedQuestLevels
         celebratedRecords = try c.decodeIfPresent([String].self, forKey: .celebratedRecords) ?? fallback.celebratedRecords
         recordDays = try c.decodeIfPresent([String].self, forKey: .recordDays) ?? fallback.recordDays
+        dismissedAnnouncements = try c.decodeIfPresent([String].self, forKey: .dismissedAnnouncements)
+            ?? fallback.dismissedAnnouncements
         notificationDay = try c.decodeIfPresent(String.self, forKey: .notificationDay) ?? fallback.notificationDay
         notificationCountToday = try c.decodeIfPresent(Int.self, forKey: .notificationCountToday) ?? fallback.notificationCountToday
         hasCompletedOnboarding = try c.decodeIfPresent(Bool.self, forKey: .hasCompletedOnboarding) ?? fallback.hasCompletedOnboarding
@@ -261,6 +271,7 @@ struct AppSettings: Codable {
         try c.encode(notifiedQuestLevels, forKey: .notifiedQuestLevels)
         try c.encode(celebratedRecords, forKey: .celebratedRecords)
         try c.encode(recordDays, forKey: .recordDays)
+        try c.encode(dismissedAnnouncements, forKey: .dismissedAnnouncements)
         try c.encode(notificationDay, forKey: .notificationDay)
         try c.encode(notificationCountToday, forKey: .notificationCountToday)
         try c.encode(hasCompletedOnboarding, forKey: .hasCompletedOnboarding)

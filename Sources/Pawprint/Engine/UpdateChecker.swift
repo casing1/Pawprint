@@ -111,9 +111,16 @@ final class UpdateChecker {
         Task { @MainActor in
             try? await Task.sleep(for: .seconds(8))
             await self.checkIfIdle(feedURL: feed)
+            await AnnouncementCenter.shared.refresh()
         }
-        scheduleTimer = Timer.scheduledTimer(withTimeInterval: 6 * 3600, repeats: true) { _ in
-            Task { @MainActor in await self.checkIfIdle(feedURL: feed) }
+        // Hourly. `checkIfIdle` already skips the check while the user is at the keyboard and the
+        // result is a silent banner, so a shorter interval costs one small request and gets fixes
+        // to people the same day rather than the next.
+        scheduleTimer = Timer.scheduledTimer(withTimeInterval: 3600, repeats: true) { _ in
+            Task { @MainActor in
+                await self.checkIfIdle(feedURL: feed)
+                await AnnouncementCenter.shared.refresh()
+            }
         }
     }
 

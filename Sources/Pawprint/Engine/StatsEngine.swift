@@ -383,18 +383,43 @@ enum StatsEngine {
         return min(100, rawScore)
     }
 
+    /// How scattered the day was, 0...100.
+    ///
+    /// Every term is a **rate or a ratio**, never a raw count. The previous version added
+    /// `shortDwellCount * 2 + interruptions * 1.5` straight into the score, and both of those grow
+    /// with how long the Mac was used — so an eight-hour day pinned the index at 100 no matter how
+    /// calmly it was spent, and the number stopped saying anything. Two hundred short app visits
+    /// over eight hours is a normal working day; two hundred in one hour is not, and only the
+    /// second is chaos.
+    ///
+    /// Each facet is scaled against a reference value that stands for "about as scattered as this
+    /// gets", clamped to 0...1, then combined by weight. Reaching 100 means maxing out all four
+    /// at once, which is the point: it should be a remark about an unusual day, not the default.
     private static func chaosIndex(raw: DailyRawCounters) -> Double {
-        let switchesPerHour: Double
+        let hours: Double
         if let first = raw.firstActivity, let last = raw.lastActivity, last > first {
-            let hours = max(last.timeIntervalSince(first) / 3600, 0.25)
-            switchesPerHour = Double(raw.totalAppSwitches) / hours
+            hours = max(last.timeIntervalSince(first) / 3600, 0.25)
         } else {
-            switchesPerHour = 0
+            hours = 0
         }
-        let interruptions = Double(raw.focusInterruptionsByApp.values.reduce(0, +))
+        guard hours > 0 else { return 0 }
+
+        func scaled(_ value: Double, reference: Double) -> Double {
+            min(1, max(0, value / reference))
+        }
+
+        // One app switch a minute, sustained, is about as restless as a day gets.
+        let switching = scaled(Double(raw.totalAppSwitches) / hours, reference: 60)
+        // What share of app visits were fleeting — a ratio already, so day length cancels out.
+        let shortDwell = raw.totalAppSwitches > 0
+            ? scaled(Double(raw.shortDwellCount) / Double(raw.totalAppSwitches), reference: 0.6)
+            : 0
+        let interrupting = scaled(Double(raw.focusInterruptionsByApp.values.reduce(0, +)) / hours,
+                                  reference: 12)
         let burstiness = burstinessScore(raw.activityPerMinute)
-        let rawScore = switchesPerHour * 1.5 + Double(raw.shortDwellCount) * 2 + interruptions * 1.5 + burstiness * 20
-        return min(100, rawScore)
+
+        let weighted = switching * 0.30 + shortDwell * 0.25 + interrupting * 0.25 + burstiness * 0.20
+        return min(100, weighted * 100)
     }
 
     /// How spiky the minute-by-minute activity is relative to its own average — a crude proxy

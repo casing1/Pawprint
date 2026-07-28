@@ -660,6 +660,159 @@ enum DebugSnapshot {
         exit(0)
     }
 
+    // MARK: - Announcements (PAWPRINT_NOTICE)
+
+    /// Exercises the notice pipeline end to end: decode, version targeting, language selection,
+    /// and the dismissal rule — which is the part worth guarding, because "reading it dismisses
+    /// it" is the easy mistake and would silently defeat the whole feature.
+    @MainActor
+    static func probeAnnouncements() {
+        var failures = 0
+        let path = ProcessInfo.processInfo.environment["PAWPRINT_NOTICE"] ?? "docs/announcements.json"
+
+        guard let data = FileManager.default.contents(atPath: path),
+              let feed = try? JSONDecoder().decode(AnnouncementFeed.self, from: data) else {
+            write("FAIL cannot decode \(path)\n"); exit(1)
+        }
+        write("decoded \(feed.announcements.count) announcement(s) from \(path)\n\n")
+
+        for item in feed.announcements {
+            write("[\(item.id)] severity=\(item.severity ?? "info") published=\(item.publishedAt ?? "-")\n")
+            for language in ["ko", "en"] {
+                let title = item.title(for: language)
+                let body = item.body(for: language)
+                write("  \(language): \(title)  (\(body.count) chars)\n")
+                if title.isEmpty { write("FAIL empty title for \(language)\n"); failures += 1 }
+                if body.count < 40 { write("FAIL body too short for \(language)\n"); failures += 1 }
+            }
+            // A notice nobody can see is worse than none.
+            if !item.applies(to: UpdateChecker.shared.currentVersion) {
+                write("FAIL does not apply to the current version\n"); failures += 1
+            }
+        }
+
+        // Version bounds.
+        var bounded = feed.announcements[0]
+        bounded.minVersion = "0.3.0"
+        bounded.maxVersion = "0.3.9"
+        // 0.3.10 is *above* 0.3.9, so an upper bound of 0.3.9 excludes it. Lexicographic
+        // comparison would order it below and wrongly let it through.
+        for (version, expected) in [("0.2.9", false), ("0.3.0", true), ("0.3.5", true),
+                                    ("0.3.9", true), ("0.3.10", false), ("0.4.0", false)] {
+            if bounded.applies(to: version) != expected {
+                write("FAIL version \(version) should be \(expected)\n"); failures += 1
+            }
+        }
+        // String comparison would put 0.10.0 before 0.9.0.
+        if Announcement.compareVersions("0.10.0", "0.9.0") <= 0 {
+            write("FAIL version comparison is lexicographic\n"); failures += 1
+        }
+
+        // Dismissal: only the explicit action hides a notice, and it survives a settings reload.
+        let center = AnnouncementCenter.shared
+        var settings = ActivityCenter.shared.settings
+        let restore = settings
+        settings.dismissedAnnouncements = []
+        ActivityCenter.shared.updateSettings(settings)
+        center.announcements = feed.announcements
+
+        guard let shown = center.current else {
+            write("FAIL nothing shown with an empty dismissed list\n")
+            ActivityCenter.shared.updateSettings(restore)
+            exit(1)
+        }
+        write("\nshowing: \(shown.id)\n")
+        center.dismiss(shown)
+        if center.current?.id == shown.id {
+            write("FAIL still showing after dismiss\n"); failures += 1
+        } else {
+            write("hidden after dismiss: ok\n")
+        }
+        if !ActivityCenter.shared.settings.dismissedAnnouncements.contains(shown.id) {
+            write("FAIL dismissal was not persisted\n"); failures += 1
+        } else {
+            write("dismissal persisted: ok\n")
+        }
+        ActivityCenter.shared.updateSettings(restore)
+
+        // Restore so the banner has something to draw, then snapshot both surfaces.
+        center.announcements = feed.announcements
+        var clean = ActivityCenter.shared.settings
+        clean.dismissedAnnouncements = []
+        ActivityCenter.shared.updateSettings(clean)
+        capture(AnnouncementBanner().frame(width: 360).padding(10)
+            .background(Color(white: 0.12)), name: "noticebanner", bare: true)
+        if let item = feed.announcements.first {
+            capture(announcementDetailPreview(item), name: "noticedetail", bare: true)
+        }
+        ActivityCenter.shared.updateSettings(restore)
+
+        write(failures == 0 ? "\nNOTICE OK\n" : "\nNOTICE \(failures) FAILURES\n")
+        exit(failures == 0 ? 0 : 1)
+    }
+
+    /// The detail sheet's contents. `AnnouncementDetailView` is private to its file and lives in a
+    /// `.sheet`, which `ImageRenderer` will not draw, so this mirrors its layout for inspection.
+    @MainActor
+    private static func announcementDetailPreview(_ item: Announcement) -> some View {
+        let language = LocalizationManager.shared.languageCode
+        return VStack(alignment: .leading, spacing: 10) {
+            Text(item.title(for: language)).font(.headline)
+            Text(item.body(for: language))
+                .font(.callout)
+                .fixedSize(horizontal: false, vertical: true)
+            HStack {
+                Spacer()
+                Text(L10n.t("announcement.dontShowAgain"))
+                    .font(.callout)
+                    .padding(.horizontal, 10).padding(.vertical, 4)
+                    .background(RoundedRectangle(cornerRadius: 6).fill(.quaternary))
+                Text(L10n.t("announcement.close"))
+                    .font(.callout)
+                    .padding(.horizontal, 10).padding(.vertical, 4)
+                    .background(RoundedRectangle(cornerRadius: 6).fill(Color.accentColor.opacity(0.5)))
+            }
+        }
+        .padding(16)
+        .frame(width: 420)
+        .background(Color(white: 0.12))
+    }
+
+    // MARK: - Chaos index distribution (PAWPRINT_CHAOS)
+
+    /// Prints the chaos index for every recorded day, plus a few synthetic ones.
+    ///
+    /// The failure being guarded against is silent: an index that reads 100 for everybody is
+    /// indistinguishable from a working one until you look at the spread.
+    @MainActor
+    static func probeChaosIndex() {
+        let raws = PawprintStore.shared.allDays()
+        let dayStart = ActivityCenter.shared.settings.dayStartHour
+        let days = raws.map { StatsEngine.summary(for: $0, recentDays: [], dayStartHour: dayStart) }
+        write("recorded days: \(days.count)\n\n")
+        var pinned = 0
+        for day in days.sorted(by: { $0.day < $1.day }) {
+            let value = day.chaosIndex
+            if value >= 99.5 { pinned += 1 }
+            let bar = String(repeating: "#", count: Int(value / 4))
+            write(String(format: "  %@  %5.1f  %@  (switches %d, short %d)\n",
+                         day.day, value, bar, day.totalAppSwitches, day.shortDwellCount))
+        }
+        if !days.isEmpty {
+            let values = days.map(\.chaosIndex)
+            write(String(format: "\nmin %.1f  max %.1f  mean %.1f  pinned-at-100 %d/%d\n",
+                         values.min() ?? 0, values.max() ?? 0,
+                         values.reduce(0, +) / Double(values.count), pinned, days.count))
+        }
+        // A long but unremarkable day must not score high — that is the case that used to pin.
+        if pinned > days.count / 3 && days.count >= 3 {
+            write("\nFAIL most days are pinned at 100\n")
+            exit(1)
+        }
+        write("\nCHAOS OK\n")
+        exit(0)
+    }
+
     // MARK: - Keyboard event delivery (PAWPRINT_KEYS)
 
     /// Reports which of the two keyboard monitors is actually receiving events.

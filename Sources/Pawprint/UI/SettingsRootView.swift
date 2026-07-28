@@ -705,9 +705,6 @@ private struct UpdateSettingsTab: View {
 
                 if settings.updateCheckEnabled {
                     Toggle(L10n.t("settingsRootView.aa2a685b"), isOn: activityCenter.binding(\.updateCheckAutomatically))
-                    TextField(L10n.t("settingsRootView.b644dd89"),
-                              text: activityCenter.binding(\.updateFeedURL))
-                        .textFieldStyle(.roundedBorder)
                 }
             }
 
