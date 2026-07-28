@@ -27,9 +27,13 @@ final class MenuBarIconAnimator {
     /// Set via the PAWPRINT_DEBUG_PAW env var to log tick/frame activity to stderr.
     @ObservationIgnored private let debugLogging = ProcessInfo.processInfo.environment["PAWPRINT_DEBUG_PAW"] != nil
 
-    /// One cycle. The paw completes two wiggles per cycle and the cat one slow tail sweep, so a
-    /// single frame clock drives both without the cat looking frantic.
-    static let frameCount = 24
+    /// One cycle. The paw completes four wiggles per cycle and the cat one tail wave, so a single
+    /// frame clock drives both without the cat looking frantic.
+    ///
+    /// Doubled from 24 with the per-frame intervals halved to match, so each cycle takes the same
+    /// time as before at twice the frame rate. At 24 the slow end of the range was three frames a
+    /// second, and the sway visibly stepped.
+    static let frameCount = 48
     /// Point size of the rendered glyph. Menu bar icons are ~18pt tall.
     private static let glyphSize: CGFloat = 16
     /// Canvas is larger than the glyph so rotated corners aren't clipped.
@@ -54,42 +58,52 @@ final class MenuBarIconAnimator {
     /// speeds up along with everything else — a cat blinking at a constant rate while its tail
     /// whips about looks broken.
     static let catPoses: [MenuBarCat.Pose] = (0..<frameCount).map { step in
-        let t = Double(step) / Double(frameCount) * 2 * .pi
-        let blink: CGFloat
-        switch step {
-        case frameCount - 3, frameCount - 1: blink = 0.55
-        case frameCount - 2: blink = 1
-        default: blink = 0
-        }
-        // The ear flick sits well away from the blink. Overlapping them made the cat look like it
-        // was wincing rather than doing two unrelated small things.
-        let fold: CGFloat
-        switch step {
-        case 8, 11: fold = 0.45
-        case 9, 10: fold = 1
-        default: fold = 0
-        }
-        return MenuBarCat.Pose(tail: CGFloat(sin(t)), blink: blink, earFold: fold)
+        let p = Double(step) / Double(frameCount)
+        return MenuBarCat.Pose(tailPhase: CGFloat(p),
+                               // Ears sway at half the tail's rate and a quarter turn behind it,
+                               // so the two motions never line up into one rocking motion.
+                               earSway: CGFloat(sin((p - 0.25) * 2 * .pi) * 0.55),
+                               blink: blinkCurve(at: p))
     }
 
-    /// Sleep is its own, much slower cycle: one long breath rather than a tail sweep.
-    static let sleepFrameCount = 16
-    private static let sleepFrames: [NSImage] = (0..<sleepFrameCount).map { step in
-        MenuBarCat.sleepingImage(breath: CGFloat(step) / CGFloat(sleepFrameCount),
-                                 height: catHeight,
-                                 canvasWidth: catCanvasWidth, canvasHeight: canvasSize)
+    /// Sleeping frames: the same cat with its eyes shut, a barely-moving tail, and the marks
+    /// drifting. Its own array because it advances on a much slower clock.
+    static let sleepPoses: [MenuBarCat.Pose] = (0..<sleepFrameCount).map { step in
+        let p = Double(step) / Double(sleepFrameCount)
+        return MenuBarCat.Pose(tailPhase: CGFloat(p),
+                               earSway: CGFloat(sin(p * 2 * .pi) * 0.22),
+                               blink: 1,
+                               asleep: true,
+                               sleepDrift: CGFloat(p))
     }
 
-    /// One breath every ~4.5s: about four image swaps a second, forever, while the user is away.
-    /// That is negligible next to the active animation's twenty, and a slower breath also reads
-    /// more like deep sleep than the brisker rate it started at.
+    /// A smooth blink once per cycle: a raised cosine over a short window rather than a couple of
+    /// hand-picked frames, which snapped shut and open again.
+    private static func blinkCurve(at p: Double) -> CGFloat {
+        let centre = 0.86
+        let halfWidth = 0.055
+        let distance = abs(p - centre)
+        guard distance < halfWidth else { return 0 }
+        return CGFloat((cos(distance / halfWidth * .pi) + 1) / 2)
+    }
+
+    static let sleepFrameCount = 48
+    private static let sleepFrames: [NSImage] = sleepPoses.map {
+        MenuBarCat.image(pose: $0, height: catHeight,
+                         canvasWidth: catCanvasWidth, canvasHeight: canvasSize)
+    }
+
+    /// One full drift of the sleep marks every ~13s: about four image swaps a second while the
+    /// user is away, against forty while typing. The timer that used to stop entirely now just
+    /// slows right down.
     private static let sleepInterval: TimeInterval = 0.28
 
     /// The menu bar caps height at about 18pt but does not care about width, so the cat is drawn
     /// at the height limit and given a wider canvas to be bulky in. At 17pt in a square canvas it
     /// was legible but small next to the paw.
     static let catHeight: CGFloat = 18
-    static let catCanvasWidth: CGFloat = 30
+    /// Wide enough for the tail's full sweep on one side and the sleep marks on the other.
+    static let catCanvasWidth: CGFloat = 34
 
     let filledFrames: [NSImage]
     let restingImage: NSImage
@@ -150,7 +164,7 @@ final class MenuBarIconAnimator {
         case .paw:
             return renderPaw(symbol: "pawprint.fill", angle: 0, dy: 0)
         case .cat:
-            return MenuBarCat.image(pose: .init(tail: 0.25, blink: 0), height: catHeight,
+            return MenuBarCat.image(pose: .init(tailPhase: 0.12), height: catHeight,
                                     canvasWidth: catCanvasWidth, canvasHeight: canvasSize)
         }
     }
@@ -207,12 +221,12 @@ final class MenuBarIconAnimator {
 
     private func interval(forWPM wpm: Double) -> TimeInterval {
         switch wpm {
-        case 70...: return 0.055
-        case 45..<70: return 0.075
-        case 25..<45: return 0.10
-        case 10..<25: return 0.15
-        case 1..<10: return 0.22
-        default: return 0.34      // idle sway — still alive, just lazy
+        case 70...: return 0.027
+        case 45..<70: return 0.037
+        case 25..<45: return 0.05
+        case 10..<25: return 0.075
+        case 1..<10: return 0.11
+        default: return 0.17      // idle sway — still alive, just lazy
         }
     }
 

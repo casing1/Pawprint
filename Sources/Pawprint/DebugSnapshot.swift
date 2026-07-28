@@ -246,13 +246,14 @@ enum DebugSnapshot {
     /// both appearances, beside the paw it is an alternative to.
     @MainActor
     static func renderMenuBarCatSheet() {
+        // Four points around the tail's wave plus a blink, which is what there is to judge.
         let poses: [(String, MenuBarCat.Pose)] = [
-            ("tail left",  .init(tail: -1, blink: 0)),
-            ("centre",     .init(tail: 0, blink: 0)),
-            ("tail right", .init(tail: 1, blink: 0)),
-            ("blink",      .init(tail: 0.4, blink: 1)),
-            ("ear half",   .init(tail: 0.2, blink: 0, earFold: 0.45)),
-            ("ear folded", .init(tail: 0.2, blink: 0, earFold: 1))
+            ("wave 0",  .init(tailPhase: 0.0, earSway: -0.55)),
+            ("wave ¼",  .init(tailPhase: 0.25, earSway: 0)),
+            ("wave ½",  .init(tailPhase: 0.5, earSway: 0.55)),
+            ("wave ¾",  .init(tailPhase: 0.75, earSway: 0)),
+            ("blink",   .init(tailPhase: 0.3, earSway: 0.2, blink: 1)),
+            ("asleep",  .init(tailPhase: 0.4, blink: 1, asleep: true, sleepDrift: 0.45))
         ]
 
         // Drawn at a large point size rather than scaled up from 17pt, so this shows the geometry
@@ -261,8 +262,8 @@ enum DebugSnapshot {
             ForEach(Array(poses.enumerated()), id: \.offset) { _, pose in
                 VStack(spacing: 8) {
                     Image(nsImage: tinted(MenuBarCat.image(
-                        pose: pose.1, height: 128, canvasWidth: 200, canvasHeight: 160)))
-                        .frame(width: 200, height: 160)
+                        pose: pose.1, height: 130, canvasWidth: 240, canvasHeight: 160)))
+                        .frame(width: 240, height: 160)
                     Text(pose.0).font(.system(size: 13)).foregroundStyle(.white.opacity(0.7))
                 }
             }
@@ -276,9 +277,10 @@ enum DebugSnapshot {
         let cycle = VStack(spacing: 0) {
             ForEach([true, false], id: \.self) { dark in
                 HStack(spacing: 3) {
-                    ForEach(Array(MenuBarIconAnimator.catPoses.enumerated()), id: \.offset) { _, pose in
+                    ForEach(Array(stride(from: 0, to: MenuBarIconAnimator.frameCount, by: 2)),
+                            id: \.self) { step in
                         Image(nsImage: tinted(
-                            MenuBarCat.image(pose: pose,
+                            MenuBarCat.image(pose: MenuBarIconAnimator.catPoses[step],
                                              height: MenuBarIconAnimator.catHeight,
                                              canvasWidth: MenuBarIconAnimator.catCanvasWidth,
                                              canvasHeight: 22),
@@ -291,16 +293,18 @@ enum DebugSnapshot {
                 .background(dark ? Color(white: 0.13) : Color(white: 0.93))
             }
         }
-        .frame(width: 640)
+        .frame(width: 860)
         capture(cycle, name: "menucat_cycle", scale: 3, bare: true)
 
         // Asleep, big and small. This is what the icon shows most of the time — whenever nobody
         // is at the keyboard — so it gets the same scrutiny as the awake pose.
         let sleepBig = HStack(spacing: 18) {
-            ForEach([0.0, 0.25, 0.5, 0.75], id: \.self) { breath in
-                Image(nsImage: tinted(MenuBarCat.sleepingImage(
-                    breath: CGFloat(breath), height: 128, canvasWidth: 200, canvasHeight: 160)))
-                    .frame(width: 200, height: 160)
+            ForEach([0.1, 0.35, 0.6, 0.85], id: \.self) { drift in
+                Image(nsImage: tinted(MenuBarCat.image(
+                    pose: .init(tailPhase: CGFloat(drift), blink: 1, asleep: true,
+                                sleepDrift: CGFloat(drift)),
+                    height: 130, canvasWidth: 240, canvasHeight: 160)))
+                    .frame(width: 240, height: 160)
             }
         }
         .padding(24)
@@ -309,12 +313,14 @@ enum DebugSnapshot {
 
         let sleepStrip = VStack(spacing: 0) {
             ForEach([true, false], id: \.self) { dark in
-                HStack(spacing: 4) {
-                    ForEach(0..<MenuBarIconAnimator.sleepFrameCount, id: \.self) { step in
-                        Image(nsImage: tinted(MenuBarCat.sleepingImage(
-                            breath: CGFloat(step) / CGFloat(MenuBarIconAnimator.sleepFrameCount),
-                            height: MenuBarIconAnimator.catHeight,
-                            canvasWidth: MenuBarIconAnimator.catCanvasWidth, canvasHeight: 22),
+                HStack(spacing: 2) {
+                    ForEach(Array(stride(from: 0, to: MenuBarIconAnimator.sleepFrameCount, by: 3)),
+                            id: \.self) { step in
+                        Image(nsImage: tinted(
+                            MenuBarCat.image(pose: MenuBarIconAnimator.sleepPoses[step],
+                                             height: MenuBarIconAnimator.catHeight,
+                                             canvasWidth: MenuBarIconAnimator.catCanvasWidth,
+                                             canvasHeight: 22),
                             white: dark))
                     }
                     Spacer(minLength: 0)
@@ -324,7 +330,7 @@ enum DebugSnapshot {
                 .background(dark ? Color(white: 0.13) : Color(white: 0.93))
             }
         }
-        .frame(width: 600)
+        .frame(width: 620)
         capture(sleepStrip, name: "menucat_sleep", scale: 3, bare: true)
 
         // Side by side with the paw, at the size and spacing of a real menu bar.
