@@ -14,9 +14,28 @@ CONFIG="${1:-debug}"
 echo "==> Building ($CONFIG)..."
 cd "$ROOT_DIR"
 if [ "$CONFIG" = "release" ]; then
-    swift build -c release
-    BIN_PATH="$ROOT_DIR/.build/release/$APP_NAME"
+    # Release builds are universal. Sequoia still runs on Intel Macs (2018-2020), and an
+    # arm64-only app on one of those shows the prohibitory badge on its icon and refuses to
+    # launch — there is no Rosetta in that direction. Shipping arm64-only silently excluded
+    # every Intel user, with an error message that says nothing about why.
+    #
+    # Built one architecture at a time and joined with `lipo`, rather than `swift build --arch
+    # arm64 --arch x86_64`: that form needs xcbuild from a full Xcode install, and this script
+    # deliberately uses the CommandLineTools toolchain so no Xcode licence is required.
+    MIN_MACOS="$(/usr/libexec/PlistBuddy -c 'Print :LSMinimumSystemVersion' "$ROOT_DIR/scripts/Info.plist")"
+    for arch in arm64 x86_64; do
+        echo "    ...$arch"
+        swift build -c release --triple "$arch-apple-macosx$MIN_MACOS"
+    done
+    BIN_PATH="$BUILD_DIR/$APP_NAME-universal"
+    mkdir -p "$BUILD_DIR"
+    lipo -create -output "$BIN_PATH" \
+        "$ROOT_DIR/.build/arm64-apple-macosx/release/$APP_NAME" \
+        "$ROOT_DIR/.build/x86_64-apple-macosx/release/$APP_NAME"
+    echo "==> Universal binary: $(lipo -archs "$BIN_PATH")"
 else
+    # Debug builds stay native — they only ever run on the machine that produced them, and
+    # building twice would double every edit-run cycle.
     swift build
     BIN_PATH="$ROOT_DIR/.build/debug/$APP_NAME"
 fi

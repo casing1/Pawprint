@@ -13,6 +13,7 @@
 <br><br>
 
 <img src="https://img.shields.io/badge/macOS-14%2B-000000?style=flat-square&logo=apple&logoColor=white" alt="macOS 14+">
+<img src="https://img.shields.io/badge/universal-Apple%20Silicon%20%2B%20Intel-555555?style=flat-square" alt="Universal binary">
 <img src="https://img.shields.io/badge/Swift-5.10-F05138?style=flat-square&logo=swift&logoColor=white" alt="Swift 5.10">
 <img src="https://img.shields.io/badge/license-Apache%202.0-blue?style=flat-square" alt="Apache 2.0">
 <a href="https://github.com/yhcho0405/Pawprint/releases/latest"><img src="https://img.shields.io/github/v/release/yhcho0405/Pawprint?style=flat-square&color=8957e5" alt="Latest release"></a>
@@ -88,6 +89,8 @@ endpoint configured, meaning a stock build never sends it at all. Details in
 [docs/ANALYTICS.md](docs/ANALYTICS.md).
 
 <br>
+
+Runs on macOS 14 or later, on both Apple Silicon and Intel Macs.
 
 ## Permissions
 

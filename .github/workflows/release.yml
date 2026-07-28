@@ -98,6 +98,20 @@ jobs:
           fi
           codesign -dvv "build/Pawprint.app" 2>&1 | grep -E "^Authority|^Signature" || true
 
+      # Shipping arm64-only excluded every Intel Mac silently: Sequoia still runs on 2018-2020
+      # models, and there the icon just gets a prohibitory badge and refuses to open. Nothing in
+      # the build fails, so only a user can discover it.
+      - name: Confirm the binary is universal
+        run: |
+          archs="$(lipo -archs build/Pawprint.app/Contents/MacOS/Pawprint)"
+          echo "architectures: $archs"
+          for required in arm64 x86_64; do
+            case " $archs " in
+              *" $required "*) ;;
+              *) echo "::error::binary is missing $required (got: $archs)"; exit 1 ;;
+            esac
+          done
+
       - name: Verify the archive against the pinned public key
         run: |
           # Catches a mismatched key pair here rather than on every user's machine.
