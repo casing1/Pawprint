@@ -12,6 +12,7 @@ import SwiftUI
 ///    ring fragments poking out around the lenses. Now the eye pass checks eyewear first.
 ///  * Chibi proportions (big head, small body, low-set big eyes) is what makes it cute; whiskers
 ///    and mouth lines are kept thin and faint because heavy face strokes turn "cat" into "insect".
+@MainActor
 struct PawpetView: View {
     let summary: DailySummary
     var size: CGFloat = 120

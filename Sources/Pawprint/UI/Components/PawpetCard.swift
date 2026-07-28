@@ -5,6 +5,7 @@ import SwiftUI
 /// The drawing is only worth having if you can tell *why* it looks the way it does, so every
 /// visible trait gets a line naming the metric behind it. Three are shown by default; the rest are
 /// one click away.
+@MainActor
 struct PawpetCard: View {
     let summary: DailySummary
     var streakDays: Int = 0
