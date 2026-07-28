@@ -53,6 +53,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
 
+        if ProcessInfo.processInfo.environment["PAWPRINT_SOCIAL"] != nil {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                DebugSnapshot.renderSocialCard(); NSApp.terminate(nil)
+            }
+        }
+
         if ProcessInfo.processInfo.environment["PAWPRINT_BANNER"] != nil {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                 DebugSnapshot.renderBanner(); NSApp.terminate(nil)

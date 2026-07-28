@@ -236,6 +236,114 @@ enum DebugSnapshot {
         capture(banner, name: "banner", scale: 2, bare: true)
     }
 
+    // MARK: - GitHub social preview (PAWPRINT_SOCIAL)
+
+    /// The repository's social card: 1280x640, the size GitHub asks for.
+    ///
+    /// GitHub crops this card differently depending on where it is shown — the repo page, a link
+    /// unfurled in Slack, a tweet — so everything that matters stays inside a 64pt inset, well
+    /// clear of the 40pt they recommend. The corners hold nothing but background on purpose.
+    ///
+    /// Rendered at scale 1: 1280x640 points is already the pixel size wanted, and scale 2 would
+    /// produce a 2560x1280 file that GitHub only downsamples.
+    @MainActor
+    static func renderSocialCard() {
+        // Five S-grade cats with different charms and coats, found the same way the README wall
+        // does it: walk dates until the date-seeded draw lands on the combination we want.
+        let wanted: [(PawpetTraits.PawCharm, PawpetTraits.Wings)] = [
+            (.star, .feathered), (.flame, .ember), (.orb, .crystal),
+            (.crystal, .feathered), (.gauntlet, .ember)
+        ]
+        var cats: [(DailySummary, PawpetTraits)] = []
+        var usedPalettes: Set<Int> = []
+
+        for (charm, wings) in wanted {
+            var fallback: (DailySummary, PawpetTraits)?
+            search: for month in 1...12 {
+                for day in 1...28 {
+                    var summary = excellentDay()
+                    summary.day = String(format: "2026-%02d-%02d", month, day)
+                    let traits = PawpetTraits(day: summary.day, summary: summary,
+                                              streakDays: 40, setARecord: cats.isEmpty)
+                    guard traits.charmAndWings == (charm, wings) else { continue }
+                    if fallback == nil { fallback = (summary, traits) }
+                    if !usedPalettes.contains(traits.paletteIndex) {
+                        usedPalettes.insert(traits.paletteIndex)
+                        cats.append((summary, traits))
+                        break search
+                    }
+                }
+            }
+            if cats.count < wanted.count, let fallback,
+               !cats.contains(where: { $0.1.charmAndWings == (charm, wings) }) {
+                cats.append(fallback)
+            }
+        }
+
+        let card = ZStack {
+            LinearGradient(
+                colors: [Color(red: 0.09, green: 0.10, blue: 0.16),
+                         Color(red: 0.16, green: 0.13, blue: 0.24),
+                         Color(red: 0.10, green: 0.15, blue: 0.22)],
+                startPoint: .topLeading, endPoint: .bottomTrailing
+            )
+            // A warm glow behind the cats so the right half doesn't read as empty.
+            RadialGradient(colors: [Color(red: 1.0, green: 0.78, blue: 0.35).opacity(0.16), .clear],
+                           center: .init(x: 0.5, y: 0.72), startRadius: 0, endRadius: 460)
+
+            VStack(spacing: 34) {
+                VStack(spacing: 14) {
+                    HStack(spacing: 16) {
+                        Image(systemName: "pawprint.fill")
+                            .font(.system(size: 58))
+                            .foregroundStyle(Color(red: 1.0, green: 0.78, blue: 0.35))
+                        Text("Pawprint")
+                            .font(.system(size: 84, weight: .heavy, design: .rounded))
+                            .foregroundStyle(.white)
+                    }
+                    Text("Your Mac, as a cat you collect every day.")
+                        .font(.system(size: 30, weight: .medium))
+                        .foregroundStyle(.white.opacity(0.86))
+                    Text("A quiet menu bar tracker that never records what you type.")
+                        .font(.system(size: 20))
+                        .foregroundStyle(.white.opacity(0.52))
+                }
+
+                // Barely overlapping. At -14 the rainbow frames clipped each other and the row
+                // read as one striped block rather than five separate cats.
+                HStack(spacing: 4) {
+                    ForEach(Array(cats.prefix(5).enumerated()), id: \.offset) { index, entry in
+                        PawpetView(summary: entry.0, size: 150, streakDays: 40, showsAura: false,
+                                   traitsOverride: entry.1)
+                            .rotationEffect(.degrees(Double(index - 2) * 3.5))
+                    }
+                }
+
+                HStack(spacing: 10) {
+                    ForEach(["macOS 14+", "Apple Silicon + Intel", "100% local", "Open source"],
+                            id: \.self) { tag in
+                        Text(tag)
+                            .font(.system(size: 17, weight: .semibold))
+                            .foregroundStyle(.white.opacity(0.72))
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 7)
+                            .background(Capsule().fill(.white.opacity(0.10)))
+                    }
+                }
+            }
+            .padding(64)
+        }
+        .frame(width: 1280, height: 640)
+
+        capture(card, name: "social", scale: 1, bare: true)
+
+        if ProcessInfo.processInfo.environment["PAWPRINT_SOCIAL_SAFE"] != nil {
+            capture(card.overlay(
+                Rectangle().strokeBorder(Color.red.opacity(0.9), lineWidth: 2).padding(40)
+            ), name: "social_safe", scale: 1, bare: true)
+        }
+    }
+
     // MARK: - DMG background (PAWPRINT_DMG_BG)
 
     /// Installer window backdrop: 1200x800 px for a 600x400 pt window (2x for Retina).
