@@ -1091,6 +1091,84 @@ enum DebugSnapshot {
         next()
     }
 
+    // MARK: - Streaks and collars (PAWPRINT_STREAK)
+
+    /// Checks that a day's collar is the same whenever you look at it.
+    ///
+    /// The collar is the one trait derived from something outside its own day, which is what made
+    /// it the one trait that could change retroactively: the gallery passed a streak of zero for
+    /// every day but today, so yesterday's gold collar came back bare this morning. The counting
+    /// was also confined to a seven-day cache, which capped every streak at 8 and put the gold and
+    /// rainbow collars out of reach entirely.
+    @MainActor
+    static func probeStreaks() {
+        var failures = 0
+        func check(_ label: String, _ condition: Bool, _ detail: String = "") {
+            if !condition { failures += 1 }
+            write("\(condition ? "ok  " : "FAIL") \(label)\(detail.isEmpty ? "" : " — \(detail)")\n")
+        }
+
+        /// An active day, and one with nothing on it.
+        func day(_ key: String, active: Bool = true) -> DailySummary {
+            var summary = DailySummary(day: key)
+            if active {
+                summary.activeSeconds = 3_600
+                summary.totalKeyPresses = 2_000
+            }
+            return summary
+        }
+
+        // 40 consecutive days, so every collar tier is in range.
+        let start = "2026-01-01"
+        let run = (0..<40).map { day(DayKey.addingDays($0, to: start)) }
+        let streaks = StreakRule.streaks(for: run)
+
+        check("day 1 of a run counts 1", streaks[start] == 1, "\(streaks[start] ?? -1)")
+        check("day 8 counts 8", streaks[DayKey.addingDays(7, to: start)] == 8,
+              "\(streaks[DayKey.addingDays(7, to: start)] ?? -1)")
+        // The old implementation could not exceed 8 — its whole input was a seven-day cache.
+        check("day 40 counts 40, not 8", streaks[DayKey.addingDays(39, to: start)] == 40,
+              "\(streaks[DayKey.addingDays(39, to: start)] ?? -1)")
+
+        // A gap resets the count, and days before the gap keep theirs.
+        let broken = (0..<5).map { day(DayKey.addingDays($0, to: start)) }
+            + [day(DayKey.addingDays(5, to: start), active: false)]
+            + (6..<9).map { day(DayKey.addingDays($0, to: start)) }
+        let brokenStreaks = StreakRule.streaks(for: broken)
+        check("gap resets", brokenStreaks[DayKey.addingDays(6, to: start)] == 1,
+              "\(brokenStreaks[DayKey.addingDays(6, to: start)] ?? -1)")
+        check("days before the gap keep their count",
+              brokenStreaks[DayKey.addingDays(4, to: start)] == 5,
+              "\(brokenStreaks[DayKey.addingDays(4, to: start)] ?? -1)")
+        check("an inactive day has no streak",
+              brokenStreaks[DayKey.addingDays(5, to: start)] == nil)
+
+        // The batch pass and the walking pass must agree; the app uses one for history and the
+        // other for today.
+        let active = Set(run.map(\.day))
+        let walked = StreakRule.streak(endingOn: DayKey.addingDays(39, to: start)) { active.contains($0) }
+        check("batch and walk agree", walked == streaks[DayKey.addingDays(39, to: start)], "\(walked)")
+
+        // What the user actually sees: the collar each streak length earns.
+        for (days, expected) in [(0, PawpetTraits.Collar.none), (1, .cloth), (3, .blue),
+                                 (7, .green), (14, .gold), (30, .rainbow)] {
+            let traits = PawpetTraits.forDay(day("2026-03-14"), streakDays: days)
+            check("streak \(days) wears \(expected)", traits.collar == expected, "\(traits.collar)")
+        }
+
+        // The regression itself. `run` ends at "today", so index 20 is a day the gallery would
+        // once have handed a streak of zero simply for not being today.
+        let past = run[20]
+        let pastStreak = streaks[past.day] ?? 0
+        check("a past day still has its streak", pastStreak == 21, "\(pastStreak)")
+        check("a past day keeps the collar it earned",
+              PawpetTraits.forDay(past, streakDays: pastStreak).collar == .gold,
+              "\(PawpetTraits.forDay(past, streakDays: pastStreak).collar)")
+
+        write(failures == 0 ? "\nSTREAK OK\n" : "\nSTREAK \(failures) FAILURES\n")
+        exit(failures == 0 ? 0 : 1)
+    }
+
     /// Screenshots one named window by id, so nothing else on screen can end up in the file.
     @MainActor
     private static func shoot(_ window: NSWindow?, to path: String) {

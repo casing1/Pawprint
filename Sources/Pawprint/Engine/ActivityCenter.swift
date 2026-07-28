@@ -319,18 +319,20 @@ final class ActivityCenter {
 
     func clearLevelUp() { pendingLevelUp = nil }
 
+    /// Consecutive active days ending today.
+    ///
+    /// Reads past days from the store rather than from `recentDaysCache`, which holds a week. With
+    /// the cache as the only source the count could never exceed 8, so the collars that need 14 and
+    /// 30 consecutive days were unreachable no matter how long anyone kept it up. The walk stops at
+    /// the first gap, so it costs the length of the streak, not the length of the history.
     private func recomputeStreak() {
-        var activeDays = Set(recentDaysCache.filter { $0.activeSeconds > 0 }.map { $0.day })
-        if today.activeSeconds > 0 || today.totalKeyPresses > 0 {
-            activeDays.insert(currentDayString)
+        currentStreak = StreakRule.streak(endingOn: currentDayString) { day in
+            if day == currentDayString { return StreakRule.isActive(today) }
+            if let cached = recentDaysCache.first(where: { $0.day == day }) {
+                return StreakRule.isActive(cached)
+            }
+            return store.loadDay(day).map(StreakRule.isActive) ?? false
         }
-        var streak = 0
-        var cursor = currentDayString
-        while activeDays.contains(cursor) {
-            streak += 1
-            cursor = DayKey.addingDays(-1, to: cursor)
-        }
-        currentStreak = streak
     }
 
     // MARK: - Settings
@@ -485,10 +487,20 @@ final class ActivityCenter {
     /// category-toggle gate, and active/idle session bookkeeping. Returns false if the event
     /// should be dropped — a disabled category is treated the same as "never happened", it
     /// doesn't even count toward generic active/idle time.
+    /// A screenshot run must not record itself.
+    ///
+    /// The harness drives the real app over a seeded history, and left recording it writes its own
+    /// events into the seeded day. That is invisible at midday and obvious just after midnight: the
+    /// day's last activity moves to 00:15, and the persona calls it an all-nighter over an activity
+    /// clock showing nothing after six. Captures should depend on the seeded data and the clock,
+    /// not on the hour they were taken.
+    @ObservationIgnored
+    private let isCaptureRun = ProcessInfo.processInfo.environment["PAWPRINT_SHOTS"] != nil
+
     @discardableResult
     func beginEvent(at date: Date, category: CollectionCategory) -> Bool {
         rolloverIfNeeded(at: date)
-        guard isRecordingActive, isCategoryEnabled(category) else { return false }
+        guard !isCaptureRun, isRecordingActive, isCategoryEnabled(category) else { return false }
         markActivity(at: date)
         dirtySinceLastSummary = true
         return true

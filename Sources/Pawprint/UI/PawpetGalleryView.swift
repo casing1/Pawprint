@@ -11,6 +11,7 @@ struct PawpetGalleryView: View {
     @Bindable var activityCenter = ActivityCenter.shared
 
     @State private var days: [DailySummary] = []
+    @State private var streaks: [String: Int] = [:]
     @State private var selected: DailySummary?
     @State private var filter: Filter = .all
     @State private var sort: SortField
@@ -55,10 +56,14 @@ struct PawpetGalleryView: View {
 
     private var dayStartHour: Int { activityCenter.settings.dayStartHour }
 
-    /// Streak only applies to today — historical streak values aren't stored, so past cats are
-    /// drawn without a collar rather than with a wrong one.
+    /// The streak as it stood on each day, derived once in `load()`.
+    ///
+    /// This used to return the live streak for today and `0` for everything else, which took the
+    /// collar off every cat the day after it was earned. A streak is not something that has to be
+    /// stored to be known — it is a property of which days have activity, and the gallery is
+    /// already holding all of them.
     private func streak(for summary: DailySummary) -> Int {
-        summary.day == activityCenter.todaySummary.day ? activityCenter.currentStreak : 0
+        streaks[summary.day] ?? 0
     }
 
     private func traits(for summary: DailySummary) -> PawpetTraits {
@@ -289,6 +294,7 @@ struct PawpetGalleryView: View {
         result.removeAll { $0.day == todayKey }
         result.insert(activityCenter.todaySummary, at: 0)
         days = result
+        streaks = StreakRule.streaks(for: result)
     }
 }
 
