@@ -6,17 +6,24 @@ and both are why this document is more specific than a template.
 
 ## Supported Versions
 
-Only the latest release receives security updates.
-
 | Version | Supported |
 | ------- | --------- |
-| 0.3.7 (latest) | :white_check_mark: |
-| < 0.3.7 | :x: |
+| 0.4.x | :white_check_mark: |
+| < 0.4 | :x: |
 
-Pawprint is distributed outside the App Store and updates itself, so there is no long-lived
-release branch to back-port to — a fix ships as the next version, usually within a day. If
-automatic update checks are turned off, the current release is always at
+Read that as *the 0.4 series is where fixes land*, not as a promise to patch old 0.4 releases in
+place. Pawprint is distributed outside the App Store and updates itself, so there is no long-lived
+release branch to back-port to: a fix ships as the **next** 0.4.x, usually within a day, and you
+receive it by updating. Being on 0.4.2 when 0.4.9 carries the fix means updating, not waiting for
+a 0.4.2 patch.
+
+Releases are frequent and the patch number moves often, which is why this table names the series
+rather than a number that would be stale within the week. If automatic update checks are turned
+off, the current release is always at
 [Releases](https://github.com/yhcho0405/Pawprint/releases/latest).
+
+When 0.5 arrives, 0.4.x stops being supported at that point — there is only ever one supported
+series.
 
 ## Reporting a Vulnerability
 
@@ -116,11 +123,12 @@ harmless the content looks.
 Everything needed to check a download is public:
 
 ```bash
-V=0.3.7
+# Whatever is current. Set V by hand to check a specific release instead.
+V=$(gh release view -R yhcho0405/Pawprint --json tagName -q .tagName | tr -d v)
 gh release download "v$V" -R yhcho0405/Pawprint -p "Pawprint-$V.zip*"
 
 # The archive signature — the same check the app performs before unpacking anything.
-# The public key is the one compiled into the app (UpdateChecker.publicKey).
+# The public key is the one compiled into the app (UpdateDistribution.publicKey).
 swift scripts/updatekeys.swift verify \
   "Pawprint-$V.zip" \
   "$(cat "Pawprint-$V.zip.sig")" \
@@ -130,7 +138,7 @@ swift scripts/updatekeys.swift verify \
 # Who signed the app, and that both architectures are intact.
 codesign -dvvv /Applications/Pawprint.app
 codesign --verify --deep --strict /Applications/Pawprint.app
-lipo -archs /Applications/Pawprint.app/Contents/MacOS/Pawprint   # arm64 x86_64
+lipo -archs /Applications/Pawprint.app/Contents/MacOS/Pawprint   # x86_64 arm64
 ```
 
 The signature is over the `.zip`, not the `.dmg`: the `.zip` is what the updater downloads, so it
