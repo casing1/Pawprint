@@ -256,10 +256,39 @@ structural change.
    generation and screenshot rendering. Addressed in S10.
 5. **`PawpetTraits` is pure domain logic filed under `UI/Components`.** Moves in S2.
 
-## 8. Status
+## 8. A reordering, and why
+
+S2 (module split) was planned before S3 (characterization tests). It is being done the other way
+round, because `swift test` turned out to run against the executable target directly —
+`@testable import Pawprint` reaches every `internal` symbol with no module boundary needed.
+
+That matters, because the module split is not small. Moving the 5,491 pure lines behind a target
+boundary needs an access-level modifier on roughly **1,093 declarations**, and it has to compile
+all at once. Doing that *first* would mean performing the single largest mechanical edit in the
+project with no test coverage underneath it.
+
+So the tests land first and then guard the move, which is the order the tests were wanted for in
+the first place. Nothing is skipped: S2 still happens, and §17's requirement that pure domain logic
+be testable independently of the app target is what S2 delivers. The tests written now carry over
+unchanged — `@testable import PawprintCore` instead of `Pawprint`.
+
+## 9. Status
 
 | Stage | State |
 |---|---|
-| S1 Baseline + plan + perf probe | **Done** |
-| S2 – S12 | Not started |
+| S1 Baseline, plan, `PAWPRINT_PERF` | **Done** |
+| S3 Characterization tests | **Partial** — 37 tests: privacy invariants, day boundaries + DST, stored-data compatibility, summary determinism, streak rule. Missing: recording policy (A), keyboard/mouse accumulation (C), system state (D), store-level compatibility on a real database fixture (F), update signing (G) |
+| S2 Module split | Not started — scoped at ~1,093 declarations |
+| S4 – S12 | Not started |
 | Features F1 – F3 | Not started |
+
+### Acceptance checks, current state
+
+| Check | |
+|---|---|
+| `swift build -c debug` | Pass |
+| `swift build -c release` | Pass |
+| `swift test` | Pass — 37 tests, 0 failures |
+| `./scripts/build_app.sh release` | Pass |
+| `lipo -archs` | `x86_64 arm64` |
+| Everything else in §17 | Not yet met — the stages they depend on have not run |
