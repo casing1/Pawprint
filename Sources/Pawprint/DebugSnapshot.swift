@@ -1091,6 +1091,88 @@ enum DebugSnapshot {
         next()
     }
 
+    // MARK: - Performance baseline (PAWPRINT_PERF)
+
+    /// Times the paths a refactor could plausibly slow down, so "no significant regression" is a
+    /// measurement rather than an opinion.
+    ///
+    /// Everything here is synthetic and seeded: the same workload runs before and after, on one
+    /// thread, with no wall-clock sleeps. Absolute numbers are only meaningful against another run
+    /// of the same probe on the same machine.
+    @MainActor
+    static func probePerformance() {
+        let center = ActivityCenter.shared
+
+        func time(_ label: String, iterations: Int, _ body: () -> Void) {
+            // One untimed pass so lazily-built caches are not charged to the first measurement.
+            body()
+            let start = DispatchTime.now().uptimeNanoseconds
+            for _ in 0..<iterations { body() }
+            let elapsed = Double(DispatchTime.now().uptimeNanoseconds - start) / 1_000_000
+            write(String(format: "PERF %-26s %8.3f ms/op  (%d)\n",
+                         (label as NSString).utf8String!, elapsed / Double(iterations), iterations))
+        }
+
+        let store = PawprintStore.shared
+        let all = store.allDays()
+        let day = all.last ?? DailyRawCounters(day: DayKey.today(dayStartHour: 0))
+        let recent = Array(all.suffix(8).dropLast())
+
+        time("summary 1 day", iterations: 200) {
+            SummaryCache.shared.invalidateAll()
+            _ = StatsEngine.summary(for: day, recentDays: recent, dayStartHour: 0)
+        }
+        time("load 30 days", iterations: 20) {
+            _ = store.loadDays(from: DayKey.addingDays(-30, to: day.day), to: day.day)
+        }
+        time("load 90 days", iterations: 10) {
+            _ = store.loadDays(from: DayKey.addingDays(-90, to: day.day), to: day.day)
+        }
+        time("lifetime rebuild", iterations: 5) {
+            center.refreshLifetimeStats(force: true)
+        }
+
+        // Event hot paths. These run through the same entry points the monitors call, so anything
+        // that starts writing to the database or rebuilding a summary per event shows up here.
+        let now = Date()
+        // Spacing matters more than count here: the live-WPM window is a 60-second sliding array,
+        // so the per-key cost scales with how many keys fall inside that window. 0.125s apart is
+        // about 96 WPM sustained; 0.02s apart is a burst no human sustains, included because it is
+        // where an accidental O(n^2) would show itself.
+        time("20k keys @96wpm", iterations: 1) {
+            for i in 0..<20_000 {
+                center.recordKeyPress(category: .character, keyCode: UInt16(i % 50),
+                                      at: now.addingTimeInterval(Double(i) * 0.125))
+            }
+        }
+        time("20k keys @burst", iterations: 1) {
+            for i in 0..<20_000 {
+                center.recordKeyPress(category: .character, keyCode: UInt16(i % 50),
+                                      at: now.addingTimeInterval(Double(i) * 0.02))
+            }
+        }
+        time("100k cursor moves", iterations: 1) {
+            for i in 0..<100_000 {
+                center.recordCursorMovement(distancePixels: 3.5, speedPxPerSec: 400,
+                                            at: now.addingTimeInterval(Double(i) * 0.01))
+            }
+        }
+        time("20k clicks", iterations: 1) {
+            for i in 0..<20_000 {
+                center.recordClick(kind: .left, at: now.addingTimeInterval(Double(i) * 0.05))
+            }
+        }
+        time("5k app switches", iterations: 1) {
+            for i in 0..<5_000 {
+                center.appDidActivate(bundleID: "com.example.app\(i % 12)", name: "App \(i % 12)",
+                                      at: now.addingTimeInterval(Double(i)))
+            }
+        }
+
+        write("\nPERF DONE\n")
+        exit(0)
+    }
+
     // MARK: - Streaks and collars (PAWPRINT_STREAK)
 
     /// Checks that a day's collar is the same whenever you look at it.

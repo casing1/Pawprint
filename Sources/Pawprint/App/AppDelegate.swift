@@ -165,6 +165,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
 
+        if ProcessInfo.processInfo.environment["PAWPRINT_PERF"] != nil {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { DebugSnapshot.probePerformance() }
+        }
+
         if ProcessInfo.processInfo.environment["PAWPRINT_STREAK"] != nil {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { DebugSnapshot.probeStreaks() }
         }
