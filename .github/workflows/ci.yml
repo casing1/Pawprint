@@ -7,7 +7,11 @@ on:
 
 jobs:
   build:
-    runs-on: macos-14
+    # macos-15, not macos-14. The Observation macro on the macos-14 image emits a duplicate
+    # modifier for any `package` stored property it tracks, which is a build failure — the source
+    # is valid Swift and compiles on a current toolchain. The deployment target is set in
+    # Package.swift (.macOS(.v14)) and is unaffected by which image builds it.
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
       - name: Build
