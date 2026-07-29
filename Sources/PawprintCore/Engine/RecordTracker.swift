@@ -3,6 +3,10 @@ import Observation
 
 /// One metric's all-time best, measured over days *before* today.
 package struct PersonalBest {
+    // `package var`, not `package private(set) var`. The two are equivalent to every caller here —
+    // nothing outside this type assigns to them — but the Observation macro on the CI toolchain
+    // copies the modifier list into its generated accessors and emits a duplicate, which is a
+    // build failure rather than a warning. Keeping the setter package-visible is the smaller cost.
     package var id: String
     package var title: String
     package var icon: String
@@ -49,14 +53,14 @@ final package class RecordTracker {
     /// Fraction of the record at which a near-miss becomes worth surfacing.
     static package let nearThreshold = 0.85
 
-    package private(set) var standings: [RecordStanding] = []
+    package var standings: [RecordStanding] = []
     /// Records already celebrated, keyed by "day/metricID". Seeded from persisted settings —
     /// holding it only in memory meant every relaunch re-celebrated the same record, and since
     /// a broken record stays broken for the rest of the day, the banner came back on every
     /// launch, login and post-update restart.
     @ObservationIgnored private var celebrated: Set<String> = []
     /// Set when a record breaks so the UI can fire a celebration once.
-    package private(set) var pendingCelebration: RecordStanding?
+    package var pendingCelebration: RecordStanding?
 
     private init() {}
 

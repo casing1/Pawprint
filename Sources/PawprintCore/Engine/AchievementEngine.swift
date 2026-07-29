@@ -7,10 +7,14 @@ import Observation
 @Observable
 final package class AchievementEngine {
     static package let shared = AchievementEngine()
+    // `package var`, not `package private(set) var`. The two are equivalent to every caller here —
+    // nothing outside this type assigns to them — but the Observation macro on the CI toolchain
+    // copies the modifier list into its generated accessors and emits a duplicate, which is a
+    // build failure rather than a warning. Keeping the setter package-visible is the smaller cost.
 
-    package private(set) var unlocked: [UnlockedAchievement]
+    package var unlocked: [UnlockedAchievement]
     /// Set when something is newly unlocked so the popover can show a celebration, then cleared.
-    package private(set) var pendingCelebration: AchievementID?
+    package var pendingCelebration: AchievementID?
 
     @ObservationIgnored private let store = PawprintStore.shared
 

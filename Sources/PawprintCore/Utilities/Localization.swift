@@ -37,8 +37,12 @@ final package class LocalizationManager {
 
     /// Bumped on every language change purely so `@Observable` views re-render; the lookup
     /// itself reads `Tables`, not this.
-    package private(set) var revision: Int = 0
-    package private(set) var languageCode: String = LocalizationManager.baseLanguage
+    // `package var`, not `package private(set) var`. The two are equivalent to every caller here —
+    // nothing outside this type assigns to them — but the Observation macro on the CI toolchain
+    // copies the modifier list into its generated accessors and emits a duplicate, which is a
+    // build failure rather than a warning. Keeping the setter package-visible is the smaller cost.
+    package var revision: Int = 0
+    package var languageCode: String = LocalizationManager.baseLanguage
 
 
     private init() {
