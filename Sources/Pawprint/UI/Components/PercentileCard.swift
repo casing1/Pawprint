@@ -1,4 +1,5 @@
 import SwiftUI
+import PawprintCore
 
 /// "How does today compare to every day I've recorded?"
 ///

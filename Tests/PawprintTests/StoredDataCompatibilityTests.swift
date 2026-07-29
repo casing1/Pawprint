@@ -1,4 +1,5 @@
 import XCTest
+import PawprintCore
 @testable import Pawprint
 
 /// What happens when today's build reads yesterday's database.

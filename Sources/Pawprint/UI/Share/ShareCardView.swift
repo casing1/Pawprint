@@ -1,4 +1,5 @@
 import SwiftUI
+import PawprintCore
 
 /// The poster-style card that gets rendered to an image for sharing. Designed to be readable
 /// as a standalone picture: no app chrome, high contrast, one clear headline.

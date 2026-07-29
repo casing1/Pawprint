@@ -1,4 +1,5 @@
 import SwiftUI
+import PawprintCore
 
 /// "오늘 vs 평소" — compares today against the recent average for a handful of metrics.
 /// Deliberately neutral about direction: being below average is described as quieter, not worse.

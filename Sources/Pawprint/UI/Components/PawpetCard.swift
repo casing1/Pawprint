@@ -1,4 +1,5 @@
 import SwiftUI
+import PawprintCore
 
 /// The day's cat plus a plain-language reading of what it's showing.
 ///

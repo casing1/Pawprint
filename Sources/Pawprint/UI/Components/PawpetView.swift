@@ -1,4 +1,5 @@
 import SwiftUI
+import PawprintCore
 
 /// The day's cat, drawn procedurally from `PawpetTraits`.
 ///

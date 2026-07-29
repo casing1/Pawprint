@@ -1,4 +1,5 @@
 import SwiftUI
+import PawprintCore
 
 /// Confetti burst used for level-ups and broken records.
 ///

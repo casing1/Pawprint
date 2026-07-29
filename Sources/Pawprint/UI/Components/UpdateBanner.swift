@@ -1,4 +1,5 @@
 import SwiftUI
+import PawprintCore
 
 /// "A new version is ready" strip at the top of the popover.
 ///

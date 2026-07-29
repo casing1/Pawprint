@@ -1,4 +1,5 @@
 import SwiftUI
+import PawprintCore
 
 /// The month retrospective, presented one reveal at a time.
 ///

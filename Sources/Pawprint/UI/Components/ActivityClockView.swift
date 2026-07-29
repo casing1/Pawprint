@@ -1,4 +1,5 @@
 import SwiftUI
+import PawprintCore
 
 /// The day laid out around a 24-hour dial — midnight at the top, noon at the bottom. Each of the
 /// 48 half-hour wedges grows with that slot's activity, which makes a day's rhythm (early bird,

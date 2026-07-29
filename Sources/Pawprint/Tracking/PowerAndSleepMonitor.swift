@@ -2,6 +2,7 @@ import AppKit
 import CoreAudio
 import IOKit
 import IOKit.ps
+import PawprintCore
 
 /// Observes everything about the Mac's own state rather than the user's input:
 /// system sleep/wake, display sleep, screen lock/unlock, lid (clamshell) open/close,

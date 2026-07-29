@@ -1,4 +1,5 @@
 import SwiftUI
+import PawprintCore
 
 /// A number that stays short by default but can show its full value on demand.
 ///

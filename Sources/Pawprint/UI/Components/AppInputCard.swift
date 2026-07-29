@@ -1,4 +1,5 @@
 import SwiftUI
+import PawprintCore
 
 /// Where the day's input actually went, per app, and how each app was driven.
 ///

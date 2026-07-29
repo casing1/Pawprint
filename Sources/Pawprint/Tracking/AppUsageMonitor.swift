@@ -1,4 +1,5 @@
 import AppKit
+import PawprintCore
 
 /// Observes app activation/launch/termination via `NSWorkspace`. Only the bundle identifier
 /// and localized app name are read — never window titles, document names, or URLs — so no

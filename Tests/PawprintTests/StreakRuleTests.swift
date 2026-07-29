@@ -1,4 +1,5 @@
 import XCTest
+import PawprintCore
 @testable import Pawprint
 
 /// The streak rule, which decides the cat's collar.

@@ -1,6 +1,7 @@
 import SwiftUI
 import AppKit
 import UserNotifications
+import PawprintCore
 
 /// Which pane is showing. Held in `@State` on the root, which is the fix for a long-standing
 /// annoyance: `TabView` kept its selection internally, so every settings change re-evaluated the

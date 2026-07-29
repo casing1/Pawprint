@@ -1,5 +1,6 @@
 import AppKit
 import SwiftUI
+import PawprintCore
 
 /// Warns that character keys are not being counted.
 ///

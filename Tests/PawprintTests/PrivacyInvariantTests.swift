@@ -1,4 +1,5 @@
 import XCTest
+import PawprintCore
 @testable import Pawprint
 
 /// The privacy rules, asserted against the model rather than trusted to review.

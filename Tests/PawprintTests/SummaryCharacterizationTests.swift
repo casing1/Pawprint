@@ -1,4 +1,5 @@
 import XCTest
+import PawprintCore
 @testable import Pawprint
 
 /// Pins the behaviour of `StatsEngine.summary` before it is split apart.

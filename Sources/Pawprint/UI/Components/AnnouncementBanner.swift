@@ -1,4 +1,5 @@
 import SwiftUI
+import PawprintCore
 
 /// The notice strip at the top of the popover, plus the sheet behind it.
 ///

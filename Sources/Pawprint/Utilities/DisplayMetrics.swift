@@ -1,5 +1,6 @@
 import AppKit
 import CoreGraphics
+import PawprintCore
 
 /// Real physical calibration for the "커서가 N미터 이동" / "화면 N개 높이만큼 스크롤" conversions.
 ///
@@ -7,7 +8,7 @@ import CoreGraphics
 /// Now derived from the actual display: `CGDisplayScreenSize` reports the panel's physical size
 /// in millimeters, which combined with its size in points gives a true points-per-meter scale.
 /// Values are cached and recomputed when the screen configuration changes.
-final class DisplayMetrics {
+final class DisplayMetrics: DisplayCalibrating {
     static let shared = DisplayMetrics()
 
     /// Fallbacks for displays that don't report a physical size (common for virtual displays
@@ -64,4 +65,12 @@ final class DisplayMetrics {
     func screens(fromScrollPoints points: Double) -> Double {
         points / mainScreenHeightPoints
     }
+}
+
+extension DisplayMetrics {
+    /// The domain names these in metres and asks for the panel height in points separately; the
+    /// stored properties above keep the names they were measured under.
+    var pointsPerMetre: Double { pointsPerMeter }
+    var screenHeightPoints: Double { mainScreenHeightPoints }
+    var screenHeightMetres: Double { mainScreenHeightMeters }
 }

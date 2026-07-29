@@ -1,4 +1,5 @@
 import SwiftUI
+import PawprintCore
 
 /// Convenience two-way `Binding`s into `AppSettings` for SwiftUI controls, funneled through
 /// `updateSettings(_:)` so every write still gets persisted and re-evaluated (exclusion state,

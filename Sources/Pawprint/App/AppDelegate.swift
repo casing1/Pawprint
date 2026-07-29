@@ -1,10 +1,16 @@
 import AppKit
+import PawprintCore
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private lazy var statusItemController = StatusItemController()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // The domain states what it needs from the display; AppKit is what can answer. Injected
+        // before anything computes a summary, because the fallback would quietly under-report
+        // cursor distance and scroll height on a Retina panel.
+        DisplayCalibration.current = DisplayMetrics.shared
+
         applyDockIconPolicy()
         TrackingCoordinator.shared.start()
         MenuBarIconAnimator.shared.start()
@@ -167,6 +173,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         if ProcessInfo.processInfo.environment["PAWPRINT_PERF"] != nil {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { DebugSnapshot.probePerformance() }
+        }
+
+        if ProcessInfo.processInfo.environment["PAWPRINT_DIGEST"] != nil {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { DebugSnapshot.probeSummaryDigest() }
         }
 
         if ProcessInfo.processInfo.environment["PAWPRINT_STREAK"] != nil {

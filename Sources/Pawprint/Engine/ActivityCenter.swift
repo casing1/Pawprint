@@ -1,5 +1,6 @@
 import AppKit
 import Observation
+import PawprintCore
 
 /// Central mutation point for everything Pawprint records. Tracking services never touch
 /// storage directly — they call into `ActivityCenter`, which applies the pause/excluded-app
@@ -926,8 +927,4 @@ final class ActivityCenter {
 
 enum ClickKind {
     case left, right, double, drag
-}
-
-enum CollectionCategory {
-    case keyboard, mouse, appUsage, clipboard, sleepWake, powerPeripherals
 }

@@ -1,4 +1,5 @@
 import SwiftUI
+import PawprintCore
 
 /// Compact sparkline of the day's minute-by-minute activity intensity. Tapping expands it to
 /// show a coarser hour-by-hour breakdown with labels.

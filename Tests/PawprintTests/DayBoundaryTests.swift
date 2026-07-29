@@ -1,4 +1,5 @@
 import XCTest
+import PawprintCore
 @testable import Pawprint
 
 /// Day boundaries, pinned before anything moves.

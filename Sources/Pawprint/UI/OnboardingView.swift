@@ -1,6 +1,7 @@
 import AppKit
 import SwiftUI
 import UserNotifications
+import PawprintCore
 
 /// First-run setup.
 ///

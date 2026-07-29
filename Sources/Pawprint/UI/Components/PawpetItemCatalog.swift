@@ -1,4 +1,5 @@
 import SwiftUI
+import PawprintCore
 
 /// Every item a cat can wear, what unlocks it, and what it is worth.
 ///

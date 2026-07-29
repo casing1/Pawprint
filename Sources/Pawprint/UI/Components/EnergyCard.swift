@@ -1,4 +1,5 @@
 import SwiftUI
+import PawprintCore
 
 /// Translates the day's battery drain into real electrical energy and everyday equivalents.
 /// Only battery discharge is counted — while plugged in, macOS doesn't expose actual wall draw,

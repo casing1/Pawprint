@@ -1,6 +1,7 @@
 import AppKit
 import Observation
 import SwiftUI
+import PawprintCore
 
 /// Drives the menu bar icon animation, for whichever icon the user picked.
 ///

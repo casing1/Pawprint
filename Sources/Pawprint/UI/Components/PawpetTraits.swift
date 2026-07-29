@@ -1,4 +1,5 @@
 import SwiftUI
+import PawprintCore
 
 /// Every visual axis of the day's cat, plus the reason each one looks the way it does.
 ///

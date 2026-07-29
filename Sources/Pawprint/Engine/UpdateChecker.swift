@@ -2,6 +2,7 @@ import AppKit
 import CryptoKit
 import Observation
 import Security
+import PawprintCore
 
 /// One release, as described by the update feed.
 struct UpdateRelease: Codable, Equatable {
@@ -159,18 +160,6 @@ final class UpdateChecker {
         default: return nil
         }
     }
-}
-
-/// Distribution constants, kept outside the `@MainActor` class so non-isolated types such as
-/// `AppSettings` can read them without hopping actors.
-enum UpdateDistribution {
-    /// Public half of the update signing key. The private half is a GitHub Actions secret.
-    /// Changing this invalidates every previously published release — rotate deliberately.
-    static let publicKey = "WFrwhuof35wfjgGTjm5WwGXW8BlHb6DnXYKNcfoOiBc="
-
-    /// GitHub Releases for this repository. Ships as the default so a fresh install already
-    /// knows where updates come from; the setting itself is still off until the user opts in.
-    static let feedURL = "https://api.github.com/repos/yhcho0405/Pawprint/releases/latest"
 }
 
 extension UpdateChecker {

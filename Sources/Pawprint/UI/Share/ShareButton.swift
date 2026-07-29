@@ -1,4 +1,5 @@
 import SwiftUI
+import PawprintCore
 
 /// Share control with a preview + copy/save actions. Shows inline confirmation after copying
 /// so the user knows the image is on the clipboard without leaving the popover.

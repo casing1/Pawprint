@@ -1,4 +1,5 @@
 import SwiftUI
+import PawprintCore
 
 /// The endless-progression panel: an overall level headline plus a per-track progress list.
 /// Every track always has a next threshold, so there's never a "completed everything" state.

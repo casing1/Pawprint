@@ -1,4 +1,5 @@
 import SwiftUI
+import PawprintCore
 
 /// Weekday × hour heatmap of all recorded activity — the "punch card" GitHub popularised.
 ///

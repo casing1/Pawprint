@@ -1,5 +1,6 @@
 import AppKit
 import SwiftUI
+import PawprintCore
 
 /// Floating always-on-top readout of the session happening right now.
 ///

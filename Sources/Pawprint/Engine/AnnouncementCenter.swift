@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import PawprintCore
 
 /// Fetches project notices and remembers which ones have been dismissed.
 ///

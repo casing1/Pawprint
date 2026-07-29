@@ -1,4 +1,5 @@
 import Foundation
+import PawprintCore
 
 /// Fabricates a plausible history so the README can show the real app with something in it.
 ///

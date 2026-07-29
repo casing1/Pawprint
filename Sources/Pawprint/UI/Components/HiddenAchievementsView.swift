@@ -1,4 +1,5 @@
 import SwiftUI
+import PawprintCore
 
 /// The achievements sheet: nine hidden slots, plus the open ones underneath.
 ///

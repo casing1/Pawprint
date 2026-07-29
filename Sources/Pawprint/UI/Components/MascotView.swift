@@ -1,4 +1,5 @@
 import SwiftUI
+import PawprintCore
 
 enum MascotMood {
     case paused

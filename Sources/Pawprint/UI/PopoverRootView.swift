@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import PawprintCore
 
 enum PopoverTab: Int, CaseIterable {
     case today, calendar, gallery, records

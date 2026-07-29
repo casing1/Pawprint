@@ -1,5 +1,6 @@
 import AppKit
 import SwiftUI
+import PawprintCore
 
 /// Renders `ShareCardView` to a bitmap and puts it on the pasteboard, so the user can paste the
 /// card straight into a message, doc, or post.

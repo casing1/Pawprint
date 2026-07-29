@@ -4,6 +4,7 @@ import ImageIO
 import UniformTypeIdentifiers
 import IOKit.hid
 import SwiftUI
+import PawprintCore
 
 /// Debug-only helpers, all gated behind environment variables so they never run in normal use.
 /// They exist because this app has no testable UI surface from the command line — rendering the
@@ -1170,6 +1171,51 @@ enum DebugSnapshot {
         }
 
         write("\nPERF DONE\n")
+        exit(0)
+    }
+
+    // MARK: - Summary digest (PAWPRINT_DIGEST)
+
+    /// Prints one day's summary as a stable list of numbers, plus a checksum over every stored day.
+    ///
+    /// Exists to answer one question across a structural change: does the same database still
+    /// produce the same statistics? Run it before and after and diff the output.
+    @MainActor
+    static func probeSummaryDigest() {
+        let day = ProcessInfo.processInfo.environment["PAWPRINT_DIGEST"] ?? ""
+        let store = PawprintStore.shared
+        let all = store.allDays()
+
+        func fields(_ summary: DailySummary) -> [(String, String)] {
+            Mirror(reflecting: summary).children.compactMap { child in
+                guard let label = child.label else { return nil }
+                switch child.value {
+                case let v as Int: return (label, String(v))
+                case let v as Double: return (label, String(format: "%.6f", v))
+                case let v as UInt64: return (label, String(v))
+                case let v as Bool: return (label, v ? "true" : "false")
+                default: return nil
+                }
+            }.sorted { $0.0 < $1.0 }
+        }
+
+        if day != "1", let raw = all.first(where: { $0.day == day }) {
+            let summary = StatsEngine.summary(for: raw, recentDays: [], dayStartHour: 0)
+            write("DIGEST day \(day)\n")
+            for (name, value) in fields(summary) { write("  \(name) = \(value)\n") }
+        }
+
+        // A checksum over every day, so a change anywhere in the history is visible as one number.
+        var checksum: UInt64 = 1469598103934665603
+        for raw in all {
+            let summary = StatsEngine.summary(for: raw, recentDays: [], dayStartHour: 0)
+            for (name, value) in fields(summary) {
+                for byte in Array("\(raw.day)/\(name)=\(value)".utf8) {
+                    checksum = (checksum ^ UInt64(byte)) &* 1099511628211
+                }
+            }
+        }
+        write("DIGEST days=\(all.count) checksum=\(String(checksum, radix: 16))\n")
         exit(0)
     }
 

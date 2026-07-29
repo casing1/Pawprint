@@ -1,4 +1,5 @@
 import SwiftUI
+import PawprintCore
 
 /// Collapsible detail card used for the keyboard / pointer / app breakdowns on the Today tab.
 /// Collapsed by default so the popover stays glanceable, per the spec's "가벼운 위젯" goal.

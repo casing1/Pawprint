@@ -1,4 +1,5 @@
 import SwiftUI
+import PawprintCore
 
 struct StatCard: View {
     let metric: MetricDefinition

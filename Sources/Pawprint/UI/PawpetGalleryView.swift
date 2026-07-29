@@ -1,4 +1,5 @@
 import SwiftUI
+import PawprintCore
 
 /// The collection of every cat you've had.
 ///

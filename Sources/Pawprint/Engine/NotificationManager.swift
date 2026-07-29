@@ -1,5 +1,6 @@
 import Foundation
 import UserNotifications
+import PawprintCore
 
 /// Local notifications: a once-a-day summary at a time the user picks, plus quiet celebrations
 /// for level-ups and personal records.

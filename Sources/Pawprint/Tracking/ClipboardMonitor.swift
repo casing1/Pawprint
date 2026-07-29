@@ -1,4 +1,5 @@
 import AppKit
+import PawprintCore
 
 /// Tiny cross-tracker hint so `ClipboardMonitor` can tell a cut from a copy, and can snapshot
 /// the clipboard's *type* at the moment of a paste (pasting normally doesn't change

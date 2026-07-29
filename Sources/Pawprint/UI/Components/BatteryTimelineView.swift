@@ -1,4 +1,5 @@
 import SwiftUI
+import PawprintCore
 
 /// Sparkline of the day's battery level, with charging stretches tinted differently so a
 /// glance shows when the Mac was plugged in.

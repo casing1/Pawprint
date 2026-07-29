@@ -1,4 +1,5 @@
 import SwiftUI
+import PawprintCore
 
 @MainActor
 struct TodayView: View {

@@ -1,4 +1,5 @@
 import AppKit
+import PawprintCore
 
 /// Observes global key-down and modifier-flag events system-wide to classify keystrokes by
 /// category and detect well-known shortcut chords. It only ever reads `event.keyCode` and

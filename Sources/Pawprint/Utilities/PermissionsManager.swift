@@ -2,6 +2,7 @@ import AppKit
 import ApplicationServices
 import IOKit.hid
 import Observation
+import PawprintCore
 
 /// Tracks the two OS permissions Pawprint needs to observe global keyboard/mouse events.
 /// Keyboard events (keyDown/flagsChanged) require Input Monitoring; mouse events and some

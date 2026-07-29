@@ -1,4 +1,5 @@
 import SwiftUI
+import PawprintCore
 
 /// Per-key heatmap drawn on a real US-ANSI keyboard shape, colored by how often each physical
 /// key was pressed.

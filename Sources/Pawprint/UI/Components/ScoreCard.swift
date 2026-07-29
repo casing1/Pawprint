@@ -1,4 +1,5 @@
 import SwiftUI
+import PawprintCore
 
 /// The hero card at the top of the Today tab: today's playful score, its grade ring, and the
 /// day's persona. Framed as a summary of how busy the day looked, never as a rating of the user.

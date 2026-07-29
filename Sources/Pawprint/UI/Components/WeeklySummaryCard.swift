@@ -1,4 +1,5 @@
 import SwiftUI
+import PawprintCore
 
 struct WeeklySummaryCard: View {
     let rollup: WeeklyRollup

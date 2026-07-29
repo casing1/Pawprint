@@ -1,4 +1,5 @@
 import SwiftUI
+import PawprintCore
 
 struct AchievementGrid: View {
     @Bindable var achievements = AchievementEngine.shared
