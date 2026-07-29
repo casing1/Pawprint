@@ -272,13 +272,60 @@ the first place. Nothing is skipped: S2 still happens, and §17's requirement th
 be testable independently of the app target is what S2 delivers. The tests written now carry over
 unchanged — `@testable import PawprintCore` instead of `Pawprint`.
 
-## 9. Status
+## 9. Verifying that behaviour did not change
+
+Each structural stage has to prove it changed nothing. The method, established at S2 and reused
+afterwards:
+
+1. `PAWPRINT_DIGEST=<day>` dumps every numeric field of that day's summary and then checksums the
+   summaries of **every** stored day.
+2. Build the pre-stage commit in a `git worktree`, run the same probe against the same database,
+   and diff.
+
+For S2 that produced, across the 115-day demo database:
+
+```
+before  DIGEST days=115 checksum=8ab4898b51151e79
+after   DIGEST days=115 checksum=8ab4898b51151e79
+diff of the expanded day: no field differs
+```
+
+### Performance across S2
+
+The debug build regressed 7–12% uniformly — including `load 30 days`, which is SQLite and JSON
+decoding and has nothing to do with the split. Uniformity across unrelated workloads pointed at the
+build rather than the code: calls from the app target into `PawprintCore` are cross-module now, and
+a debug build does not inline across a module boundary.
+
+Measured again on the release build, which is what ships:
+
+| Workload | Pre-split | Post-split | Δ |
+|---|---|---|---|
+| `summary 1 day` | 0.414 ms | 0.419 ms | +1.2% |
+| `load 30 days` | 23.682 ms | 23.532 ms | −0.6% |
+| `load 90 days` | 69.369 ms | 68.493 ms | −1.3% |
+| `lifetime rebuild` | 96.072 ms | 95.633 ms | −0.5% |
+| `20k keys @96wpm` | 1,049.836 ms | 1,053.225 ms | +0.3% |
+| `20k keys @burst` | 1,304.639 ms | 1,269.689 ms | −2.7% |
+| `100k cursor moves` | 4,896.887 ms | 4,899.950 ms | +0.1% |
+| `20k clicks` | 995.664 ms | 993.975 ms | −0.2% |
+| `5k app switches` | 491.103 ms | 489.815 ms | −0.3% |
+
+Worst case +1.2%, several workloads slightly faster, nothing outside noise. The §14 threshold is
+met on the build users run; the debug figure is recorded here so it is not rediscovered as a
+mystery later.
+
+The release figures also put the §7 keystroke finding in proportion: 52 µs per key at 96 WPM and
+65 µs at burst, against 132 µs and 539 µs in debug. The sliding window is still O(n), and still
+worth fixing in S8, but the shipped cost of it is a quarter of what the baseline table suggests.
+
+## 10. Status
 
 | Stage | State |
 |---|---|
 | S1 Baseline, plan, `PAWPRINT_PERF` | **Done** |
 | S3 Characterization tests | **Partial** — 37 tests: privacy invariants, day boundaries + DST, stored-data compatibility, summary determinism, streak rule. Missing: recording policy (A), keyboard/mouse accumulation (C), system state (D), store-level compatibility on a real database fixture (F), update signing (G) |
-| S2 Module split | Not started — scoped at ~1,093 declarations |
+| S2 Module split | **Done** — 5,491 lines in `PawprintCore`, 702 `package` declarations, 16 written-out memberwise initializers, `DisplayCalibrating` seam. Verified identical by digest and by the 37 tests |
 | S4 – S12 | Not started |
 | Features F1 – F3 | Not started |
 
@@ -291,4 +338,7 @@ unchanged — `@testable import PawprintCore` instead of `Pawprint`.
 | `swift test` | Pass — 37 tests, 0 failures |
 | `./scripts/build_app.sh release` | Pass |
 | `lipo -archs` | `x86_64 arm64` |
+| Existing database loads without loss | Pass — 115-day checksum identical |
+| Core summaries unchanged | Pass — no field differs |
+| No significant performance regression | Pass — worst +1.2% on the release build |
 | Everything else in §17 | Not yet met — the stages they depend on have not run |
