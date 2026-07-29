@@ -119,7 +119,14 @@ jobs:
       - name: Verify the archive against the pinned public key
         run: |
           # Catches a mismatched key pair here rather than on every user's machine.
-          PUBLIC_KEY=$(grep -o 'static let publicKey = "[^"]*"' Sources/Pawprint/Engine/UpdateChecker.swift | cut -d'"' -f2)
+          # Searched for rather than read from a fixed path: the constant moved once already,
+          # when the domain was split into PawprintCore, and this step went on "verifying" with an
+          # empty key until the signature check itself failed. An empty result is now fatal here.
+          PUBLIC_KEY=$(grep -rho 'static let publicKey = "[^"]*"' Sources | head -1 | cut -d'"' -f2)
+          if [ -z "$PUBLIC_KEY" ]; then
+            echo "::error::could not find the pinned public key in Sources"
+            exit 1
+          fi
           swift scripts/updatekeys.swift verify \
             "dist/Pawprint-${{ steps.version.outputs.version }}.zip" \
             "$(cat dist/Pawprint-${{ steps.version.outputs.version }}.zip.sig)" \
