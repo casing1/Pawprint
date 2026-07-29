@@ -1174,6 +1174,62 @@ enum DebugSnapshot {
         exit(0)
     }
 
+    // MARK: - Rarity vs lustre separation (PAWPRINT_LUSTRE)
+
+    /// Counts how many distinct values each measure actually produces over a real history.
+    ///
+    /// The claim behind `CatLustre` is that rarity collides and lustre does not. That is a
+    /// measurable claim, so it is measured rather than asserted.
+    @MainActor
+    static func probeLustre() {
+        let store = PawprintStore.shared
+        let days = store.allDays().map {
+            SummaryCache.shared.summary(for: $0, dayStartHour: 0)
+        }
+        let streaks = StreakRule.streaks(for: days)
+        let traits = days.map { PawpetTraits(day: $0.day, summary: $0, streakDays: streaks[$0.day] ?? 0) }
+        guard !traits.isEmpty else { write("LUSTRE no days\n"); exit(1) }
+
+        let rarities = traits.map(\.rarity)
+        let lustres = traits.map { $0.lustre.value }
+
+        var collisions: [Int: Int] = [:]
+        for r in rarities { collisions[r, default: 0] += 1 }
+        let worstRarity = collisions.values.max() ?? 0
+
+        var lustreCollisions: [String: Int] = [:]
+        for l in lustres { lustreCollisions[String(format: "%.2f", l), default: 0] += 1 }
+        let worstLustre = lustreCollisions.values.max() ?? 0
+
+        write("LUSTRE days=\(traits.count) wings=\(traits.filter { $0.wings != .none }.count) "
+              + String(format: "pointsPerMetre=%.1f screenH=%.1f\n",
+                       DisplayCalibration.current.pointsPerMetre,
+                       DisplayCalibration.current.screenHeightPoints))
+        write("  distinct rarity values : \(Set(rarities).count)\n")
+        write("  distinct lustre values : \(Set(lustres.map { String(format: "%.2f", $0) }).count)\n")
+        write("  largest rarity tie     : \(worstRarity) days share one value\n")
+        write("  largest lustre tie     : \(worstLustre) days share one value\n")
+
+        for finish in CatLustre.Finish.allCases {
+            let n = traits.filter { $0.lustre.finish == finish }.count
+            write("  \(String(describing: finish)): \(n)\n")
+        }
+
+        // The separation that matters: cats whose items are identical.
+        let byRarity = Dictionary(grouping: traits, by: \.rarity)
+        if let (value, tied) = byRarity.max(by: { $0.value.count < $1.value.count }), tied.count > 1 {
+            let spread = tied.map(\.lustre.value)
+            write("  rarity \(value) is shared by \(tied.count) days; their lustre spans "
+                  + String(format: "%.2f – %.2f\n", spread.min()!, spread.max()!))
+        }
+        let sorted = lustres.sorted()
+        write("  deciles: " + (0...10).map {
+            String(format: "%.1f", sorted[min(sorted.count - 1, $0 * sorted.count / 10)])
+        }.joined(separator: " ") + "\n")
+        write("\nLUSTRE OK\n")
+        exit(0)
+    }
+
     // MARK: - Summary digest (PAWPRINT_DIGEST)
 
     /// Prints one day's summary as a stable list of numbers, plus a checksum over every stored day.

@@ -182,7 +182,11 @@ struct PawpetTraits {
                      setARecord: ActivityCenter.shared.setARecord(on: summary.day))
     }
 
+    /// Kept so `lustre` can look at the magnitudes behind the items. Nothing else reads it.
+    private let sourceSummary: DailySummary
+
     init(day: String, summary: DailySummary, streakDays: Int = 0, setARecord: Bool = false) {
+        sourceSummary = summary
         // --- Identity: date only ---
         var generator = SeededGenerator(seed: Self.daySeed(day))
         paletteIndex = generator.nextInt(below: Self.palettes.count)
@@ -363,7 +367,18 @@ struct PawpetTraits {
     /// (colour, pattern, ears) contribute nothing: they're uniformly random, so scoring them
     /// would just add noise you can't influence.
     var rarity: Int {
-        Int(rarityBreakdown.reduce(0) { $0 + $1.earned }.rounded())
+        Int(rarityPoints.rounded())
+    }
+
+    /// The same total before rounding, which is what lustre is built on.
+    var rarityPoints: Double {
+        rarityBreakdown.reduce(0) { $0 + $1.earned }
+    }
+
+    /// The continuous companion to `rarity`: see `CatLustre`. Sorts the gallery and drives the
+    /// card's finish, so two cats with the same items still look — and rank — differently.
+    var lustre: CatLustre {
+        CatLustre.compute(itemPoints: rarityPoints, summary: sourceSummary)
     }
 
     /// Per-axis contribution, for the stat sheet. Ordered heaviest first.

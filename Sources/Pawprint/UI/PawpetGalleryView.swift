@@ -44,11 +44,12 @@ struct PawpetGalleryView: View {
     }
 
     enum SortField: String, CaseIterable, Identifiable {
-        case rarity, date, score
+        case rarity, lustre, date, score
         var id: String { rawValue }
         var label: String {
             switch self {
             case .rarity: return L10n.t("pawpetGalleryView.d4ebe9b6")
+            case .lustre: return L10n.t("pawpetGalleryView.69090c79")
             case .date: return L10n.t("pawpetGalleryView.5caa75a8")
             case .score: return L10n.t("pawpetGalleryView.67d2cf6b")
             }
@@ -91,6 +92,11 @@ struct PawpetGalleryView: View {
                 let a = traits(for: lhs).rarity
                 let b = traits(for: rhs).rarity
                 // Ties fall back to date so the order is stable and never looks shuffled.
+                ascending = a == b ? lhs.day < rhs.day : a < b
+            case .lustre:
+                // Continuous, so a tiebreak is theory rather than practice — but keep it stable.
+                let a = traits(for: lhs).lustre.value
+                let b = traits(for: rhs).lustre.value
                 ascending = a == b ? lhs.day < rhs.day : a < b
             case .date:
                 ascending = lhs.day < rhs.day
@@ -266,6 +272,7 @@ struct PawpetGalleryView: View {
         } label: {
             VStack(spacing: 2) {
                 PawpetView(summary: summary, size: 62, streakDays: streak(for: summary), showsAura: true)
+                    .overlay { CatFoil(lustre: t.lustre, size: 62) }
                     .overlay(alignment: .topLeading) {
                         Text(t.rarityGrade)
                             .font(.system(size: 8, weight: .heavy))
@@ -277,7 +284,7 @@ struct PawpetGalleryView: View {
                 HStack(spacing: 3) {
                     Text(Formatters.shortDayLabel(summary.day))
                         .font(.system(size: 8)).foregroundStyle(.secondary)
-                    Text("\(t.rarity)")
+                    Text(sort == .lustre ? t.lustre.display : "\(t.rarity)")
                         .font(.system(size: 8, weight: .semibold).monospacedDigit())
                         .foregroundStyle(t.rarityColor)
                 }
@@ -285,7 +292,7 @@ struct PawpetGalleryView: View {
             }
         }
         .buttonStyle(.plain)
-        .help("\(Formatters.dayLabel(summary.day)) · \(t.rarityLabel) \(t.rarity) · \(t.caption)")
+        .help(L10n.t("pawpetGalleryView.5837d7db", Formatters.dayLabel(summary.day), t.rarityLabel, t.rarity, t.lustre.display, t.lustre.finishName, t.caption))
     }
 
     private func load() {
@@ -326,7 +333,9 @@ struct PawpetDetailView: View {
         let t = traits
         return VStack(alignment: .leading, spacing: 14) {
             HStack(alignment: .top, spacing: 14) {
-                PawpetView(summary: summary, size: 150, streakDays: streakDays)
+                CatFoilTilt(lustre: t.lustre, size: 150) {
+                    PawpetView(summary: summary, size: 150, streakDays: streakDays)
+                }
                 rarityPanel(t)
             }
             breakdownSection(t)
@@ -367,6 +376,17 @@ struct PawpetDetailView: View {
                     Capsule().fill(t.rarityColor)
                         .frame(width: max(3, geo.size.width * CGFloat(t.rarity) / 100))
                 }
+            }
+            // The continuous companion. Rarity says which items the day earned; this says how
+            // emphatically, and it is what the card's finish is drawn from.
+            HStack(spacing: 4) {
+                Text(L10n.t("pawpetGalleryView.69090c79")).font(.caption2).foregroundStyle(.secondary)
+                Text(t.lustre.display)
+                    .font(.caption.weight(.semibold).monospacedDigit())
+                Text(t.lustre.finishName)
+                    .font(.system(size: 9, weight: .semibold))
+                    .padding(.horizontal, 5).padding(.vertical, 1)
+                    .background(Capsule().fill(t.rarityColor.opacity(0.18)))
             }
             .frame(height: 6)
 

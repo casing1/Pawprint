@@ -5,16 +5,29 @@ import Foundation
 /// as a quiet day rather than a failure (spec §1: 사용자 행동을 좋음/나쁨으로 단정하지 않는다).
 package struct PawprintScore {
     package var total: Int              // 0...100
+    /// Points earned *past* every reference, on a day that ran through all four of them.
+    ///
+    /// Kept apart from `total` rather than folded into it, so nothing that already depends on the
+    /// 0–100 band changes meaning: the grade thresholds, the percentile samples and every score
+    /// ever displayed still read exactly as before. An exceptional day used to be indistinguishable
+    /// from a merely complete one — both landed on 100 — and now it carries the surplus with it.
+    package var overflow: Int = 0
     package var grade: String           // S / A / B / C / D
     package var gradeColorHint: GradeTone
     package var headline: String
     package var components: [Component]
+
+    /// What the day is worth once the surplus counts. Used for ranking and records, where a
+    /// hundred-and-something genuinely outranks a hundred.
+    package var totalIncludingOverflow: Int { total + overflow }
 
     package struct Component: Identifiable {
         package var id: String { label }
         package var label: String
         package var earned: Int
         package var maximum: Int
+        /// Points this component earned beyond its reference. Zero unless the reference was passed.
+        package var overflow: Int = 0
     }
 
     package enum GradeTone {
@@ -31,26 +44,48 @@ package struct PawprintScore {
     }
 
     static package func build(from summary: DailySummary) -> PawprintScore {
-        let activity = scaled(Double(summary.activeSeconds), reference: Reference.activeSeconds, max: 30)
-        let focus = scaled(Double(summary.totalFocusSeconds), reference: Reference.focusSeconds, max: 30)
-        let typing = scaled(Double(summary.totalKeyPresses), reference: Reference.keyPresses, max: 20)
-        let speed = scaled(summary.maxWPM, reference: Reference.wpm, max: 20)
+        let axes: [(value: Double, reference: Double, max: Int, label: String)] = [
+            (Double(summary.activeSeconds), Reference.activeSeconds, 30, L10n.t("pawprintScore.2a22907d")),
+            (Double(summary.totalFocusSeconds), Reference.focusSeconds, 30, L10n.t("pawprintScore.56fb8019")),
+            (Double(summary.totalKeyPresses), Reference.keyPresses, 20, L10n.t("pawprintScore.24ad1fbd")),
+            (summary.maxWPM, Reference.wpm, 20, L10n.t("pawprintScore.e8a20d8c")),
+        ]
 
-        let total = activity + focus + typing + speed
+        let components = axes.map { axis in
+            Component(label: axis.label,
+                      earned: scaled(axis.value, reference: axis.reference, max: axis.max),
+                      maximum: axis.max,
+                      overflow: surplus(axis.value, reference: axis.reference, max: axis.max))
+        }
+
+        let total = components.reduce(0) { $0 + $1.earned }
+        let overflow = components.reduce(0) { $0 + $1.overflow }
         let (grade, tone) = gradeFor(total)
 
         return PawprintScore(
             total: total,
+            overflow: overflow,
             grade: grade,
             gradeColorHint: tone,
             headline: headlineFor(total: total, summary: summary),
-            components: [
-                Component(label: L10n.t("pawprintScore.2a22907d"), earned: activity, maximum: 30),
-                Component(label: L10n.t("pawprintScore.56fb8019"), earned: focus, maximum: 30),
-                Component(label: L10n.t("pawprintScore.24ad1fbd"), earned: typing, maximum: 20),
-                Component(label: L10n.t("pawprintScore.e8a20d8c"), earned: speed, maximum: 20),
-            ]
+            components: components
         )
+    }
+
+    /// Points for the part of a day that ran past its reference.
+    ///
+    /// Deliberately slow to start and slow to finish. The exponent above 1 means being a little
+    /// over the line is worth almost nothing — 20% past every reference earns about two points —
+    /// so an ordinary good day still reads as 100 rather than drifting into inflation. The cap at
+    /// three times the reference stops one unattended afternoon of key-repeat producing a number
+    /// nobody can interpret.
+    ///
+    /// Each axis can contribute at most half its base maximum, so the surplus tops out at +50 and
+    /// a score can never quite reach 150.
+    private static func surplus(_ value: Double, reference: Double, max maxPoints: Int) -> Int {
+        guard reference > 0, value > reference else { return 0 }
+        let excess = min((value / reference) - 1, 2.0) / 2.0
+        return Int((pow(excess, 1.5) * Double(maxPoints) / 2).rounded())
     }
 
     /// Square-root scaling so early activity feels rewarding and the curve flattens near the
@@ -86,11 +121,13 @@ package struct PawprintScore {
     /// The memberwise initializer, at package access — a `package struct`
     /// otherwise gets an internal one the application target cannot reach.
     package init(total: Int,
+                 overflow: Int = 0,
                  grade: String,
                  gradeColorHint: GradeTone,
                  headline: String,
                  components: [Component]) {
         self.total = total
+        self.overflow = overflow
         self.grade = grade
         self.gradeColorHint = gradeColorHint
         self.headline = headline

@@ -79,9 +79,17 @@ struct ScoreCard: View {
                 Text(score.grade)
                     .font(.system(size: 21, weight: .bold, design: .rounded))
                     .foregroundStyle(tone)
-                Text("\(score.total)")
-                    .font(.system(size: 10, weight: .medium, design: .rounded).monospacedDigit())
-                    .foregroundStyle(.secondary)
+                HStack(spacing: 1) {
+                    Text("\(score.total)")
+                        .font(.system(size: 10, weight: .medium, design: .rounded).monospacedDigit())
+                        .foregroundStyle(.secondary)
+                    // Only on a day that ran past every reference, which is the point of showing it.
+                    if score.overflow > 0 {
+                        Text("+\(score.overflow)")
+                            .font(.system(size: 9, weight: .heavy, design: .rounded).monospacedDigit())
+                            .foregroundStyle(tone)
+                    }
+                }
             }
         }
         .frame(width: 62, height: 62)

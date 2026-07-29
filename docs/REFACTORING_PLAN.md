@@ -327,7 +327,9 @@ worth fixing in S8, but the shipped cost of it is a quarter of what the baseline
 | S3 Characterization tests | **Partial** — 37 tests: privacy invariants, day boundaries + DST, stored-data compatibility, summary determinism, streak rule. Missing: recording policy (A), keyboard/mouse accumulation (C), system state (D), store-level compatibility on a real database fixture (F), update signing (G) |
 | S2 Module split | **Done** — 5,491 lines in `PawprintCore`, 702 `package` declarations, 16 written-out memberwise initializers, `DisplayCalibrating` seam. Verified identical by digest and by the 37 tests |
 | S4 – S12 | Not started |
-| Features F1 – F3 | Not started |
+| F1 Uncapped score | **Done** — surplus kept apart from the 0–100 band, so grades and percentiles are untouched |
+| F2 Continuous lustre | **Done** — `CatLustre` in the core; 26 distinct rarity values become 108 distinct lustre values over 116 days |
+| F3 Foil finish | **Done** — `CatFoil`, continuous in lustre, masked away from the cat's face |
 
 ### Acceptance checks, current state
 

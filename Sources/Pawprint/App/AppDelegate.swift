@@ -175,6 +175,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { DebugSnapshot.probePerformance() }
         }
 
+        if ProcessInfo.processInfo.environment["PAWPRINT_LUSTRE"] != nil {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { DebugSnapshot.probeLustre() }
+        }
+
         if ProcessInfo.processInfo.environment["PAWPRINT_DIGEST"] != nil {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { DebugSnapshot.probeSummaryDigest() }
         }
