@@ -28,10 +28,16 @@ jobs:
       - name: Test
         run: swift test
 
-      # Run again. The suite is meant to be deterministic — no wall-clock time, no sleeps — and a
-      # test that only passes sometimes is worth catching here rather than in a release.
-      - name: Test again, for determinism
-        run: swift test
+      # Run again, and in timezones that are not the machine's. The suite is meant to be
+      # deterministic, and the way it first failed to be was a day-boundary test that quietly
+      # depended on the host being in Seoul.
+      - name: Test again, in other timezones
+        run: |
+          set -euo pipefail
+          for tz in UTC America/New_York Pacific/Kiritimati; do
+            echo "--- TZ=$tz"
+            TZ=$tz swift test
+          done
 
       - name: Reject a hostile release tag
         run: ./scripts/test_validate_tag.sh
