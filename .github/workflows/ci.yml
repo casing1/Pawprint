@@ -5,6 +5,10 @@ on:
     branches: [main]
   pull_request:
 
+# Nothing here writes anything.
+permissions:
+  contents: read
+
 jobs:
   build:
     # macos-15, not macos-14. The Observation macro on the macos-14 image emits a duplicate
@@ -14,8 +18,58 @@ jobs:
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
-      - name: Build
+
+      - name: Build (debug)
+        run: swift build -c debug
+
+      - name: Build (release)
         run: swift build -c release
+
+      - name: Test
+        run: swift test
+
+      # Run again. The suite is meant to be deterministic — no wall-clock time, no sleeps — and a
+      # test that only passes sometimes is worth catching here rather than in a release.
+      - name: Test again, for determinism
+        run: swift test
+
+      - name: Reject a hostile release tag
+        run: ./scripts/test_validate_tag.sh
+
       - name: Package
         # Proves the whole bundling path still works, not just that the code compiles.
         run: ./scripts/build_app.sh release
+
+      - name: Confirm the binary is universal
+        run: |
+          set -euo pipefail
+          ARCHS=$(lipo -archs build/Pawprint.app/Contents/MacOS/Pawprint)
+          echo "archs: $ARCHS"
+          for want in arm64 x86_64; do
+            case " $ARCHS " in
+              *" $want "*) ;;
+              *) echo "::error::$want missing from the built binary"; exit 1 ;;
+            esac
+          done
+
+      # Everything a release does short of signing, which needs secrets a pull request cannot see.
+      - name: Package a disk image
+        run: |
+          set -euo pipefail
+          ./scripts/make_dmg.sh
+          ls -la dist/
+
+      # These reach paths a unit test cannot, because they need a running application: the loaded
+      # language pack, the item catalogue, the record rewards.
+      - name: Run the in-app probes
+        run: |
+          set -euo pipefail
+          APP=build/Pawprint.app/Contents/MacOS/Pawprint
+          for probe in PAWPRINT_L10N PAWPRINT_ITEMS PAWPRINT_REWARDS PAWPRINT_CHAOS \
+                       PAWPRINT_SESSIONS PAWPRINT_STREAK; do
+            echo "--- $probe"
+            if ! env "$probe=1" "$APP"; then
+              echo "::error::$probe failed"
+              exit 1
+            fi
+          done

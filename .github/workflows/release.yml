@@ -27,25 +27,40 @@ jobs:
       CERTIFICATE_P12: ${{ secrets.MACOS_CERTIFICATE_P12 }}
       CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
     steps:
+      # Checked out at the commit that triggered the run — a real SHA, never a string anyone
+      # typed. This exists only to get `scripts/` on disk so the tag can be validated before it is
+      # used for anything.
+      - uses: actions/checkout@v4
+
+      # The tag can be hand-typed into the workflow_dispatch form, and this job holds the signing
+      # key. Validated before it selects a ref, and passed through the environment rather than
+      # interpolated into the shell. `scripts/test_validate_tag.sh` covers the hostile cases.
+      - name: Validate the tag
+        id: version
+        env:
+          RAW_TAG: ${{ github.event.inputs.tag || github.ref_name }}
+        run: |
+          set -euo pipefail
+          VERSION=$(./scripts/validate_tag.sh "$RAW_TAG")
+          echo "tag=$RAW_TAG"     >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      # Now the real one, at the tag the release is actually for.
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.inputs.tag || github.ref }}
+          ref: ${{ steps.version.outputs.tag }}
           fetch-depth: 0
-
-      - name: Resolve version
-        id: version
-        run: |
-          TAG="${{ github.event.inputs.tag || github.ref_name }}"
-          VERSION="${TAG#v}"
-          echo "tag=$TAG"          >> "$GITHUB_OUTPUT"
-          echo "version=$VERSION"  >> "$GITHUB_OUTPUT"
 
       # The tag is the single source of truth for the version — the checked-in Info.plist is only
       # a default, so stamping it here keeps a re-tagged build from shipping a stale number.
       - name: Stamp version into Info.plist
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          BUILD: ${{ github.run_number }}
         run: |
-          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString ${{ steps.version.outputs.version }}" scripts/Info.plist
-          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${{ github.run_number }}" scripts/Info.plist
+          set -euo pipefail
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION" scripts/Info.plist
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD" scripts/Info.plist
 
       # macOS ties Accessibility / Input Monitoring grants to the code signature. An ad-hoc
       # signature is a hash of that exact build, so it changes every release and the user has to
@@ -82,13 +97,15 @@ jobs:
       - name: Build, sign and package
         env:
           PAWPRINT_UPDATE_PRIVATE_KEY: ${{ secrets.PAWPRINT_UPDATE_PRIVATE_KEY }}
+          VERSION: ${{ steps.version.outputs.version }}
         run: |
+          set -euo pipefail
           if [ -z "$PAWPRINT_UPDATE_PRIVATE_KEY" ]; then
             echo "::error::PAWPRINT_UPDATE_PRIVATE_KEY secret is not set — in-app updates would refuse this build."
             exit 1
           fi
           ./scripts/make_dmg.sh --build
-          cp "dist/Pawprint-${{ steps.version.outputs.version }}.dmg" dist/Pawprint.dmg
+          cp "dist/Pawprint-$VERSION.dmg" dist/Pawprint.dmg
 
       # A release that quietly fell back to ad-hoc after the secrets were configured is the exact
       # failure that went unnoticed once already: it publishes fine and only bites users later,
@@ -128,16 +145,17 @@ jobs:
             exit 1
           fi
           swift scripts/updatekeys.swift verify \
-            "dist/Pawprint-${{ steps.version.outputs.version }}.zip" \
-            "$(cat dist/Pawprint-${{ steps.version.outputs.version }}.zip.sig)" \
+            "dist/Pawprint-$VERSION.zip" \
+            "$(cat "dist/Pawprint-$VERSION.zip.sig")" \
             "$PUBLIC_KEY"
 
       - name: Publish release
         env:
           GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+          TAG: ${{ steps.version.outputs.tag }}
         run: |
-          VERSION="${{ steps.version.outputs.version }}"
-          TAG="${{ steps.version.outputs.tag }}"
+          set -euo pipefail
           NOTES_FILE=$(mktemp)
           {
             echo "### Install"
