@@ -70,6 +70,7 @@ jobs:
       - name: Import signing certificate
         if: env.CERTIFICATE_P12 != ''
         run: |
+          set -euo pipefail
           KEYCHAIN=$RUNNER_TEMP/signing.keychain-db
           KEYCHAIN_PASSWORD=$(uuidgen)
           security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
@@ -113,6 +114,7 @@ jobs:
       - name: Confirm the release is not ad-hoc signed
         if: env.CERTIFICATE_P12 != ''
         run: |
+          set -euo pipefail
           if codesign -dvv "build/Pawprint.app" 2>&1 | grep -q "Signature=adhoc"; then
             echo "::error::Certificate secrets are set but the app was ad-hoc signed."
             exit 1
@@ -124,6 +126,7 @@ jobs:
       # the build fails, so only a user can discover it.
       - name: Confirm the binary is universal
         run: |
+          set -euo pipefail
           archs="$(lipo -archs build/Pawprint.app/Contents/MacOS/Pawprint)"
           echo "architectures: $archs"
           for required in arm64 x86_64; do
@@ -134,7 +137,10 @@ jobs:
           done
 
       - name: Verify the archive against the pinned public key
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
         run: |
+          set -euo pipefail
           # Catches a mismatched key pair here rather than on every user's machine.
           # Searched for rather than read from a fixed path: the constant moved once already,
           # when the domain was split into PawprintCore, and this step went on "verifying" with an
