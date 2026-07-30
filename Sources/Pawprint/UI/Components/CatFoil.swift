@@ -1,144 +1,221 @@
 import SwiftUI
 import PawprintCore
 
-/// The trading-card finish on a cat's square, drawn from its lustre.
+/// A holographic trading-card finish, built the way the real ones are.
 ///
-/// Every parameter here is continuous in `lustre.value`, deliberately. Bands alone would only
-/// separate five groups, and a settled user earns most of their days inside one of them — the sheen
-/// angle, its width, its opacity and above all its *hue* keep moving between two cats three points
-/// apart, so the sort order stays visible where a five-way tier would have flattened it.
+/// The first attempt was a static gradient sitting on top of the art, which is not what a foil is.
+/// A foil is a *response to light*: the rainbow slides across the print as the card turns, a
+/// specular glare tracks where the light source is, and the glitter flashes on and off as the angle
+/// changes. None of that exists in a still image, which is why the first version read as a colour
+/// filter rather than as a finish.
 ///
-/// Cheap on purpose: static gradients composited over an already-rendered `Canvas`, no timers and
-/// no per-frame work, because the gallery draws hundreds of these at once. The only animation is
-/// the tilt in `CatFoilTilt`, which is applied to the single large card in the detail sheet.
-struct CatFoil: View {
+/// So this tracks the pointer and treats it as the light. Four layers, composited the way
+/// `poke-holo` composites its CSS equivalents:
+///
+/// 1. **Holo** — a repeating rainbow whose *phase shifts with the pointer*. This is the layer that
+///    makes it read as foil: the colours move, they do not merely exist. `.colorDodge`, which is
+///    what blows the bright parts out to white the way a real foil does under direct light.
+/// 2. **Glare** — a specular highlight centred on the pointer, `.overlay`, so the card looks lit
+///    from wherever you are pointing rather than uniformly bright.
+/// 3. **Glitter** — a sparse dot field, `.colorDodge` and pointer-shifted, so individual flecks
+///    catch and lose the light as the angle changes.
+/// 4. **Rim** — a lit edge, which is what actually sells the card as a physical object.
+///
+/// The pattern differs per finish tier and its phase is seeded from the exact lustre value, so no
+/// two cards behave identically.
+///
+/// **Cost.** At rest a card draws one cheap static layer. Everything above only exists while the
+/// pointer is inside that card, and a pointer is inside exactly one card at a time — so a gallery
+/// of several hundred pays for one.
+struct CatFoil<Content: View>: View {
     let lustre: CatLustre
-    /// Side of the square this is drawn over. The corner radius and the mask both scale from it.
+    /// Distinguishes two cards with the same lustre. The day string is the natural choice.
+    let seed: String
     var size: CGFloat
+    /// Off for anything being rendered to an image, where there is no pointer to track.
+    var interactive: Bool = true
 
-    private var cornerRadius: CGFloat { size * 0.15 }
-
-    /// 0–1 across the whole scale, not within the band. The band names the finish; this drives it.
-    private var t: Double { (lustre.value / 100).clamped(to: 0...1) }
-
-    /// Matte days get nothing at all — a card that is not special should not shine.
-    private var isVisible: Bool { lustre.finish > .matte }
-
-    var body: some View {
-        if isVisible {
-            ZStack {
-                sheen
-                if lustre.finish >= .holographic { rainbow }
-                if lustre.finish >= .prismatic { sparkleEdge }
-            }
-            .mask { faceSparingMask }
-            .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
-            .allowsHitTesting(false)
-        }
-    }
-
-    /// Keeps the finish off the middle of the card.
-    ///
-    /// A real foil washes over the whole print, and copying that here cost the thing the card is
-    /// for: at 62 points the cat's own colour *is* its identity in the grid, and a full-strength
-    /// holo turned a ginger cat and a grey one into the same violet smear. Letting it catch the
-    /// light around the edges reads as the same finish and leaves the face legible.
-    private var faceSparingMask: some View {
-        RadialGradient(
-            stops: [
-                .init(color: .white.opacity(0.10), location: 0),
-                .init(color: .white.opacity(0.35), location: 0.55),
-                .init(color: .white, location: 1),
-            ],
-            center: .center, startRadius: 0, endRadius: size * 0.72)
-    }
-
-    /// The base diagonal sweep. Its angle and hue both track lustre, so two cats of the same finish
-    /// still catch the light differently.
-    private var sheen: some View {
-        LinearGradient(
-            stops: [
-                .init(color: .white.opacity(0), location: 0),
-                .init(color: .white.opacity(0), location: 0.30 + 0.12 * t),
-                .init(color: .white.opacity(0.06 + 0.13 * t), location: 0.42 + 0.12 * t),
-                .init(color: .white.opacity(0), location: 0.54 + 0.12 * t),
-                .init(color: .white.opacity(0), location: 1),
-            ],
-            startPoint: .topLeading, endPoint: .bottomTrailing)
-            .rotationEffect(.degrees(-24 + 48 * t))
-            .blendMode(.screen)
-    }
-
-    /// The holographic band. Hue-rotated by the exact lustre value, which is what makes 87.80 and
-    /// 93.26 read as different cards rather than as two of the same.
-    private var rainbow: some View {
-        // A band, not a wash. Covering the whole square tinted the cat instead of finishing the
-        // card — the art has to stay the thing you are looking at.
-        LinearGradient(
-            stops: [
-                .init(color: .clear, location: 0),
-                .init(color: Color(hue: 0.00, saturation: 0.85, brightness: 1), location: 0.30),
-                .init(color: Color(hue: 0.16, saturation: 0.80, brightness: 1), location: 0.40),
-                .init(color: Color(hue: 0.40, saturation: 0.80, brightness: 1), location: 0.50),
-                .init(color: Color(hue: 0.58, saturation: 0.85, brightness: 1), location: 0.60),
-                .init(color: Color(hue: 0.80, saturation: 0.85, brightness: 1), location: 0.70),
-                .init(color: .clear, location: 1),
-            ],
-            startPoint: .leading, endPoint: .trailing)
-            .hueRotation(.degrees(lustre.value * 3.6))
-            .opacity(0.20 + 0.26 * lustre.intensity)
-            .rotationEffect(.degrees(-18 + 36 * t))
-            .blendMode(.overlay)
-    }
-
-    /// A lit rim, brightest on the rarest cards.
-    private var sparkleEdge: some View {
-        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-            .strokeBorder(
-                LinearGradient(
-                    colors: [.white.opacity(0.85), .white.opacity(0.15), .white.opacity(0.70)],
-                    startPoint: .topLeading, endPoint: .bottomTrailing),
-                lineWidth: lustre.finish == .radiant ? 1.4 : 0.9)
-            .opacity(0.35 + 0.45 * lustre.intensity)
-            .blendMode(.screen)
-    }
-}
-
-/// The same finish, tilted towards the pointer.
-///
-/// Only used where there is one large card and a pointer to track — the detail sheet. Putting this
-/// on grid cells would mean a gesture recogniser per thumbnail.
-struct CatFoilTilt<Content: View>: View {
-    let lustre: CatLustre
-    var size: CGFloat
     @ViewBuilder var content: () -> Content
 
-    @State private var tilt: CGSize = .zero
+    /// Where the light is, in unit coordinates. `nil` means the pointer is elsewhere.
+    @State private var pointer: CGPoint?
+
+    /// Screenshot capture forces a light position, because a captured window has no pointer in it
+    /// and the whole effect would otherwise photograph as its resting state.
+    static var forcedPointer: CGPoint? {
+        guard let raw = ProcessInfo.processInfo.environment["PAWPRINT_FOIL_POINTER"] else { return nil }
+        let parts = raw.split(separator: ",").compactMap { Double($0) }
+        guard parts.count == 2 else { return nil }
+        return CGPoint(x: parts[0], y: parts[1])
+    }
+
+    private var cornerRadius: CGFloat { size * 0.15 }
+    private var shape: RoundedRectangle { RoundedRectangle(cornerRadius: cornerRadius, style: .continuous) }
+
+    /// 0–1 across the whole scale. Drives how strong everything is.
+    private var strength: Double { (lustre.value / 100).clamped(to: 0...1) }
+
+    /// A stable per-card offset so two cards of the same tier do not sit in phase.
+    private var phase: Double {
+        let hash = seed.utf8.reduce(UInt64(5381)) { ($0 &* 33) &+ UInt64($1) }
+        return Double(hash % 360) / 360
+    }
+
+    /// Unit position of the light, defaulting to just above the top-left — the direction a card
+    /// held in the hand is usually lit from.
+    private var light: CGPoint {
+        pointer ?? Self.forcedPointer ?? CGPoint(x: 0.35, y: 0.2)
+    }
+
+    private var isLit: Bool { pointer != nil || Self.forcedPointer != nil }
 
     var body: some View {
         content()
-            .overlay {
-                CatFoil(lustre: lustre, size: size)
-                    .offset(x: tilt.width * 0.35, y: tilt.height * 0.35)
-            }
-            .rotation3DEffect(.degrees(tilt.height * 0.05), axis: (x: -1, y: 0, z: 0))
-            .rotation3DEffect(.degrees(tilt.width * 0.05), axis: (x: 0, y: 1, z: 0))
+            .overlay { if lustre.finish > .matte { layers } }
+            .clipShape(shape)
+            .overlay { if lustre.finish >= .holographic { rim } }
+            // Tilting towards the light is what makes the moving rainbow legible as a *surface*
+            // rather than as an animation playing on a flat panel.
+            .rotation3DEffect(.degrees((light.y - 0.5) * -10 * tiltScale),
+                              axis: (x: 1, y: 0, z: 0), perspective: 0.6)
+            .rotation3DEffect(.degrees((light.x - 0.5) * 10 * tiltScale),
+                              axis: (x: 0, y: 1, z: 0), perspective: 0.6)
+            .animation(.easeOut(duration: 0.18), value: pointer)
             .onContinuousHover { phase in
+                guard interactive else { return }
                 switch phase {
                 case .active(let point):
-                    withAnimation(.interactiveSpring(response: 0.25, dampingFraction: 0.8)) {
-                        tilt = CGSize(width: point.x - size / 2, height: point.y - size / 2)
-                    }
+                    pointer = CGPoint(x: (point.x / size).clamped(to: 0...1),
+                                      y: (point.y / size).clamped(to: 0...1))
                 case .ended:
-                    withAnimation(.easeOut(duration: 0.35)) { tilt = .zero }
+                    pointer = nil
                 }
             }
+    }
+
+    /// No tilt at rest — a grid of permanently skewed thumbnails looks broken, not shiny.
+    private var tiltScale: Double { isLit ? 1 : 0 }
+
+    @ViewBuilder private var layers: some View {
+        ZStack {
+            holo
+            if isLit { glare }
+            if lustre.finish >= .prismatic { glitter }
+        }
+        .clipShape(shape)
+        .allowsHitTesting(false)
+    }
+
+    // MARK: - Holo
+
+    /// The repeating rainbow. Its phase is driven by the pointer, which is the whole effect.
+    private var holo: some View {
+        let stops = holoStops
+        let travel = (light.x - 0.5) + (light.y - 0.5)
+        return LinearGradient(stops: stops, startPoint: .topLeading, endPoint: .bottomTrailing)
+            .scaleEffect(2.2)                                   // room to slide without exposing an edge
+            .offset(x: travel * size * 0.9, y: travel * size * 0.5)
+            .rotationEffect(.degrees(holoAngle))
+            .blendMode(.colorDodge)
+            // Dodge blows out fast, so the layer is kept dim and lets the blend do the brightening.
+            .opacity(isLit ? 0.16 + 0.22 * strength : 0.07 + 0.10 * strength)
+    }
+
+    /// Bar spacing and colour set per tier: a satin card gets a soft two-tone sweep, a radiant one
+    /// gets the full spectrum at close pitch.
+    private var holoStops: [Gradient.Stop] {
+        let bands: Int
+        let saturation: Double
+        switch lustre.finish {
+        case .matte, .satin:      bands = 2; saturation = 0.35
+        case .holographic:        bands = 4; saturation = 0.70
+        case .prismatic:          bands = 6; saturation = 0.85
+        case .radiant:            bands = 8; saturation = 1.00
+        }
+        let perBand = 6
+        return (0...(bands * perBand)).map { i in
+            let position = Double(i) / Double(bands * perBand)
+            let hue = (position * Double(bands) + phase).truncatingRemainder(dividingBy: 1)
+            return .init(color: Color(hue: hue, saturation: saturation, brightness: 0.95),
+                         location: position)
+        }
+    }
+
+    private var holoAngle: Double {
+        // Fixed per card, so the bars belong to the card rather than swinging with the pointer.
+        -35 + phase * 70
+    }
+
+    // MARK: - Glare
+
+    /// The specular highlight. Bright where the pointer is, falling to dark at the far corner,
+    /// which is what gives the surface a direction.
+    private var glare: some View {
+        RadialGradient(
+            stops: [
+                .init(color: .white.opacity(0.55 + 0.25 * strength), location: 0),
+                .init(color: .white.opacity(0.18), location: 0.35),
+                .init(color: .black.opacity(0.35), location: 1),
+            ],
+            center: UnitPoint(x: light.x, y: light.y),
+            startRadius: 0, endRadius: size * 0.9)
+            .blendMode(.overlay)
+    }
+
+    // MARK: - Glitter
+
+    /// Sparse flecks that catch the light. Drawn once into a `Canvas`; the pointer moves the field
+    /// slightly so individual dots pass in and out of the glare rather than sitting still.
+    private var glitter: some View {
+        Canvas { context, canvasSize in
+            var generator = SeededGenerator(seed: UInt64(abs(seed.hashValue % 100_000)) &+ 1)
+            let count = lustre.finish == .radiant ? 34 : 20
+            for _ in 0..<count {
+                let x = generator.nextDouble(in: 0...1) * canvasSize.width
+                let y = generator.nextDouble(in: 0...1) * canvasSize.height
+                let r = (0.006 + generator.nextDouble(in: 0...1) * 0.014) * canvasSize.width
+                // Brightest where the light is, so the field reads as reflective rather than as
+                // dots printed on the card.
+                let dx = x / canvasSize.width - light.x
+                let dy = y / canvasSize.height - light.y
+                let nearness = max(0, 1 - (dx * dx + dy * dy).squareRoot() * 1.6)
+                context.fill(Path(ellipseIn: CGRect(x: x - r, y: y - r, width: r * 2, height: r * 2)),
+                             with: .color(.white.opacity(0.25 + 0.65 * nearness)))
+            }
+        }
+        .offset(x: (light.x - 0.5) * size * 0.06, y: (light.y - 0.5) * size * 0.06)
+        .blendMode(.colorDodge)
+        .opacity(isLit ? 0.85 : 0.35)
+    }
+
+    // MARK: - Rim
+
+    private var rim: some View {
+        shape.strokeBorder(
+            LinearGradient(
+                stops: [
+                    .init(color: .white.opacity(0.9), location: 0),
+                    .init(color: .white.opacity(0.1), location: 0.45),
+                    .init(color: .white.opacity(0.75), location: 1),
+                ],
+                startPoint: UnitPoint(x: light.x, y: light.y),
+                endPoint: UnitPoint(x: 1 - light.x, y: 1 - light.y)),
+            lineWidth: lustre.finish == .radiant ? 1.6 : 1.0)
+            .opacity(0.30 + 0.50 * strength)
+            .blendMode(.screen)
+            .allowsHitTesting(false)
     }
 }
 
 extension Double {
     fileprivate func clamped(to range: ClosedRange<Double>) -> Double {
         Swift.min(Swift.max(self, range.lowerBound), range.upperBound)
+    }
+}
+
+extension CGFloat {
+    fileprivate func clamped(to range: ClosedRange<Double>) -> Double {
+        Swift.min(Swift.max(Double(self), range.lowerBound), range.upperBound)
     }
 }
 

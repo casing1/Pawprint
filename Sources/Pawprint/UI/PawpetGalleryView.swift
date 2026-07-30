@@ -271,8 +271,10 @@ struct PawpetGalleryView: View {
             selected = summary
         } label: {
             VStack(spacing: 2) {
-                PawpetView(summary: summary, size: 62, streakDays: streak(for: summary), showsAura: true)
-                    .overlay { CatFoil(lustre: t.lustre, size: 62) }
+                CatFoil(lustre: t.lustre, seed: summary.day, size: 62) {
+                    PawpetView(summary: summary, size: 62, streakDays: streak(for: summary),
+                               showsAura: true)
+                }
                     .overlay(alignment: .topLeading) {
                         Text(t.rarityGrade)
                             .font(.system(size: 8, weight: .heavy))
@@ -333,7 +335,7 @@ struct PawpetDetailView: View {
         let t = traits
         return VStack(alignment: .leading, spacing: 14) {
             HStack(alignment: .top, spacing: 14) {
-                CatFoilTilt(lustre: t.lustre, size: 150) {
+                CatFoil(lustre: t.lustre, seed: summary.day, size: 150) {
                     PawpetView(summary: summary, size: 150, streakDays: streakDays)
                 }
                 rarityPanel(t)

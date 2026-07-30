@@ -99,7 +99,12 @@ package struct CatLustre: Equatable {
         // blend reproduces exactly the clustering this is meant to resolve: on a real 115-day
         // history, weighting items at 0.62 put 58% of days in one band. Effort has six axes with
         // genuine day-to-day variance, and leaning on it is what makes the scale spread.
-        let raw = 0.45 * (itemPoints / 100) + 0.55 * effortShare
+        // The exponent is what stops the middle of the scale bunching. Averaging six axes pulls
+        // everything towards the centre, and on a real history that left the bottom 30% of days
+        // spread over 0–67 while the top 50% shared 89–93. Raising the effort share to a power
+        // pushes an average day down without moving an exceptional one, which widens the part of
+        // the scale people actually live in.
+        let raw = 0.40 * (itemPoints / 100) + 0.60 * pow(effortShare, 1.6)
         let value = (raw * 100).clamped(to: 0...100)
 
         let finish = Finish.allCases.last { value >= $0.threshold } ?? .matte
