@@ -10,7 +10,7 @@ import Foundation
 /// `DisplayCalibration.current` mid-calculation, which is the thing that stops its output being a
 /// pure function of its input; §S6 turns it into a parameter. Moving it behind a protocol first is
 /// what makes that change mechanical rather than exploratory.
-package protocol DisplayCalibrating: Sendable {
+package protocol DisplayCalibrating {
     /// Points of cursor delta per physical metre of desk-surface movement.
     var pointsPerMetre: Double { get }
     /// Height of the main display in points — one "screen" of scrolling.
@@ -37,6 +37,10 @@ package struct FallbackDisplayCalibration: DisplayCalibrating {
 }
 
 package enum DisplayCalibration {
+    // Not `Sendable`: the AppKit implementation recomputes itself when the screen configuration
+    // changes, so its stored values are mutable and promising otherwise would be a lie the
+    // compiler correctly refused. `current` is written once during launch, before anything reads
+    // it, which is what makes the unchecked access below safe rather than the protocol.
     /// Replaced once at launch with the real display. Tests and any headless use get the fallback,
     /// which is why the two conversions above are the only summary fields the characterization
     /// tests decline to pin to an exact value.

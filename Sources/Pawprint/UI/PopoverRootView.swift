@@ -23,8 +23,14 @@ struct PopoverRootView: View {
     @State private var tab: PopoverTab
 
     /// Capture only; the app itself always opens the gallery on rarity.
-    static let gallerySort: PawpetGalleryView.SortField =
-        ProcessInfo.processInfo.environment["PAWPRINT_SHOT_SORT"] == "date" ? .date : .rarity
+    static let gallerySort: PawpetGalleryView.SortField = {
+        switch ProcessInfo.processInfo.environment["PAWPRINT_SHOT_SORT"] {
+        case "date": return .date
+        case "lustre": return .lustre
+        case "score": return .score
+        default: return .rarity
+        }
+    }()
 
     /// `var`, not `let`, only so the capture harness can shoot one tab at two different heights
     /// in a single run. Nothing in the app writes it.

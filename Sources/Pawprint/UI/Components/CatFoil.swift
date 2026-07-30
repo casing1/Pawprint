@@ -38,15 +38,15 @@ struct CatFoil<Content: View>: View {
     @ViewBuilder var content: () -> Content
 
     /// Where the light is, in unit coordinates. `nil` means the pointer is elsewhere.
-    @State private var pointer: CGPoint?
+    @State private var pointer: UnitPoint?
 
     /// Screenshot capture forces a light position, because a captured window has no pointer in it
     /// and the whole effect would otherwise photograph as its resting state.
-    static var forcedPointer: CGPoint? {
+    static var forcedPointer: UnitPoint? {
         guard let raw = ProcessInfo.processInfo.environment["PAWPRINT_FOIL_POINTER"] else { return nil }
         let parts = raw.split(separator: ",").compactMap { Double($0) }
         guard parts.count == 2 else { return nil }
-        return CGPoint(x: parts[0], y: parts[1])
+        return UnitPoint(x: parts[0], y: parts[1])
     }
 
     private var cornerRadius: CGFloat { size * 0.15 }
@@ -63,9 +63,14 @@ struct CatFoil<Content: View>: View {
 
     /// Unit position of the light, defaulting to just above the top-left — the direction a card
     /// held in the hand is usually lit from.
-    private var light: CGPoint {
-        pointer ?? Self.forcedPointer ?? CGPoint(x: 0.35, y: 0.2)
+    private var light: UnitPoint {
+        pointer ?? Self.forcedPointer ?? UnitPoint(x: 0.35, y: 0.2)
     }
+
+    /// The same thing as plain `Double`s. `UnitPoint`'s components are `CGFloat`, and mixing those
+    /// with `Double` literals in the same expression leaves `*` ambiguous on a strict type-checker.
+    private var lightX: Double { Double(light.x) }
+    private var lightY: Double { Double(light.y) }
 
     private var isLit: Bool { pointer != nil || Self.forcedPointer != nil }
 
@@ -76,17 +81,17 @@ struct CatFoil<Content: View>: View {
             .overlay { if lustre.finish >= .holographic { rim } }
             // Tilting towards the light is what makes the moving rainbow legible as a *surface*
             // rather than as an animation playing on a flat panel.
-            .rotation3DEffect(.degrees((light.y - 0.5) * -10 * tiltScale),
+            .rotation3DEffect(.degrees((lightY - 0.5) * -10 * tiltScale),
                               axis: (x: 1, y: 0, z: 0), perspective: 0.6)
-            .rotation3DEffect(.degrees((light.x - 0.5) * 10 * tiltScale),
+            .rotation3DEffect(.degrees((lightX - 0.5) * 10 * tiltScale),
                               axis: (x: 0, y: 1, z: 0), perspective: 0.6)
             .animation(.easeOut(duration: 0.18), value: pointer)
             .onContinuousHover { phase in
                 guard interactive else { return }
                 switch phase {
                 case .active(let point):
-                    pointer = CGPoint(x: (point.x / size).clamped(to: 0...1),
-                                      y: (point.y / size).clamped(to: 0...1))
+                    pointer = UnitPoint(x: (Double(point.x) / Double(size)).clamped(to: 0...1),
+                                        y: (Double(point.y) / Double(size)).clamped(to: 0...1))
                 case .ended:
                     pointer = nil
                 }
@@ -111,10 +116,10 @@ struct CatFoil<Content: View>: View {
     /// The repeating rainbow. Its phase is driven by the pointer, which is the whole effect.
     private var holo: some View {
         let stops = holoStops
-        let travel = (light.x - 0.5) + (light.y - 0.5)
+        let travel = (lightX - 0.5) + (lightY - 0.5)
         return LinearGradient(stops: stops, startPoint: .topLeading, endPoint: .bottomTrailing)
             .scaleEffect(2.2)                                   // room to slide without exposing an edge
-            .offset(x: travel * size * 0.9, y: travel * size * 0.5)
+            .offset(x: travel * Double(size) * 0.9, y: travel * Double(size) * 0.5)
             .rotationEffect(.degrees(holoAngle))
             .blendMode(.colorDodge)
             // Dodge blows out fast, so the layer is kept dim and lets the blend do the brightening.
@@ -157,7 +162,7 @@ struct CatFoil<Content: View>: View {
                 .init(color: .white.opacity(0.18), location: 0.35),
                 .init(color: .black.opacity(0.35), location: 1),
             ],
-            center: UnitPoint(x: light.x, y: light.y),
+            center: light,
             startRadius: 0, endRadius: size * 0.9)
             .blendMode(.overlay)
     }
@@ -176,14 +181,14 @@ struct CatFoil<Content: View>: View {
                 let r = (0.006 + generator.nextDouble(in: 0...1) * 0.014) * canvasSize.width
                 // Brightest where the light is, so the field reads as reflective rather than as
                 // dots printed on the card.
-                let dx = x / canvasSize.width - light.x
-                let dy = y / canvasSize.height - light.y
+                let dx = Double(x / canvasSize.width) - lightX
+                let dy = Double(y / canvasSize.height) - lightY
                 let nearness = max(0, 1 - (dx * dx + dy * dy).squareRoot() * 1.6)
                 context.fill(Path(ellipseIn: CGRect(x: x - r, y: y - r, width: r * 2, height: r * 2)),
                              with: .color(.white.opacity(0.25 + 0.65 * nearness)))
             }
         }
-        .offset(x: (light.x - 0.5) * size * 0.06, y: (light.y - 0.5) * size * 0.06)
+        .offset(x: (lightX - 0.5) * Double(size) * 0.06, y: (lightY - 0.5) * Double(size) * 0.06)
         .blendMode(.colorDodge)
         .opacity(isLit ? 0.85 : 0.35)
     }
@@ -198,8 +203,8 @@ struct CatFoil<Content: View>: View {
                     .init(color: .white.opacity(0.1), location: 0.45),
                     .init(color: .white.opacity(0.75), location: 1),
                 ],
-                startPoint: UnitPoint(x: light.x, y: light.y),
-                endPoint: UnitPoint(x: 1 - light.x, y: 1 - light.y)),
+                startPoint: light,
+                endPoint: UnitPoint(x: 1 - lightX, y: 1 - lightY)),
             lineWidth: lustre.finish == .radiant ? 1.6 : 1.0)
             .opacity(0.30 + 0.50 * strength)
             .blendMode(.screen)
@@ -210,12 +215,6 @@ struct CatFoil<Content: View>: View {
 extension Double {
     fileprivate func clamped(to range: ClosedRange<Double>) -> Double {
         Swift.min(Swift.max(self, range.lowerBound), range.upperBound)
-    }
-}
-
-extension CGFloat {
-    fileprivate func clamped(to range: ClosedRange<Double>) -> Double {
-        Swift.min(Swift.max(Double(self), range.lowerBound), range.upperBound)
     }
 }
 
