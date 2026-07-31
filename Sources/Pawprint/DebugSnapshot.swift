@@ -1317,6 +1317,14 @@ enum DebugSnapshot {
     static func probeSummaryDigest() {
         let day = ProcessInfo.processInfo.environment["PAWPRINT_DIGEST"] ?? ""
         let store = PawprintStore.shared
+        // Seed an empty database rather than reporting on nothing.
+        //
+        // `PAWPRINT_SEED_DEMO` cannot do this from CI: it seeds and then leaves the application
+        // running, because it exists to be combined with the screenshot probes, which are what
+        // exit. A determinism gate that ran it would hang forever — and did, once.
+        if store.allDays().isEmpty, ProcessInfo.processInfo.environment["PAWPRINT_DIGEST_SEED"] != nil {
+            DemoData.generate()
+        }
         let all = store.allDays()
 
         func fields(_ summary: DailySummary) -> [(String, String)] {

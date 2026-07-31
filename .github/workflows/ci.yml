@@ -123,9 +123,9 @@ jobs:
           set -euo pipefail
           APP=build/Pawprint.app/Contents/MacOS/Pawprint
           export PAWPRINT_DB="$RUNNER_TEMP/determinism.sqlite3"
-          env PAWPRINT_SEED_DEMO=1 "$APP" || true
-          env PAWPRINT_DIGEST=all "$APP" > "$RUNNER_TEMP/first.txt" 2>&1 || true
-          env PAWPRINT_DIGEST=all "$APP" > "$RUNNER_TEMP/second.txt" 2>&1 || true
+          export PAWPRINT_DIGEST_SEED=1
+          env PAWPRINT_DIGEST=all "$APP" > "$RUNNER_TEMP/first.txt" 2>&1
+          env PAWPRINT_DIGEST=all "$APP" > "$RUNNER_TEMP/second.txt" 2>&1
           if ! diff "$RUNNER_TEMP/first.txt" "$RUNNER_TEMP/second.txt"; then
             echo "::error::the same database produced different statistics on two runs"
             exit 1
