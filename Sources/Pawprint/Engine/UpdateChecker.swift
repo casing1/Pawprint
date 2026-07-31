@@ -237,32 +237,16 @@ extension UpdateChecker {
     }
 
     /// Compares marketing versions component-wise, falling back to the build number on a tie.
-    /// String comparison would rank "1.10.0" below "1.9.0".
+    /// The comparison itself is `ReleaseVersion`, which has no URLSession attached to it.
     func isNewer(_ release: UpdateRelease) -> Bool {
-        switch compare(release.version, currentVersion) {
-        case .orderedDescending: return true
-        case .orderedAscending: return false
-        case .orderedSame:
-            guard let build = release.build else { return false }
-            return compare(build, currentBuild) == .orderedDescending
-        }
-    }
-
-    private func compare(_ lhs: String, _ rhs: String) -> ComparisonResult {
-        let a = lhs.split(separator: ".").map { Int($0.filter(\.isNumber)) ?? 0 }
-        let b = rhs.split(separator: ".").map { Int($0.filter(\.isNumber)) ?? 0 }
-        for i in 0..<max(a.count, b.count) {
-            let x = i < a.count ? a[i] : 0
-            let y = i < b.count ? b[i] : 0
-            if x != y { return x > y ? .orderedDescending : .orderedAscending }
-        }
-        return .orderedSame
+        ReleaseVersion.isNewer(version: release.version, build: release.build,
+                               thanVersion: currentVersion, build: currentBuild)
     }
 
     private func systemMeets(_ minimum: String) -> Bool {
         let current = ProcessInfo.processInfo.operatingSystemVersion
         let running = "\(current.majorVersion).\(current.minorVersion).\(current.patchVersion)"
-        return compare(running, minimum) != .orderedAscending
+        return ReleaseVersion.compare(running, minimum) != .orderedAscending
     }
 
     // MARK: - Downloading
@@ -342,15 +326,12 @@ extension UpdateChecker {
             encodedSignature = reference
         }
 
-        guard let signature = Data(base64Encoded: encodedSignature.trimmingCharacters(in: .whitespacesAndNewlines)),
-              let rawKey = Data(base64Encoded: Self.updatePublicKey),
-              let key = try? Curve25519.Signing.PublicKey(rawRepresentation: rawKey) else {
-            throw UpdateError(message: L10n.t("updateChecker.6156b73b"))
-        }
         guard let payload = FileManager.default.contents(atPath: archive.path) else {
             throw UpdateError(message: L10n.t("updateChecker.e50e9207"))
         }
-        guard key.isValidSignature(signature, for: payload) else {
+        guard ReleaseSignature.isValid(payload: payload,
+                                       signatureBase64: encodedSignature,
+                                       publicKeyBase64: Self.updatePublicKey) else {
             throw UpdateError(message: L10n.t("updateChecker.79d0bb3f"))
         }
     }

@@ -41,7 +41,11 @@ let package = Package(
         .testTarget(
             name: "PawprintTests",
             dependencies: ["PawprintCore", "Pawprint"],
-            path: "Tests/PawprintTests"
+            path: "Tests/PawprintTests",
+            // Read from the repository through `#filePath`, not from a test bundle. The database
+            // fixture is a *file* on purpose — the point of it is to open it the way the running
+            // application opens one — and the language packs are checked as they are committed.
+            exclude: ["Fixtures"]
         )
     ]
 )

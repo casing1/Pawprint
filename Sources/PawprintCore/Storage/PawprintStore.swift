@@ -21,22 +21,30 @@ final package class PawprintStore {
         return d
     }()
 
-    private init() {
+    /// Where the running application keeps its records.
+    ///
+    /// Screenshots need a history that looks lived-in, and the only honest way to get one is to run
+    /// the real app against a real database. `PAWPRINT_DB` points it at a throwaway file so the
+    /// documentation can be captured without touching anyone's own records.
+    package static func defaultURL() -> URL {
         let fm = FileManager.default
         let supportDir = fm.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("Pawprint", isDirectory: true)
         try? fm.createDirectory(at: supportDir, withIntermediateDirectories: true)
-        // Screenshots need a history that looks lived-in, and the only honest way to get one is
-        // to run the real app against a real database. `PAWPRINT_DB` points it at a throwaway
-        // file so the documentation can be captured without touching anyone's own records.
-        let url: URL
-        if let override = ProcessInfo.processInfo.environment["PAWPRINT_DB"], !override.isEmpty {
-            url = URL(fileURLWithPath: (override as NSString).expandingTildeInPath)
-            try? fm.createDirectory(at: url.deletingLastPathComponent(),
-                                    withIntermediateDirectories: true)
-        } else {
-            url = supportDir.appendingPathComponent("pawprint.sqlite3")
+        guard let override = ProcessInfo.processInfo.environment["PAWPRINT_DB"], !override.isEmpty else {
+            return supportDir.appendingPathComponent("pawprint.sqlite3")
         }
+        let url = URL(fileURLWithPath: (override as NSString).expandingTildeInPath)
+        try? fm.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+        return url
+    }
+
+    /// Opens a store at an arbitrary path.
+    ///
+    /// The application uses `shared`; this exists so a test can open a *file* rather than a
+    /// dictionary. `InMemoryActivityStore` proves the callers behave, but only a real database
+    /// proves that a blob written by an older build still comes back out.
+    package init(url: URL = PawprintStore.defaultURL()) {
         self.databaseURL = url
         do {
             self.db = try SQLiteDatabase(path: url.path)
