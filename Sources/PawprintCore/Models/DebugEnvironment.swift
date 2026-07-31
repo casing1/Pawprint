@@ -26,11 +26,14 @@ package enum DebugEnvironment {
     package static var settingsTab: String? { value("PAWPRINT_SETTINGS_TAB") }
     /// Frame-by-frame logging while tuning the menu bar animation.
     package static var logsPawFrames: Bool { value("PAWPRINT_DEBUG_PAW") != nil }
+    /// Opens the day's cat card with every trait note showing, which is otherwise behind a click.
+    package static var expandsCatNotes: Bool { value("PAWPRINT_CAT_NOTES") != nil }
     #else
     package static var gallerySort: String? { nil }
     package static var popoverHeight: String? { nil }
     package static var foilPointer: String? { nil }
     package static var settingsTab: String? { nil }
     package static var logsPawFrames: Bool { false }
+    package static var expandsCatNotes: Bool { false }
     #endif
 }

@@ -11,7 +11,21 @@ struct PawpetCard: View {
     let summary: DailySummary
     var streakDays: Int = 0
 
-    @State private var showAllNotes = false
+    /// How wide the trait labels need to be in whatever language is loaded.
+    ///
+    /// Measured rather than guessed: the fixed 26 points this replaced fitted Korean's two-
+    /// character names and split "Expression" across three lines in English.
+    static func labelColumnWidth(_ labels: [String]) -> CGFloat {
+        let font = NSFont.systemFont(ofSize: 9, weight: .semibold)
+        let widest = labels
+            .map { ($0 as NSString).size(withAttributes: [.font: font]).width }
+            .max() ?? 26
+        // Capped so one unusually long name cannot squeeze the reasons into a ribbon.
+        return min(72, ceil(widest) + 1)
+    }
+
+    /// Screenshot capture can start it open; a captured window has no pointer to click with.
+    @State private var showAllNotes = DebugEnvironment.expandsCatNotes
 
     var body: some View {
         let pet = PawpetView(
@@ -37,20 +51,26 @@ struct PawpetCard: View {
                         Spacer()
                     }
                     Text(traits.caption).font(.callout.weight(.semibold))
-                    Grid(alignment: .leadingFirstTextBaseline,
-                         horizontalSpacing: 5, verticalSpacing: 3) {
-                        ForEach(visible, id: \.trait) { note in
-                            GridRow {
-                                Text(note.trait)
-                                    .font(.system(size: 9, weight: .semibold))
-                                    .foregroundStyle(.tertiary)
-                                    .fixedSize()
-                                    .gridColumnAlignment(.leading)
-                                Text(note.reason)
-                                    .font(.system(size: 10))
-                                    .foregroundStyle(.secondary)
-                                    .fixedSize(horizontal: false, vertical: true)
-                            }
+                    // Plain rows with a measured label column, not a Grid.
+                    //
+                    // A Grid sizes its columns to the widest cell, which is exactly what was wanted
+                    // — but a cell that grows vertically inside one (`fixedSize(vertical:)` on a
+                    // wrapping reason) is measured at a width the row does not end up having, so
+                    // expanding the card pushed the last notes out through the bottom of it and
+                    // left the collapse button beside them. Measuring the labels directly gives the
+                    // same alignment with a layout that cannot disagree with itself.
+                    let labelWidth = Self.labelColumnWidth(visible.map(\.trait))
+                    ForEach(visible, id: \.trait) { note in
+                        HStack(alignment: .top, spacing: 5) {
+                            Text(note.trait)
+                                .font(.system(size: 9, weight: .semibold))
+                                .foregroundStyle(.tertiary)
+                                .frame(width: labelWidth, alignment: .leading)
+                            Text(note.reason)
+                                .font(.system(size: 10))
+                                .foregroundStyle(.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .frame(maxWidth: .infinity, alignment: .leading)
                         }
                     }
                 }
