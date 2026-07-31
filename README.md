@@ -130,7 +130,9 @@ excluded. Deleting everything takes one button.
 A setup wizard walks you through both on first launch, and you can reopen it any time from
 Settings → General.
 
-Runs on macOS 14 or later, on both Apple Silicon and Intel Macs.
+Runs on macOS 14 or later, on both Apple Silicon and Intel Macs. The interface is available in
+English, Korean, Japanese and German, and follows your system language unless you pick one in
+Settings → General.
 
 ## Updates
 
