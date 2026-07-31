@@ -10,7 +10,8 @@ import PawprintCore
 /// external display connections, and audio output device switches.
 ///
 /// None of this requires Accessibility or Input Monitoring — it's all public state APIs.
-final class PowerAndSleepMonitor {
+@MainActor
+final class PowerAndSleepMonitor: Monitor {
     private var workspaceObservers: [NSObjectProtocol] = []
     private var distributedObservers: [NSObjectProtocol] = []
     private var screenObserver: NSObjectProtocol?
@@ -58,7 +59,12 @@ final class PowerAndSleepMonitor {
     /// and each sample crosses into the kernel or CoreAudio.
     private static let stateSampleInterval: TimeInterval = 15
 
+    var isRunning: Bool { stateTimer != nil }
+
     func start() {
+        // Four notification-centre registrations, an IOKit run-loop source and a CoreAudio
+        // listener. A second call used to add a second set of all of them.
+        guard !isRunning else { return }
         let wsnc = NSWorkspace.shared.notificationCenter
         workspaceObservers = [
             wsnc.addObserver(forName: NSWorkspace.willSleepNotification, object: nil, queue: .main) { [weak self] _ in

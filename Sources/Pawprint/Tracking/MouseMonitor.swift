@@ -7,7 +7,10 @@ import AppKit
 /// `mouseMoved`/`scrollWheel` can fire at very high frequency, so raw deltas are accumulated
 /// into a small lock-protected buffer and flushed into `ActivityCenter` on a fixed timer
 /// instead of hopping to the main queue per event.
-final class MouseMonitor {
+@MainActor
+final class MouseMonitor: Monitor {
+    var isRunning: Bool { !monitors.isEmpty }
+
     private var monitors: [Any] = []
     private var flushTimer: Timer?
     private let lock = NSLock()
@@ -50,11 +53,6 @@ final class MouseMonitor {
 
     /// Re-registers the monitors. Needed when Accessibility is granted after launch: a monitor
     /// created without it stays dead once it arrives.
-    func restart() {
-        stop()
-        start()
-    }
-
     func stop() {
         for m in monitors { NSEvent.removeMonitor(m) }
         monitors.removeAll()

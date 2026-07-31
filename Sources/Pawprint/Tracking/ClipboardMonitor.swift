@@ -16,7 +16,10 @@ final class ClipboardShortcutHints {
 /// for pasteboard changes). Only `pasteboard.types` is ever inspected to classify the kind of
 /// content — the actual string/data payload is never read, matching the "유형만 분류, 내용은
 /// 저장하지 않는다" rule in the spec.
-final class ClipboardMonitor {
+@MainActor
+final class ClipboardMonitor: Monitor {
+    var isRunning: Bool { timer != nil }
+
     private var timer: Timer?
     private var lastChangeCount: Int = NSPasteboard.general.changeCount
     private var lastObservedPasteAt: Date?

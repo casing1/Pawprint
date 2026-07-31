@@ -4,7 +4,8 @@ import PawprintCore
 /// Observes app activation/launch/termination via `NSWorkspace`. Only the bundle identifier
 /// and localized app name are read — never window titles, document names, or URLs — so no
 /// app *content* is ever visible to Pawprint, only which app was in front and for how long.
-final class AppUsageMonitor {
+@MainActor
+final class AppUsageMonitor: Monitor {
     private var activationObserver: NSObjectProtocol?
     private var launchObserver: NSObjectProtocol?
     private var terminateObserver: NSObjectProtocol?
@@ -13,7 +14,11 @@ final class AppUsageMonitor {
     private var currentAppName: String?
     private var currentSessionStart: Date?
 
+    var isRunning: Bool { activationObserver != nil }
+
     func start() {
+        // Without this, a second call adds a second observer and every app switch is counted twice.
+        guard !isRunning else { return }
         let nc = NSWorkspace.shared.notificationCenter
         activationObserver = nc.addObserver(forName: NSWorkspace.didActivateApplicationNotification, object: nil, queue: .main) { [weak self] note in
             self?.handleActivation(note)

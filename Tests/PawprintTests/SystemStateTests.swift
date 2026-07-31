@@ -12,6 +12,7 @@ import PawprintCore
 /// interesting behaviour is: the category gate, the pause gate, and the fact that some of these
 /// counters are events while others are elapsed seconds. `PowerAndSleepMonitor` above it is
 /// IOKit plumbing — it decides *when* to call these, and that part is not testable off a machine.
+@MainActor
 final class SystemStateTests: XCTestCase {
 
     private let noon = Date(timeIntervalSince1970: 1_772_000_000)

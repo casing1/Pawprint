@@ -3,7 +3,10 @@ import Foundation
 /// Tracks how much data crossed the network interfaces, using the kernel's per-interface byte
 /// counters (`getifaddrs` → `if_data`). Requires no permission and reveals nothing about *what*
 /// was transferred — no hosts, no ports, no packet contents — only totals.
-final class NetworkMonitor {
+@MainActor
+final class NetworkMonitor: Monitor {
+    var isRunning: Bool { timer != nil }
+
     private var timer: Timer?
     private var lastSample: (inBytes: UInt64, outBytes: UInt64)?
 

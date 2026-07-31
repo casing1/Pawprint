@@ -5,7 +5,8 @@ import PawprintCore
 /// category and detect well-known shortcut chords. It only ever reads `event.keyCode` and
 /// `event.modifierFlags` — never `event.characters` — so no typed text is observable, let
 /// alone stored.
-final class KeyboardMonitor {
+@MainActor
+final class KeyboardMonitor: Monitor {
     private var keyDownMonitor: Any?
     private var flagsChangedMonitor: Any?
     private var lastCapsLockState = false
@@ -29,6 +30,8 @@ final class KeyboardMonitor {
     /// genuinely idle keyboard is never mistaken for a broken one.
     var looksStalled: Bool { flagsSeen >= 3 && keyDownsSeen == 0 }
 
+    var isRunning: Bool { keyDownMonitor != nil }
+
     func start() {
         guard keyDownMonitor == nil else { return }
         keyDownsSeen = 0
@@ -41,13 +44,6 @@ final class KeyboardMonitor {
             self?.flagsSeen += 1
             self?.handleFlagsChanged(event)
         }
-    }
-
-    /// Tears the monitors down and registers them again. This is the only way to pick up an Input
-    /// Monitoring grant that arrived after the original registration.
-    func restart() {
-        stop()
-        start()
     }
 
     func stop() {

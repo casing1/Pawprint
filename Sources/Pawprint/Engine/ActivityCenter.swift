@@ -7,6 +7,13 @@ import PawprintCore
 /// gate, updates the in-memory `today` counters, and periodically flushes to disk.
 /// This keeps every privacy rule ("don't record while paused", "don't record excluded apps")
 /// enforced in exactly one place.
+/// **Main-actor isolated.** It was not, and every one of its callers was already on the main
+/// thread anyway: the event monitors register on the main queue, the timers are scheduled on the
+/// main run loop, and the views read it during layout. What the missing annotation bought was not
+/// concurrency but the *absence of a check* — nothing stopped a future caller from mutating
+/// `today` off the main thread while a view was reading it, and the compiler had no grounds to
+/// object. Stating the isolation costs nothing today and makes that a build error tomorrow.
+@MainActor
 @Observable
 final class ActivityCenter {
 

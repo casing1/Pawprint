@@ -47,6 +47,7 @@ enum MascotMood {
         }
     }
 
+    @MainActor
     static func current(activityCenter: ActivityCenter) -> MascotMood {
         guard !activityCenter.settings.isPaused else { return .paused }
         guard activityCenter.isRecordingActive else { return .paused }
