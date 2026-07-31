@@ -21,7 +21,12 @@ package enum DebugEnvironment {
     /// Popover scroll height, so a whole tab fits in one screenshot.
     package static var popoverHeight: String? { value("PAWPRINT_SHOT_HEIGHT") }
     /// Where the light is for the foil, since a captured window contains no pointer.
-    package static var foilPointer: String? { value("PAWPRINT_FOIL_POINTER") }
+    package static var foilPointer: String? { overriddenFoilPointer ?? value("PAWPRINT_FOIL_POINTER") }
+
+    /// Set frame by frame while rendering the foil animation, which has to move the light itself.
+    nonisolated(unsafe) private static var overriddenFoilPointer: String?
+
+    package static func setFoilPointer(_ point: String?) { overriddenFoilPointer = point }
     /// Which settings tab to open.
     package static var settingsTab: String? { value("PAWPRINT_SETTINGS_TAB") }
     /// Frame-by-frame logging while tuning the menu bar animation.
@@ -32,6 +37,7 @@ package enum DebugEnvironment {
     package static var gallerySort: String? { nil }
     package static var popoverHeight: String? { nil }
     package static var foilPointer: String? { nil }
+    package static func setFoilPointer(_ point: String?) {}
     package static var settingsTab: String? { nil }
     package static var logsPawFrames: Bool { false }
     package static var expandsCatNotes: Bool { false }

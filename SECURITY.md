@@ -11,11 +11,6 @@ and both are why this document is more specific than a template.
 | **The latest published release** | :white_check_mark: |
 | Anything older | :x: |
 
-Deliberately not a version number. This table said `0.4.x` while 0.9 was shipping, which is exactly
-the failure mode a hand-maintained support matrix has: it is correct on the day it is written and
-wrong every day after, and a security reporter reads it to decide whether their finding is in
-scope.
-
 Read it as *fixes land in the next release*, not as a promise to patch older ones in place.
 Pawprint is distributed outside the App Store and updates itself, so there is no long-lived release
 branch to back-port to: a fix ships as the next version, usually within a day, and you receive it

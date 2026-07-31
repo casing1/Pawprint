@@ -1029,7 +1029,15 @@ enum DebugSnapshot {
                 PopoverRootView.shotScrollAnchor = nil
                 // The Calendar tab is the short one; at the height that fits the others it came
                 // out with a third of the image empty.
-                PopoverRootView.scrollHeight = tab == .calendar ? 700 : tallHeight
+                // Today is the tall one and its first shot is meant to be the whole tab — every
+                // card, the clock, the facts and the heatmap — so it gets a height that contains
+                // all of it rather than a screenful. Calendar is the short one and at the height
+                // that fits the others it came out a third empty.
+                PopoverRootView.scrollHeight = switch tab {
+                case .today: 1750
+                case .calendar: 700
+                default: tallHeight
+                }
                 controller.showPopover(on: tab)
             }))
             // Today is about twice as tall as the others, so its first screen leaves out the fun
@@ -1304,6 +1312,68 @@ enum DebugSnapshot {
             }
         }
         write("\nFACTS OK\n")
+        exit(0)
+    }
+
+    // MARK: - Foil animation (PAWPRINT_FOILGIF)
+
+    /// Renders the cat card as an animated GIF with the light travelling across it.
+    ///
+    /// The foil only exists in motion — every layer is positioned from the pointer, so a still
+    /// frame shows one instant of something whose whole point is that it moves. A README cannot
+    /// hover, and this is the closest a page gets.
+    ///
+    /// The cat is assembled rather than picked from history: the highest tier, and the traits worth
+    /// looking at. A real day rarely wears all of them at once, and the point here is to show the
+    /// finish, not to claim a typical Tuesday looks like this.
+    @MainActor
+    static func captureFoilGIF() {
+        guard let directory = ProcessInfo.processInfo.environment["PAWPRINT_FOILGIF"] else { return }
+        var summary = DailySummary(day: "2026-06-05")
+        // Enough of everything that the trait engine grants the top of every scale.
+        summary.totalKeyPresses = 48_000
+        summary.characterKeyPresses = 39_000
+        summary.maxWPM = 132
+        summary.avgWPM = 71
+        summary.activeSeconds = 9 * 3600
+        summary.screenOnSeconds = 11 * 3600
+        summary.totalFocusSeconds = 5 * 3600
+        summary.longestFocusSeconds = 140 * 60
+        summary.totalClicks = 7_400
+        summary.cursorDistanceMeters = 1_450
+        summary.scrollScreens = 980
+        summary.totalAppSwitches = 210
+        summary.score = PawprintScore.build(from: summary)
+
+        // The size the detail card actually is. Rendering larger looked like a better showcase and
+        // was not: every layer is tuned against 150 points, and at 260 the rainbow drowned the cat
+        // the gallery exists to show.
+        let size: CGFloat = 150
+        var frames: [NSImage] = []
+        let steps = 24
+        for step in 0..<steps {
+            // A slow ellipse rather than a straight sweep: a card tilted by hand never travels in
+            // a line, and a looping line has a visible turnaround.
+            let angle = Double(step) / Double(steps) * 2 * .pi
+            // Kept away from the corners: brightness rises with distance from the centre, so a
+            // wide orbit spends most of the loop at full blast, which is one bright frame repeated
+            // rather than a surface catching the light.
+            let point = UnitPoint(x: 0.5 + cos(angle) * 0.22, y: 0.5 + sin(angle) * 0.19)
+            DebugEnvironment.setFoilPointer("\(point.x),\(point.y)")
+            let card = CatFoil(lustre: CatLustre(value: 97.4, finish: .radiant, intensity: 0.63),
+                               seed: summary.day, size: size) {
+                PawpetView(summary: summary, size: size, streakDays: 45)
+            }
+            .padding(14)
+            .background(Color(white: 0.09))
+            let renderer = ImageRenderer(content: card)
+            renderer.scale = 2
+            if let image = renderer.nsImage { frames.append(image) }
+        }
+        DebugEnvironment.setFoilPointer(nil)
+        guard !frames.isEmpty else { write("FOILGIF produced no frames\n"); exit(1) }
+        writeGIF(frames: frames, interval: 0.07, to: "\(directory)/foil-showcase.gif")
+        write("FOILGIF OK — \(frames.count) frames\n")
         exit(0)
     }
 

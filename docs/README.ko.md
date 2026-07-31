@@ -77,6 +77,13 @@
 </tr>
 </table>
 
+<img src="images/shots/foil-showcase.gif" alt="Holographic finish in motion" width="300">
+
+<sub>이 마감은 움직여야 보입니다 — 정지 화면은 움직이는 게 전부인 것의 한 순간일 뿐이라서요.<br>
+최고 등급 고양이 위로 빛이 지나갑니다.</sub>
+
+<br>
+
 <img src="images/cat-wall.png" alt="높은 등급 고양이 48마리" width="100%">
 
 <sub>높은 등급의 하루 48개 — 동부터 무지개까지의 액자, 7가지 발 장식, 3가지 날개.<br>

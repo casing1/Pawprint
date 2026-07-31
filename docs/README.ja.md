@@ -77,6 +77,13 @@
 </tr>
 </table>
 
+<img src="images/shots/foil-showcase.gif" alt="Holographic finish in motion" width="300">
+
+<sub>この仕上げは動いてこそです — 静止画では、動くことが全部のものの一瞬しか写りません。<br>
+最高レア度の猫の上を、光が通り過ぎていきます。</sub>
+
+<br>
+
 <img src="images/cat-wall.png" alt="高レア度の猫48匹" width="100%">
 
 <sub>高レア度の日を48個 — 銅から虹までの額縁、7種の肉球チャーム、3種の翼。<br>

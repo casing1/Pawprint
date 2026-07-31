@@ -45,19 +45,27 @@ deinem Mac.
 
 <table>
 <tr>
-<td width="50%"><img src="images/shots/de-popover-records.png" alt="Rekorde"></td>
-<td width="50%"><img src="images/shots/de-popover-gallery.png" alt="Katzen"></td>
+<td width="50%"><img src="images/shots/de-popover-today.png" alt="Heute"></td>
+<td width="50%"><img src="images/shots/de-popover-today-more.png" alt="Weiter unten im Heute-Tab"></td>
 </tr>
 <tr>
+<td align="center"><b>Ein Wert für den ganzen Tag</b><br><sub>Von 100 Punkten bewertet, mit einem passenden Typ versehen und gegen jeden Tag gestellt, den du je aufgezeichnet hast — dazu eine 24-Stunden-Uhr, die zeigt, wann du wirklich dran warst.</sub></td>
+<td align="center"><b>Weiter scrollen lohnt sich</b><br><sub>Dein Tag in Größen, die man sich vorstellen kann — die Strecke deines Zeigers, die Bildschirmhöhen deines Scrollens, was der verbrauchte Akku hätte laden können. Und welche Tasten es abbekommen haben.</sub></td>
+</tr>
+<tr>
+<td><img src="images/shots/de-popover-calendar.png" alt="Kalender"></td>
+<td><img src="images/shots/de-popover-records.png" alt="Rekorde"></td>
+</tr>
+<tr>
+<td align="center"><b>Monate auf einen Blick</b><br><sub>Jeder Tag eingefärbt nach dem Wert, den du wählst. Serien und Durchschnitte, dazu ein Wochenraster, das zeigt, welche Stunden welcher Tage wirklich dir gehören.</sub></td>
 <td align="center"><b>Level, die nicht ausgehen</b><br><sub>Elf Spuren — Tippen, Klicken, Scrollen, Fokus, Bildschirmzeit, Strom, App-Wechsel und mehr — mit Zielen, die weiter wachsen. Darunter Gesamtzahlen und ein Monatsrückblick.</sub></td>
-<td align="center"><b>Eine Katze pro Tag, für immer</b><br><sub>Jeder Tag bringt eine Katze hervor und bewertet sie mit bis zu 100 Punkten Seltenheit. Ein ruhiger Sonntag und ein hektischer Dienstag ergeben sichtbar verschiedene Tiere.</sub></td>
 </tr>
 <tr>
-<td><img src="images/shots/de-cat-detail.png" alt="Eine Katze im Detail"></td>
+<td><img src="images/shots/de-popover-gallery.png" alt="Katzen"></td>
 <td><img src="images/shots/de-share-card.png" alt="Teilbare Karte"></td>
 </tr>
 <tr>
-<td align="center"><b>Woher jede Katze kommt</b><br><sub>Jeder Rahmen, Anhänger und jedes Halsband lässt sich auf den Wert zurückführen, der ihn verdient hat — die Seltenheit ist nachvollziehbar, nicht geraten.</sub></td>
+<td align="center"><b>Eine Katze pro Tag, für immer</b><br><sub>Jeder Tag bringt eine Katze hervor und bewertet sie mit bis zu 100 Punkten Seltenheit. Ein ruhiger Sonntag und ein hektischer Dienstag ergeben sichtbar verschiedene Tiere.</sub></td>
 <td align="center"><b>Zeigenswert</b><br><sub>Ein Knopf kopiert den Tag — oder deine Gesamtzahlen — als Bild, bereit zum Einfügen.</sub></td>
 </tr>
 <tr>
@@ -69,6 +77,13 @@ deinem Mac.
 <td align="center"><b>Jeder Gegenstand, erklärt</b><br><sub>Was Rahmen, Anhänger, Halsband und Miene bedeuten, wann sie auftauchen und was sie wert sind.</sub></td>
 </tr>
 </table>
+
+<img src="images/shots/foil-showcase.gif" alt="Holographic finish in motion" width="300">
+
+<sub>Das Finish gibt es nur in Bewegung — ein Standbild ist ein Augenblick von etwas, dessen ganzer Sinn die Bewegung ist.<br>
+Hier die höchste Stufe, mit dem Licht, das darüber wandert.</sub>
+
+<br>
 
 <img src="images/cat-wall.png" alt="48 hochwertige Katzen" width="100%">
 

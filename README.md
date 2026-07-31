@@ -77,6 +77,13 @@ whole business cost. Counts and durations only, never content. Everything stays 
 </tr>
 </table>
 
+<img src="docs/images/shots/foil-showcase.gif" alt="Holographic finish in motion" width="300">
+
+<sub>The finish only exists in motion — a still frame is one instant of something whose whole point is that it moves.<br>
+This is the top grade, with the light travelling across it.</sub>
+
+<br>
+
 <img src="docs/images/cat-wall.png" alt="48 high-grade cats" width="100%">
 
 <sub>48 high-grade days — bronze through rainbow frames, seven paw charms, three kinds of wings.<br>
