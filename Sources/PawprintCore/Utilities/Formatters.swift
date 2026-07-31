@@ -4,7 +4,30 @@ package enum Formatters {
     static package func groupedNumber(_ value: Int) -> String {
         let formatter = NumberFormatter()
         formatter.numberStyle = .decimal
+        // The chosen language, not the system's. A default `NumberFormatter` follows
+        // `Locale.current`, so a German interface on a Korean Mac grouped with commas — and
+        // "1,500 Treppenstufen" is not a near miss in German, it reads as one and a half.
+        formatter.locale = LocalizationManager.activeLocale
         return formatter.string(from: NSNumber(value: value)) ?? "\(value)"
+    }
+
+    /// The decimal mark the active language writes.
+    static package var decimalSeparator: String {
+        LocalizationManager.activeLocale.decimalSeparator ?? "."
+    }
+
+    /// Swaps the C-locale "." that `String(format:)` always writes for the local one.
+    ///
+    /// Applied at the end rather than formatting through a `NumberFormatter` in the first place,
+    /// because the helpers below trim trailing zeros by string surgery against a literal ".".
+    static package func localizedDecimals(_ text: String) -> String {
+        let separator = decimalSeparator
+        return separator == "." ? text : text.replacingOccurrences(of: ".", with: separator)
+    }
+
+    /// A fixed number of decimal places, written the way the active language writes them.
+    static package func decimalText(_ value: Double, places: Int) -> String {
+        localizedDecimals(String(format: "%.\(places)f", value))
     }
 
     /// "8시간 42분" style long-form duration.
@@ -116,7 +139,7 @@ package enum Formatters {
         var text = String(format: "%.\(decimals)f", value)
         while text.hasSuffix("0") { text.removeLast() }
         if text.hasSuffix(".") { text.removeLast() }
-        return text
+        return localizedDecimals(text)
     }
 
     /// The unabbreviated form, for the "show me the real number" affordance.
@@ -149,7 +172,7 @@ package enum Formatters {
             while text.hasSuffix("0") { text.removeLast() }
             if text.hasSuffix(".") { text.removeLast() }
         }
-        return text
+        return localizedDecimals(text)
     }
 
     /// One decimal place, with a trailing ".0" dropped ("12.0" → "12").
@@ -157,7 +180,7 @@ package enum Formatters {
         let rounded = (value * 10).rounded() / 10
         return rounded == rounded.rounded()
             ? String(format: "%.0f", rounded)
-            : String(format: "%.1f", rounded)
+            : decimalText(rounded, places: 1)
     }
 
     /// Duration for long, accumulating spans. Past a day it switches to "3일 4시간" rather than
