@@ -40,8 +40,11 @@ package struct LifetimeStats {
     /// 가장 바쁜가" insight.
     package var activeSecondsByWeekday: [Int] = Array(repeating: 0, count: 7)
 
+    /// Still a lookup rather than a parameter, unlike the summary's — a lifetime total is read
+    /// straight from a view and threading the machine through every reader would cost more than it
+    /// buys. It goes through `MachineFacts` so there is one place the battery is asked.
     package var totalEnergyWattHours: Double? {
-        BatteryHardware.shared.wattHours(fromPercent: batteryDrainedPercent)
+        MachineFacts.current.wattHours(fromPercent: batteryDrainedPercent)
     }
 
     package var busiestWeekday: Int? {

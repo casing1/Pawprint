@@ -63,6 +63,18 @@ package enum DayKey {
         return formatter.date(from: day)
     }
 
+    /// The wall-clock instant a minute-of-day index falls on.
+    ///
+    /// Counters are indexed from the user's day start, so minute 0 is 05:00 for someone whose day
+    /// begins at five. Anything printing a time has to shift back.
+    static package func date(forMinute minute: Int, day: String, dayStartHour: Int) -> Date? {
+        guard let dayDate = date(fromDayString: day) else { return nil }
+        var calendar = Calendar.current
+        calendar.timeZone = TimeZone.current
+        let shiftedMinutes = minute + dayStartHour * 60
+        return calendar.date(byAdding: .minute, value: shiftedMinutes, to: dayDate)
+    }
+
     static package func addingDays(_ n: Int, to day: String) -> String {
         guard let date = date(fromDayString: day) else { return day }
         let newDate = Calendar.current.date(byAdding: .day, value: n, to: date) ?? date

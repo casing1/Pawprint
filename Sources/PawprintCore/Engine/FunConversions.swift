@@ -142,8 +142,9 @@ package enum FunConversions {
     /// One gate, applied uniformly, means a light day and a heavy day each surface a different
     /// handful of comparisons instead of the same two every time.
     static package func energyFacts(fromBatteryPercent percent: Int,
+                                    machine: MachineFacts = .current,
                                     references: RegionalReferences = .current) -> [FunFact] {
-        guard percent > 0, let wh = BatteryHardware.shared.wattHours(fromPercent: percent), wh > 0 else { return [] }
+        guard percent > 0, let wh = machine.wattHours(fromPercent: percent), wh > 0 else { return [] }
         let kWh = wh / 1000
         var b = Builder(topic: .energy, subject: L10n.t("funConversions.3ff56496", percent))
 

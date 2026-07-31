@@ -1338,17 +1338,30 @@ enum DebugSnapshot {
             for (name, value) in fields(summary) { write("  \(name) = \(value)\n") }
         }
 
-        // A checksum over every day, so a change anywhere in the history is visible as one number.
+        // A checksum over the history, so a change anywhere in it is visible as one number.
+        //
+        // Today is excluded, and has to be: this probe runs *inside* the application, which starts
+        // recording the moment it launches and writes today's row from under it. The checksum
+        // flipped between two values on repeated runs of the same binary, which made it useless for
+        // the one thing it exists for. Every other day is settled and cannot move.
+        let today = DayKey.today(dayStartHour: 0)
+        let settled = all.filter { $0.day < today }
         var checksum: UInt64 = 1469598103934665603
-        for raw in all {
+        for raw in settled {
             let summary = StatsEngine.summary(for: raw, recentDays: [], dayStartHour: 0)
+            var perDay: UInt64 = 1469598103934665603
             for (name, value) in fields(summary) {
                 for byte in Array("\(raw.day)/\(name)=\(value)".utf8) {
                     checksum = (checksum ^ UInt64(byte)) &* 1099511628211
+                    perDay = (perDay ^ UInt64(byte)) &* 1099511628211
                 }
             }
+            // `all` prints one line per day, so a drifting total can be traced to the day that
+            // caused it instead of bisecting 116 of them by hand.
+            if day == "all" { write("  \(raw.day) \(String(perDay, radix: 16))\n") }
         }
-        write("DIGEST days=\(all.count) checksum=\(String(checksum, radix: 16))\n")
+        write("DIGEST days=\(all.count) settled=\(settled.count) "
+              + "checksum=\(String(checksum, radix: 16))\n")
         exit(0)
     }
 
