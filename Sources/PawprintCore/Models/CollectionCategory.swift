@@ -7,3 +7,11 @@ import Foundation
 package enum CollectionCategory {
     case keyboard, mouse, appUsage, clipboard, sleepWake, powerPeripherals
 }
+
+/// Which button, or a drag.
+///
+/// Beside `CollectionCategory` because it is the same kind of thing: vocabulary the recording layer
+/// is written in, which the domain needs and the application happened to own.
+package enum ClickKind {
+    case left, right, double, drag
+}

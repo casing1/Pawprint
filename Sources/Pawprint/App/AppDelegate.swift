@@ -7,26 +7,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// Nothing else reaches for it.
     lazy var statusItemController = StatusItemController()
 
-    func applicationDidFinishLaunching(_ notification: Notification) {
-        // The domain states what it needs from the display; AppKit is what can answer. Injected
-        // before anything computes a summary, because the fallback would quietly under-report
-        // cursor distance and scroll height on a Retina panel.
-        DisplayCalibration.current = DisplayMetrics.shared
+    /// What the application is made of. Built once, here, and nowhere else — see `AppEnvironment`.
+    let environment = AppEnvironment.live
 
+    func applicationDidFinishLaunching(_ notification: Notification) {
         applyDockIconPolicy()
-        TrackingCoordinator.shared.start()
-        MenuBarIconAnimator.shared.start()
+        environment.start()
         statusItemController.install()
 
         // Re-arm the daily recap on every launch: the scheduled body carries the day's numbers,
         // so it needs refreshing rather than surviving from a previous run.
-        let settings = ActivityCenter.shared.settings
+        let settings = environment.activityCenter.settings
         if settings.dailySummaryEnabled {
             Task { @MainActor in
                 await NotificationManager.shared.scheduleDailySummary(
                     hour: settings.dailySummaryHour,
                     minute: settings.dailySummaryMinute,
-                    summary: ActivityCenter.shared.todaySummary
+                    summary: environment.activityCenter.todaySummary
                 )
             }
         }

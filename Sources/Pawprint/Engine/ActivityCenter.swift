@@ -9,7 +9,6 @@ import PawprintCore
 /// enforced in exactly one place.
 @Observable
 final class ActivityCenter {
-    static let shared = ActivityCenter()
 
     private(set) var settings: AppSettings
     private(set) var currentFrontmostBundleID: String?
@@ -66,7 +65,10 @@ final class ActivityCenter {
     private(set) var isCurrentAppExcluded: Bool = false
 
     @ObservationIgnored private var currentDayString: String
-    @ObservationIgnored private let store = PawprintStore.shared
+    /// Injected, so a test can hand over a store it controls. Defaults to the real one.
+    @ObservationIgnored let store: any ActivityStore
+    /// Where "now" comes from. Injected for the same reason.
+    @ObservationIgnored let clock: any Clock
     @ObservationIgnored private var flushTimer: Timer?
     @ObservationIgnored private var tickTimer: Timer?
     @ObservationIgnored private var summaryTimer: Timer?
@@ -76,9 +78,10 @@ final class ActivityCenter {
     @ObservationIgnored let focusEngine = FocusEngine()
 
     // Rolling window of character-key timestamps, used to compute live WPM.
-    @ObservationIgnored private var recentCharKeyTimes: [Date] = []
-    @ObservationIgnored private var typingStreakStart: Date?
-    @ObservationIgnored private var lastCharKeyTime: Date?
+    /// Keyboard and pointer arithmetic, and the state the keyboard's carries between events.
+    /// Both are value types in the core with their own tests — see `KeyboardAccumulator`.
+    @ObservationIgnored var keyboard = KeyboardAccumulator()
+    @ObservationIgnored var pointer = PointerAccumulator()
     @ObservationIgnored private var lastActivityTime: Date?
     @ObservationIgnored private var activitySessionStart: Date?
     @ObservationIgnored private var recentDaysCache: [DailyRawCounters] = []
@@ -86,19 +89,24 @@ final class ActivityCenter {
     static let idleGapSeconds: TimeInterval = 90
     static let typingStreakGapSeconds: TimeInterval = 3
 
-    private init() {
-        var loadedSettings = PawprintStore.shared.loadSettings()
+    /// The one the application uses.
+    static let shared = ActivityCenter(store: PawprintStore.shared, clock: SystemClock())
+
+    init(store: any ActivityStore, clock: any Clock = SystemClock()) {
+        self.store = store
+        self.clock = clock
+        var loadedSettings = store.loadSettings()
         // Applied here rather than in the decoder so the result is actually persisted; a decoder
         // fix-up lives only in memory until something unrelated happens to save.
         if let migrated = loadedSettings.migratedForUpdateDefaults() {
             loadedSettings = migrated
-            PawprintStore.shared.saveSettings(migrated)
+            store.saveSettings(migrated)
         }
         LocalizationManager.shared.apply(loadedSettings.language)
         self.settings = loadedSettings
         let day = DayKey.today(dayStartHour: loadedSettings.dayStartHour)
         self.currentDayString = day
-        let loadedToday = PawprintStore.shared.loadDay(day) ?? DailyRawCounters(day: day)
+        let loadedToday = store.loadDay(day) ?? DailyRawCounters(day: day)
         self.today = loadedToday
         self.todaySummary = StatsEngine.summary(for: loadedToday, dayStartHour: loadedSettings.dayStartHour)
         focusEngine.focusThresholdSeconds = TimeInterval(loadedSettings.focusThresholdSeconds)
@@ -139,10 +147,12 @@ final class ActivityCenter {
     /// Recomputes the observable today-snapshot. Skips the work entirely when nothing has been
     /// recorded since the last refresh, so an idle Mac costs nothing.
     private func refreshSummary() {
-        let now = Date()
-        let newLiveWPM = Double(recentCharKeyTimes.filter { now.timeIntervalSince($0) <= 60 }.count) / 5.0
-        if newLiveWPM != liveWPM {
-            liveWPM = newLiveWPM
+        let now = clock.now
+        // Live WPM decays with time, not with events, so the window has to be told the clock moved
+        // even on a tick where nothing was typed.
+        keyboard.refreshLiveWPM(at: now)
+        if keyboard.liveWPM != liveWPM {
+            liveWPM = keyboard.liveWPM
         }
         guard dirtySinceLastSummary else { return }
         dirtySinceLastSummary = false
@@ -411,9 +421,8 @@ final class ActivityCenter {
         let finishedDay = currentDayString
         currentDayString = dayNow
         today = store.loadDay(dayNow) ?? DailyRawCounters(day: dayNow)
-        recentCharKeyTimes.removeAll()
-        typingStreakStart = nil
-        lastCharKeyTime = nil
+        // Yesterday's typing streak does not continue into today.
+        keyboard.reset()
         // Already closed above. The next event starts a fresh session in the new day; the gap
         // from the boundary until then is genuinely unobserved, so it is not credited to either.
         activitySessionStart = nil
@@ -557,108 +566,67 @@ final class ActivityCenter {
     /// Attributes an input event to the app that was frontmost when it happened. `beginEvent`
     /// has already rejected excluded apps and paused states, so anything reaching here is
     /// attributable. Only the running count changes — nothing about the event itself is stored.
-    private func attributeToFrontmostApp(_ apply: (String) -> Void) {
-        guard let bundleID = currentFrontmostBundleID, !isExcluded(bundleID: bundleID) else { return }
-        apply(bundleID)
+    /// Which application an event should be credited to, or `nil` for none.
+    ///
+    /// Reading it also records the application's display name, because the name is only knowable
+    /// while it is in front and the gallery needs it long afterwards. That is the one side effect,
+    /// and it is why this is not simply `currentFrontmostBundleID`.
+    private var attributableBundleID: String? {
+        guard let bundleID = currentFrontmostBundleID, !isExcluded(bundleID: bundleID) else {
+            return nil
+        }
         if today.appNames[bundleID] == nil, let name = currentFrontmostAppName {
             today.appNames[bundleID] = name
         }
+        return bundleID
+    }
+
+    private func attributeToFrontmostApp(_ apply: (String) -> Void) {
+        if let bundleID = attributableBundleID { apply(bundleID) }
     }
 
     // MARK: - Keyboard
 
     func recordKeyPress(category: KeyCategory, keyCode: UInt16, at date: Date) {
         guard beginEvent(at: date, category: .keyboard) else { return }
-        today.totalKeyPresses += 1
         sessionKeyPresses += 1
-        today.keyCategoryCounts[category.rawValue, default: 0] += 1
-        // Frequency only — no ordering, no produced character. Drives the heatmap.
-        today.keyCodeCounts[String(keyCode), default: 0] += 1
-        attributeToFrontmostApp { today.appKeyPresses[$0, default: 0] += 1 }
-        let minute = minuteOfDay(date)
-        today.activityPerMinute[minute] += 1
-
-        if category == .character {
-            today.characterKeyPresses += 1
-            today.charKeysPerMinute[minute] += 1
-            updateTypingStreak(at: date)
-            updateLiveWPM(at: date, minute: minute)
-        }
+        keyboard.recordKeyPress(category: category, keyCode: keyCode, at: date,
+                                minute: minuteOfDay(date),
+                                frontmostBundleID: attributableBundleID,
+                                into: &today)
+        if keyboard.liveWPM != liveWPM { liveWPM = keyboard.liveWPM }
     }
 
     func recordShortcut(_ type: ShortcutType, at date: Date) {
         guard beginEvent(at: date, category: .keyboard) else { return }
-        today.shortcutCounts[type.rawValue, default: 0] += 1
-    }
-
-    private func updateTypingStreak(at date: Date) {
-        if let last = lastCharKeyTime, date.timeIntervalSince(last) <= Self.typingStreakGapSeconds {
-            if let start = typingStreakStart {
-                let duration = Int(date.timeIntervalSince(start))
-                if duration > today.longestTypingStreakSeconds {
-                    today.longestTypingStreakSeconds = duration
-                }
-            }
-        } else {
-            typingStreakStart = date
-            today.typingSessionCount += 1
-        }
-        lastCharKeyTime = date
-    }
-
-    private func updateLiveWPM(at date: Date, minute: Int) {
-        recentCharKeyTimes.append(date)
-        recentCharKeyTimes.removeAll { date.timeIntervalSince($0) > 60 }
-        let wpm = Double(recentCharKeyTimes.count) / 5.0
-        if wpm > today.maxWPM && recentCharKeyTimes.count >= 5 {
-            today.maxWPM = wpm
-            today.maxWPMMinute = minute
-        }
+        keyboard.recordShortcut(type, into: &today)
     }
 
     // MARK: - Mouse
 
     func recordClick(kind: ClickKind, at date: Date) {
         guard beginEvent(at: date, category: .mouse) else { return }
-        switch kind {
-        case .left: today.leftClicks += 1
-        case .right: today.rightClicks += 1
-        case .double: today.doubleClicks += 1
-        case .drag: today.dragCount += 1
-        }
-        if kind != .drag { sessionClicks += 1 }
-        let minute = minuteOfDay(date)
-        today.clicksPerMinute[minute] += 1
-        today.activityPerMinute[minute] += 1
-        attributeToFrontmostApp { today.appClicks[$0, default: 0] += 1 }
+        if pointer.countsTowardsSessionClicks(kind) { sessionClicks += 1 }
+        pointer.recordClick(kind: kind, minute: minuteOfDay(date),
+                            frontmostBundleID: attributableBundleID, into: &today)
     }
 
     func recordCursorMovement(distancePixels: Double, speedPxPerSec: Double, at date: Date) {
         guard beginEvent(at: date, category: .mouse) else { return }
-        today.cursorDistancePixels += distancePixels
-        if speedPxPerSec > today.maxCursorSpeedPxPerSec {
-            today.maxCursorSpeedPxPerSec = speedPxPerSec
-        }
+        pointer.recordCursorMovement(distancePixels: distancePixels,
+                                     speedPxPerSec: speedPxPerSec, into: &today)
     }
 
     func recordScroll(deltaY: Double, deltaX: Double, speedPointsPerSec: Double, at date: Date) {
         guard beginEvent(at: date, category: .mouse) else { return }
-        if deltaY > 0 { today.scrollUpPoints += deltaY }
-        if deltaY < 0 { today.scrollDownPoints += -deltaY }
-        if deltaX != 0 { today.scrollHorizontalPoints += abs(deltaX) }
-        if speedPointsPerSec > today.maxScrollSpeedPointsPerSec {
-            today.maxScrollSpeedPointsPerSec = speedPointsPerSec
-        }
-        let minute = minuteOfDay(date)
-        let magnitude = abs(deltaY) + abs(deltaX)
-        today.scrollPerMinute[minute] += magnitude
-        today.activityPerMinute[minute] += 1
-        attributeToFrontmostApp { today.appScrollPoints[$0, default: 0] += magnitude }
+        pointer.recordScroll(deltaY: deltaY, deltaX: deltaX,
+                             speedPointsPerSec: speedPointsPerSec, minute: minuteOfDay(date),
+                             frontmostBundleID: attributableBundleID, into: &today)
     }
 
     func recordScrollDirectionChange(at date: Date) {
         guard beginEvent(at: date, category: .mouse) else { return }
-        today.scrollDirectionChanges += 1
+        pointer.recordScrollDirectionChange(into: &today)
     }
 
     // MARK: - Clipboard
@@ -909,6 +877,3 @@ final class ActivityCenter {
     }
 }
 
-enum ClickKind {
-    case left, right, double, drag
-}

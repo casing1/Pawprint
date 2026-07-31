@@ -32,10 +32,12 @@ final class TrackingCoordinator {
 
     private init() {}
 
+    /// Starts the monitors. The centre they feed is started by `AppEnvironment` before this runs —
+    /// a coordinator of trackers deciding the lifetime of the thing it reports to was the sort of
+    /// implicit ordering a composition root exists to make explicit.
     func start() {
         guard !started else { return }
         started = true
-        ActivityCenter.shared.start()
         keyboard.start()
         mouse.start()
         clipboard.start()
