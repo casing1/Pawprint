@@ -290,6 +290,22 @@ after   DIGEST days=115 checksum=8ab4898b51151e79
 diff of the expanded day: no field differs
 ```
 
+### The keystroke hot path
+
+The O(n) live-WPM window recorded in §7 is fixed. It appended and then rescanned-with-compaction on
+every keystroke; entries arrive in order, so everything expiring is at the front and one index walk
+finds it. Debug build, against the §1 baseline:
+
+| Workload | Baseline | After | Δ |
+|---|---|---|---|
+| `20k keys @96wpm` | 2,639.557 ms | 1,034.076 ms | **−61%** |
+| `20k keys @burst` | 10,773.281 ms | 1,026.817 ms | **−90%** |
+| `100k cursor moves` | 4,900.729 ms | 4,916.946 ms | +0.3% |
+| `lifetime rebuild` | 100.453 ms | 93.728 ms | −6.7% |
+
+The point is not the percentage but that burst now costs the same as ordinary typing: the per-key
+cost no longer scales with how fast anyone types.
+
 ### Performance across S2
 
 The debug build regressed 7–12% uniformly — including `load 30 days`, which is SQLite and JSON
@@ -324,12 +340,12 @@ worth fixing in S8, but the shipped cost of it is a quarter of what the baseline
 | Stage | State |
 |---|---|
 | S1 Baseline, plan, `PAWPRINT_PERF` | **Done** |
-| S3 Characterization tests | **Partial** — 66 tests: privacy invariants, day boundaries + DST, stored-data compatibility, summary determinism, streak rule, score overflow, lustre, and **recording policy (A)**. Missing: keyboard/mouse accumulation (C), system state (D), store-level compatibility on a real database fixture (F), update signing (G) |
+| S3 Characterization tests | **Partial** — 88 tests: privacy invariants, day boundaries + DST, stored-data compatibility, summary determinism, streak rule, score overflow, lustre, **recording policy (A)**, **keyboard/mouse accumulation (C)** and language-pack integrity. Missing: system state (D), store-level compatibility on a real database fixture (F), update signing (G) |
 | S2 Module split | **Done** — 5,491 lines in `PawprintCore`, 702 `package` declarations, 16 written-out memberwise initializers, `DisplayCalibrating` seam. Verified identical by digest and by the 37 tests |
 | S10 Debug tooling out of the release | **Done** — `DebugSnapshot` and `DemoData` (2,562 lines) are `#if DEBUG`, the 36 environment branches moved from `AppDelegate` into `DebugCommand`, and the capture knobs fold to compile-time constants. Release binary 16,987,840 → 15,181,216 bytes (−10.6%), and `strings` finds no `PAWPRINT_`, `DebugSnapshot`, `DemoData` or `DebugCommand` in it. CI asserts this |
 | S11 Release workflow | **Done** — no GitHub expression reaches a shell; the tag is validated before it selects a ref; `scripts/test_validate_tag.sh` and `scripts/check_workflows.py` run in CI |
-| S4 Injectable time | **Partial** — `Clock` / `SystemClock` / `TestClock` exist in the core. The composition root and the removal of the 225 `.shared` lookups have not started |
-| S5 Split ActivityCenter | **Partial** — `RecordingPolicy` extracted: pause, excluded applications, system processes and the per-category switches are a value type in the core, tested on their own. The remaining responsibilities (rollover, sessions, accumulators, persistence) are still on `ActivityCenter` |
+| S4 Composition root | **Done** — `AppEnvironment` builds the application; `ActivityCenter` takes its store and clock; `ActivityStore` + `InMemoryActivityStore` make it constructible in a test; `TrackingCoordinator` no longer starts the centre it reports to. The 225 `.shared` lookups remain, which is S9 |
+| S5 Split ActivityCenter | **Done** — `RecordingPolicy`, `KeyboardAccumulator` and `PointerAccumulator` own the state that outlives an event and are tested on their own. The stateless `record*` methods stay on the facade deliberately: moving a one-line increment into a type that owns nothing is moving lines, not separating responsibilities |
 | S6 – S9, S12 | Not started |
 | F1 Uncapped score | **Done** — surplus kept apart from the 0–100 band, so grades and percentiles are untouched |
 | F2 Continuous lustre | **Done** — `CatLustre` in the core; 26 distinct rarity values become 108 distinct lustre values over 116 days |
@@ -341,7 +357,7 @@ worth fixing in S8, but the shipped cost of it is a quarter of what the baseline
 |---|---|
 | `swift build -c debug` | Pass |
 | `swift build -c release` | Pass |
-| `swift test` | Pass — 66 tests, 0 failures, in four timezones |
+| `swift test` | Pass — 88 tests, 0 failures, in four timezones |
 | `./scripts/build_app.sh release` | Pass |
 | `lipo -archs` | `x86_64 arm64` |
 | Existing database loads without loss | Pass — 115-day checksum identical |

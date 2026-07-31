@@ -140,7 +140,8 @@ enum DebugCommand {
         }
         if let shotLanguage = ProcessInfo.processInfo.environment["PAWPRINT_SHOT_LANG"] {
             var updated = ActivityCenter.shared.settings
-            updated.language = shotLanguage == "ko" ? .korean : .english
+            // Every shipped language, so adding one does not also mean editing the harness.
+            updated.language = AppLanguage.allCases.first { $0.code == shotLanguage } ?? .english
             ActivityCenter.shared.updateSettings(updated)
         }
         if ProcessInfo.processInfo.environment["PAWPRINT_GIF"] != nil {

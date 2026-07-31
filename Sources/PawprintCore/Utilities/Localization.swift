@@ -60,15 +60,7 @@ final package class LocalizationManager {
     /// that has already-translated text baked into it.
     @discardableResult
     package nonisolated func apply(_ language: AppLanguage) -> Bool {
-        let resolved: String
-        switch language {
-        case .system:
-            resolved = Self.defaultCode
-        case .korean:
-            resolved = "ko"
-        case .english:
-            resolved = "en"
-        }
+        let resolved = language.code ?? Self.defaultCode
         guard resolved != Tables.activeCode else { return false }
         Tables.setActive(resolved == Self.baseLanguage ? Tables.base : Self.loadPackFile(resolved),
                          code: resolved)
@@ -132,15 +124,31 @@ final package class LocalizationManager {
 
 /// What the user can pick in Settings.
 package enum AppLanguage: String, CaseIterable, Codable, Sendable {
-    case system, korean, english
+    case system, korean, english, japanese, german
 
-    static package let availableCodes: Set<String> = ["ko", "en"]
+    static package let availableCodes: Set<String> = ["ko", "en", "ja", "de"]
 
+    /// The pack this resolves to, or `nil` for `.system`, which is resolved against the Mac's own
+    /// preferred languages instead.
+    package var code: String? {
+        switch self {
+        case .system: return nil
+        case .korean: return "ko"
+        case .english: return "en"
+        case .japanese: return "ja"
+        case .german: return "de"
+        }
+    }
+
+    /// Each language names itself. A picker that lists "Japanese" to someone who reads Japanese is
+    /// listing it in a language they may not have.
     package var label: String {
         switch self {
         case .system: return L10n.t("settings.language.system")
         case .korean: return "한국어"
         case .english: return "English"
+        case .japanese: return "日本語"
+        case .german: return "Deutsch"
         }
     }
 }
@@ -186,12 +194,29 @@ package enum Tables {
         lock.withLock { activeTable = table; code = newCode }
     }
 
-    /// Falls back to the base pack so a partial translation degrades to Korean, never to a raw key.
+    /// Active pack, then English, then the base pack, then the key itself.
+    ///
+    /// English is in the middle deliberately. The chain used to go straight from the active pack to
+    /// the base one, which is Korean — so a German pack missing a string showed that string in
+    /// Korean. English is the reasonable thing to show someone whose language has a gap in it, and
+    /// it is what every other fallback in the app already resolves to.
     static package func lookup(_ key: String) -> String {
         lock.withLock {
             ensureBaseLoaded()
-            return activeTable[key] ?? baseTable[key]
+            if let hit = activeTable[key] { return hit }
+            if code != LocalizationManager.fallbackLanguage,
+               let english = fallbackTable[key] { return english }
+            return baseTable[key]
         } ?? key
+    }
+
+    /// The English pack, loaded once, purely to sit between a partial translation and Korean.
+    nonisolated(unsafe) private static var loadedFallback: [String: String]?
+    private static var fallbackTable: [String: String] {
+        if let loadedFallback { return loadedFallback }
+        let table = LocalizationManager.loadPackFile(LocalizationManager.fallbackLanguage)
+        loadedFallback = table
+        return table
     }
 }
 
