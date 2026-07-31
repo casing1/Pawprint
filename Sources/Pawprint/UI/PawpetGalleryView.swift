@@ -274,21 +274,12 @@ struct PawpetGalleryView: View {
                 CatFoil(lustre: t.lustre, seed: summary.day, size: 62) {
                     PawpetView(summary: summary, size: 62, streakDays: streak(for: summary),
                                showsAura: true)
-                } subject: {
-                    // The same cat with no aura behind it: only its alpha is used, and the aura
-                    // would leak the background into the artwork's mask.
-                    PawpetView(summary: summary, size: 62, streakDays: streak(for: summary),
-                               showsAura: false)
                 }
                     .overlay(alignment: .topLeading) {
                         Text(t.rarityGrade)
                             .font(.system(size: 8, weight: .heavy))
                             .foregroundStyle(.white)
                             .padding(.horizontal, 3).padding(.vertical, 1)
-                            // A flat stamp, deliberately. A diagonal sheen was tried across it and
-                            // read as a rendering fault rather than as metal — the badge is eleven
-                            // points tall, which is not enough room for a highlight to be anything
-                            // but a stray white streak.
                             .background(Capsule().fill(t.rarityColor))
                             .padding(2)
                     }
@@ -346,9 +337,6 @@ struct PawpetDetailView: View {
             HStack(alignment: .top, spacing: 14) {
                 CatFoil(lustre: t.lustre, seed: summary.day, size: 150) {
                     PawpetView(summary: summary, size: 150, streakDays: streakDays)
-                } subject: {
-                    PawpetView(summary: summary, size: 150, streakDays: streakDays,
-                               showsAura: false)
                 }
                 rarityPanel(t)
             }

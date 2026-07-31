@@ -46,27 +46,13 @@ private let foilSpectrum: [Color] = [
 ///
 /// **Cost.** At rest a card draws the shine dimly and nothing else. Everything that tracks the
 /// light exists only while the pointer is inside that card, and it is inside one at a time.
-struct CatFoil<Content: View, Subject: View>: View {
+struct CatFoil<Content: View>: View {
     let lustre: CatLustre
     /// Distinguishes two cards with the same lustre. The day string is the natural choice.
     let seed: String
     var size: CGFloat
 
-    /// The card as it is seen.
     @ViewBuilder var content: () -> Content
-    /// The same drawing with nothing behind it, used only for its alpha.
-    ///
-    /// **`ImageRenderer` cannot do this.** A `Canvas` used as a mask renders empty there, so the
-    /// debug screenshot of the detail card shows the bars running over the cat and no artwork
-    /// pattern at all. The running application is correct — the real-window captures show it — and
-    /// nothing the app *ships* renders a foil through `ImageRenderer`: the share card draws the cat
-    /// without one. It is a limitation of the screenshot tooling, not of the card.
-    ///
-    /// This is what lets the card have *regions*. A real holo does not print one texture across
-    /// the whole face: the bars run over the background and stop at the artwork, which gets a
-    /// pattern of its own. Without a silhouette to cut against there is only one surface, and one
-    /// surface is what made this read as a shiny square rather than a card with a cat on it.
-    @ViewBuilder var subject: () -> Subject
 
     @State private var pointer: UnitPoint?
 
@@ -140,176 +126,13 @@ struct CatFoil<Content: View, Subject: View>: View {
 
     @ViewBuilder private var foil: some View {
         ZStack {
-            // The rainbow runs across the whole face; it is the surface, not a pattern.
             shine
-            // The bars belong to the background — on a real card they run behind the artwork and
-            // stop at its edge. Cutting the cat out of them is most of what makes this read as
-            // printed rather than filtered.
-            if lustre.finish >= .prismatic {
-                // Masked *before* the blend mode, not after. A `blendMode` composites against the
-                // backdrop of its containing group, and applying one inside a masked subtree makes
-                // the layer escape its own mask — the bars drew over the cat and the shards drew
-                // over the background, which is exactly the single-surface look this replaced.
-                pillarField
-                    .mask { background }
-                    .compositingGroup()
-                    .brightness(0.12)
-                    .contrast(1.1)
-                    .blendMode(.hardLight)
-                    .opacity((isLit ? 0.34 : 0.12) * scaleAttenuation)
-            }
-            // …and the cat gets a texture of its own, which is the point of the whole exercise.
-            if lustre.finish >= .holographic {
-                subjectPattern
-                    .mask { subject() }
-                    .compositingGroup()
-                    .blendMode(subjectBlend)
-                    .opacity(subjectOpacity * scaleAttenuation)
-            }
+            if lustre.finish >= .prismatic { pillars }
             if isLit { shading }
             if lustre.finish == .radiant { glitter }
         }
         .clipShape(shape)
         .allowsHitTesting(false)
-    }
-
-    // MARK: - Regions
-
-    /// Everything the cat is not.
-    private var background: some View {
-        Rectangle()
-            .overlay { subject().blendMode(.destinationOut) }
-            .compositingGroup()
-    }
-
-    /// What the artwork itself is finished in.
-    ///
-    /// All three are the reference's `radiant rare` construction, which is a *geometric* pattern
-    /// and not the field of random shards a first attempt guessed at. It is a repeating luminance
-    /// ramp — stepped 10 → 20 → 35 → 42.5 → 50 → 42.5 → 35 → 20 → 10 → 0 percent across ten bars —
-    /// laid at 45°. Crossing two of them at ±45° is what produces the diamond facets that read as
-    /// cracked ice, and it is the same trick the rainbow rare uses at a finer pitch.
-    ///
-    /// The tiers differ in *geometry*, not in strength, so they are told apart at a glance:
-    ///
-    /// | Tier | Artwork |
-    /// |---|---|
-    /// | holographic | one family at 45° — plain chevrons |
-    /// | prismatic | both families at ±45° — diamond facets |
-    /// | radiant | both, finer, with glitter diamonds and a lit centre |
-    @ViewBuilder private var subjectPattern: some View {
-        switch lustre.finish {
-        case .matte, .satin:
-            EmptyView()
-        case .holographic:
-            ramp(angle: 45, period: rampPeriod)
-        case .prismatic:
-            ZStack {
-                ramp(angle: 45, period: rampPeriod)
-                ramp(angle: -45, period: rampPeriod).blendMode(.screen)
-            }
-            .compositingGroup()
-        case .radiant:
-            ZStack {
-                ramp(angle: 45, period: rampPeriod * 0.7)
-                ramp(angle: -45, period: rampPeriod * 0.7).blendMode(.screen)
-                glitterDiamonds.blendMode(.screen)
-                // The reference lights the centre of the facets from the pointer rather than
-                // leaving the whole sheet at one brightness.
-                RadialGradient(colors: [.white.opacity(0.5), .clear],
-                               center: light, startRadius: 0, endRadius: size * 0.55)
-                    .blendMode(.screen)
-            }
-            .compositingGroup()
-        }
-    }
-
-    /// `hardLight` against the artwork, which is how a ramp of greys becomes light and shade on the
-    /// cat rather than a grey film over it.
-    private var subjectBlend: BlendMode { .hardLight }
-
-    /// Present at rest, not only under the pointer.
-    ///
-    /// The first version faded to 0.16 when the pointer was elsewhere, which is why the artwork
-    /// looked untouched: a real foil shows its pattern sitting still on a table, and a gallery is
-    /// mostly cards nobody is pointing at.
-    private var subjectOpacity: Double {
-        switch lustre.finish {
-        case .matte, .satin: return 0
-        case .holographic:   return isLit ? 0.60 : 0.42
-        case .prismatic:     return isLit ? 0.72 : 0.52
-        case .radiant:       return isLit ? 0.85 : 0.60
-        }
-    }
-
-    // MARK: - Subject patterns
-
-    /// One period of the ramp, in points.
-    ///
-    /// The reference's `--barwidth: 1.2%` is a fraction of a 400-point card, so ten bars come to
-    /// about 48 points. Held near that on the detail card and only tightened on the thumbnail:
-    /// scaling it down proportionally would put five facets inside a cat's head, where the pattern
-    /// stops being facets and becomes grey mush.
-    private var rampPeriod: Double { max(15, Double(size) * 0.30) }
-
-    /// A `repeating-linear-gradient` with hard steps, which is what makes it read as facets rather
-    /// than as a wash. Oversized and rotated, so turning it never exposes an edge.
-    private func ramp(angle: Double, period: Double) -> some View {
-        // 10 → 20 → 35 → 42.5 → 50 → 42.5 → 35 → 20 → 10 → 0, verbatim from the reference.
-        let ladder: [Double] = [0.10, 0.20, 0.35, 0.425, 0.50, 0.425, 0.35, 0.20, 0.10, 0.0]
-        let span = Double(size) * 3
-        let periods = max(1, Int(span / period))
-        var stops: [Gradient.Stop] = []
-        for p in 0..<periods {
-            for (i, level) in ladder.enumerated() {
-                let a = (Double(p) + Double(i) / Double(ladder.count)) / Double(periods)
-                let b = (Double(p) + Double(i + 1) / Double(ladder.count)) / Double(periods)
-                stops.append(.init(color: Color(white: level), location: min(1, a)))
-                stops.append(.init(color: Color(white: level), location: min(1, b)))
-            }
-        }
-        // The sheet slides with the light, so it is a surface being tilted, not a decal.
-        return LinearGradient(stops: stops, startPoint: .leading, endPoint: .trailing)
-            .frame(width: span, height: span)
-            .rotationEffect(.degrees(angle))
-            .offset(x: (0.5 - lightX) * 0.35 * Double(size),
-                    y: (0.5 - lightY) * 0.35 * Double(size))
-    }
-
-    /// The reference's `--glitter`: a lattice of small diamonds, not a scatter of dots.
-    private var glitterDiamonds: some View {
-        Canvas { context, canvasSize in
-            let pitch = max(5, canvasSize.width * 0.075)
-            let r = pitch * 0.16
-            let slide = CGSize(width: (0.5 - lightX) * 0.2 * canvasSize.width,
-                               height: (0.5 - lightY) * 0.2 * canvasSize.height)
-            var row = 0
-            var y = -pitch
-            while y < canvasSize.height + pitch {
-                // Every other row offset by half a pitch, which is what makes it a diamond lattice
-                // rather than a square grid.
-                var x = -pitch + (row % 2 == 0 ? 0 : pitch / 2)
-                while x < canvasSize.width + pitch {
-                    let cx = x + slide.width
-                    let cy = y + slide.height
-                    let dx = cx / canvasSize.width - lightX
-                    let dy = cy / canvasSize.height - lightY
-                    let nearness = max(0, 1 - (dx * dx + dy * dy).squareRoot() * 1.6)
-                    if nearness > 0.05 {
-                        var diamond = Path()
-                        diamond.move(to: CGPoint(x: cx, y: cy - r))
-                        diamond.addLine(to: CGPoint(x: cx + r, y: cy))
-                        diamond.addLine(to: CGPoint(x: cx, y: cy + r))
-                        diamond.addLine(to: CGPoint(x: cx - r, y: cy))
-                        diamond.closeSubpath()
-                        context.fill(diamond, with: .color(.white.opacity(0.25 + 0.7 * nearness)))
-                    }
-                    x += pitch
-                }
-                y += pitch
-                row += 1
-            }
-        }
     }
 
     // MARK: - Shine
@@ -385,12 +208,16 @@ struct CatFoil<Content: View, Subject: View>: View {
     ///
     /// Two sets at different periods sliding at different rates, so they beat against each other
     /// rather than marching in step.
-    private var pillarField: some View {
+    private var pillars: some View {
         ZStack {
             barField(period: 14, travel: 1.65)
             barField(period: 10, travel: -0.9).blendMode(.screen)
         }
         .compositingGroup()
+        .brightness(0.12)
+        .contrast(1.1)
+        .blendMode(.hardLight)
+        .opacity((isLit ? 0.34 : 0.12) * scaleAttenuation)
     }
 
     private func barField(period: Double, travel: Double) -> some View {
@@ -476,20 +303,13 @@ struct CatFoil<Content: View, Subject: View>: View {
             .allowsHitTesting(false)
     }
 
-    /// The card's edge, which is its own element and gets its own metal.
-    ///
-    /// Silver up to prismatic and gold at radiant — the same grading the real cards use, and the
-    /// one part of the card a collector reads before anything else.
     private var rim: some View {
-        let metal: Color = lustre.finish == .radiant
-            ? Color(red: 1.0, green: 0.86, blue: 0.45)
-            : .white
-        return shape.strokeBorder(
+        shape.strokeBorder(
             LinearGradient(
                 stops: [
-                    .init(color: metal.opacity(0.85), location: 0),
-                    .init(color: metal.opacity(0.08), location: 0.5),
-                    .init(color: metal.opacity(0.7), location: 1),
+                    .init(color: .white.opacity(0.85), location: 0),
+                    .init(color: .white.opacity(0.08), location: 0.5),
+                    .init(color: .white.opacity(0.7), location: 1),
                 ],
                 startPoint: light, endPoint: UnitPoint(x: 1 - lightX, y: 1 - lightY)),
             lineWidth: lustre.finish == .radiant ? 1.6 : 1.0)
