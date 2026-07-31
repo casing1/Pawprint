@@ -42,7 +42,6 @@ struct ActivityClockView: View {
                 dial
                     .frame(width: 128, height: 128)
                 legend
-                Spacer(minLength: 0)
             }
         }
         .padding(10)
@@ -108,7 +107,12 @@ struct ActivityClockView: View {
             ForEach(periodBreakdown, id: \.name) { period in
                 HStack(spacing: 5) {
                     Text(period.emoji).font(.system(size: 10))
-                    Text(period.name).font(.caption2).foregroundStyle(.secondary)
+                    Text(period.name)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        // "Afternoon 12–18" and "Nachmittag 12–18" are half again as long as
+                        // "오후 12-18시"; wrapped, they pushed the dial's rows out of alignment.
+                        .lineLimit(1)
                     Spacer(minLength: 4)
                     Text("\(period.percent)%")
                         .font(.caption2.monospacedDigit())
@@ -116,7 +120,9 @@ struct ActivityClockView: View {
                 }
             }
         }
-        .frame(width: 118)
+        // Takes the width the dial leaves rather than a figure measured against Korean. The card is
+        // wide enough that the percentages simply align with the rows above it.
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private struct Period {
