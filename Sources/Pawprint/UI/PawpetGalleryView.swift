@@ -285,25 +285,11 @@ struct PawpetGalleryView: View {
                             .font(.system(size: 8, weight: .heavy))
                             .foregroundStyle(.white)
                             .padding(.horizontal, 3).padding(.vertical, 1)
-                            .background {
-                                // The grade stamp is its own element and gets its own finish: flat
-                                // ink up to holographic, then a struck-metal sweep, the way a set
-                                // symbol is foiled on a card whose artwork is.
-                                Capsule().fill(t.rarityColor)
-                                    .overlay {
-                                        if t.lustre.finish >= .prismatic {
-                                            Capsule().fill(
-                                                LinearGradient(
-                                                    stops: [
-                                                        .init(color: .white.opacity(0.0), location: 0.15),
-                                                        .init(color: .white.opacity(0.75), location: 0.42),
-                                                        .init(color: .white.opacity(0.0), location: 0.68),
-                                                    ],
-                                                    startPoint: .topLeading, endPoint: .bottomTrailing))
-                                            .blendMode(.plusLighter)
-                                        }
-                                    }
-                            }
+                            // A flat stamp, deliberately. A diagonal sheen was tried across it and
+                            // read as a rendering fault rather than as metal — the badge is eleven
+                            // points tall, which is not enough room for a highlight to be anything
+                            // but a stray white streak.
+                            .background(Capsule().fill(t.rarityColor))
                             .padding(2)
                     }
                 HStack(spacing: 3) {

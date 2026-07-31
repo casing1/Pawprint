@@ -184,153 +184,130 @@ struct CatFoil<Content: View, Subject: View>: View {
 
     /// What the artwork itself is finished in.
     ///
-    /// Each tier gets a different texture rather than more of the same one, which is how the real
-    /// cards are graded: a rainbow rare is not a holo turned up, it is a different print.
+    /// All three are the reference's `radiant rare` construction, which is a *geometric* pattern
+    /// and not the field of random shards a first attempt guessed at. It is a repeating luminance
+    /// ramp — stepped 10 → 20 → 35 → 42.5 → 50 → 42.5 → 35 → 20 → 10 → 0 percent across ten bars —
+    /// laid at 45°. Crossing two of them at ±45° is what produces the diamond facets that read as
+    /// cracked ice, and it is the same trick the rainbow rare uses at a finer pitch.
+    ///
+    /// The tiers differ in *geometry*, not in strength, so they are told apart at a glance:
+    ///
+    /// | Tier | Artwork |
+    /// |---|---|
+    /// | holographic | one family at 45° — plain chevrons |
+    /// | prismatic | both families at ±45° — diamond facets |
+    /// | radiant | both, finer, with glitter diamonds and a lit centre |
     @ViewBuilder private var subjectPattern: some View {
         switch lustre.finish {
         case .matte, .satin:
             EmptyView()
         case .holographic:
-            // Fine crosshatch. The quietest of the three, because it is also the commonest.
-            lattice(pitch: 0.085, lineWidth: 0.7, nodes: false)
+            ramp(angle: 45, period: rampPeriod)
         case .prismatic:
-            // Cracked ice: angular shards, the way a radiant holo facets its artwork.
-            crackedIce
-        case .radiant:
-            // A lattice with lit nodes over a starfield — the busiest print, for the rarest cat.
             ZStack {
-                cosmos
-                lattice(pitch: 0.06, lineWidth: 0.6, nodes: true).blendMode(.screen)
+                ramp(angle: 45, period: rampPeriod)
+                ramp(angle: -45, period: rampPeriod).blendMode(.screen)
+            }
+            .compositingGroup()
+        case .radiant:
+            ZStack {
+                ramp(angle: 45, period: rampPeriod * 0.7)
+                ramp(angle: -45, period: rampPeriod * 0.7).blendMode(.screen)
+                glitterDiamonds.blendMode(.screen)
+                // The reference lights the centre of the facets from the pointer rather than
+                // leaving the whole sheet at one brightness.
+                RadialGradient(colors: [.white.opacity(0.5), .clear],
+                               center: light, startRadius: 0, endRadius: size * 0.55)
+                    .blendMode(.screen)
             }
             .compositingGroup()
         }
     }
 
-    /// Crosshatch sits *under* the artwork's own colour; shards and stars sit on top of it.
-    private var subjectBlend: BlendMode {
-        lustre.finish == .holographic ? .softLight : .colorDodge
-    }
+    /// `hardLight` against the artwork, which is how a ramp of greys becomes light and shade on the
+    /// cat rather than a grey film over it.
+    private var subjectBlend: BlendMode { .hardLight }
 
+    /// Present at rest, not only under the pointer.
+    ///
+    /// The first version faded to 0.16 when the pointer was elsewhere, which is why the artwork
+    /// looked untouched: a real foil shows its pattern sitting still on a table, and a gallery is
+    /// mostly cards nobody is pointing at.
     private var subjectOpacity: Double {
         switch lustre.finish {
         case .matte, .satin: return 0
-        case .holographic:   return isLit ? 0.85 : 0.30
-        case .prismatic:     return isLit ? 0.55 : 0.16
-        case .radiant:       return isLit ? 0.70 : 0.22
+        case .holographic:   return isLit ? 0.60 : 0.42
+        case .prismatic:     return isLit ? 0.72 : 0.52
+        case .radiant:       return isLit ? 0.85 : 0.60
         }
     }
 
     // MARK: - Subject patterns
 
-    /// A diamond crosshatch, drifting against the light.
+    /// One period of the ramp, in points.
     ///
-    /// Rotated 45° so it never lines up with the scanlines underneath it — two grids at the same
-    /// angle beat into moiré, which looks like a rendering fault rather than a texture.
-    private func lattice(pitch: Double, lineWidth: Double, nodes: Bool) -> some View {
-        Canvas { context, canvasSize in
-            let span = max(canvasSize.width, canvasSize.height) * 1.8
-            let step = pitch * canvasSize.width
-            guard step > 0.5 else { return }
-            // The whole lattice slides a little with the pointer, so it is a surface being tilted
-            // rather than a decal stuck to the cat.
-            let slide = CGSize(width: (0.5 - lightX) * 0.20 * canvasSize.width,
-                               height: (0.5 - lightY) * 0.20 * canvasSize.height)
-            context.translateBy(x: canvasSize.width / 2 + slide.width,
-                                y: canvasSize.height / 2 + slide.height)
-            context.rotate(by: .degrees(45))
+    /// The reference's `--barwidth: 1.2%` is a fraction of a 400-point card, so ten bars come to
+    /// about 48 points. Held near that on the detail card and only tightened on the thumbnail:
+    /// scaling it down proportionally would put five facets inside a cat's head, where the pattern
+    /// stops being facets and becomes grey mush.
+    private var rampPeriod: Double { max(15, Double(size) * 0.30) }
 
-            var offset = -span / 2
-            while offset < span / 2 {
-                for path in [Path { $0.move(to: CGPoint(x: offset, y: -span / 2))
-                                    $0.addLine(to: CGPoint(x: offset, y: span / 2)) },
-                             Path { $0.move(to: CGPoint(x: -span / 2, y: offset))
-                                    $0.addLine(to: CGPoint(x: span / 2, y: offset)) }] {
-                    context.stroke(path, with: .color(.white.opacity(0.55)), lineWidth: lineWidth)
-                }
-                offset += step
+    /// A `repeating-linear-gradient` with hard steps, which is what makes it read as facets rather
+    /// than as a wash. Oversized and rotated, so turning it never exposes an edge.
+    private func ramp(angle: Double, period: Double) -> some View {
+        // 10 → 20 → 35 → 42.5 → 50 → 42.5 → 35 → 20 → 10 → 0, verbatim from the reference.
+        let ladder: [Double] = [0.10, 0.20, 0.35, 0.425, 0.50, 0.425, 0.35, 0.20, 0.10, 0.0]
+        let span = Double(size) * 3
+        let periods = max(1, Int(span / period))
+        var stops: [Gradient.Stop] = []
+        for p in 0..<periods {
+            for (i, level) in ladder.enumerated() {
+                let a = (Double(p) + Double(i) / Double(ladder.count)) / Double(periods)
+                let b = (Double(p) + Double(i + 1) / Double(ladder.count)) / Double(periods)
+                stops.append(.init(color: Color(white: level), location: min(1, a)))
+                stops.append(.init(color: Color(white: level), location: min(1, b)))
             }
+        }
+        // The sheet slides with the light, so it is a surface being tilted, not a decal.
+        return LinearGradient(stops: stops, startPoint: .leading, endPoint: .trailing)
+            .frame(width: span, height: span)
+            .rotationEffect(.degrees(angle))
+            .offset(x: (0.5 - lightX) * 0.35 * Double(size),
+                    y: (0.5 - lightY) * 0.35 * Double(size))
+    }
 
-            guard nodes else { return }
-            // A bright point at each crossing, brightest nearest the light. This is the sparkle a
-            // rainbow rare has that a plain crosshatch does not.
-            var x = -span / 2
-            while x < span / 2 {
-                var y = -span / 2
-                while y < span / 2 {
-                    let point = CGPoint(x: x, y: y)
-                    let dx = (point.x + slide.width) / canvasSize.width
-                    let dy = (point.y + slide.height) / canvasSize.height
-                    let nearness = max(0, 1 - (dx * dx + dy * dy).squareRoot() * 1.4)
-                    if nearness > 0.08 {
-                        let r = lineWidth * 1.6
-                        context.fill(Path(ellipseIn: CGRect(x: point.x - r, y: point.y - r,
-                                                            width: r * 2, height: r * 2)),
-                                     with: .color(.white.opacity(0.25 + 0.7 * nearness)))
+    /// The reference's `--glitter`: a lattice of small diamonds, not a scatter of dots.
+    private var glitterDiamonds: some View {
+        Canvas { context, canvasSize in
+            let pitch = max(5, canvasSize.width * 0.075)
+            let r = pitch * 0.16
+            let slide = CGSize(width: (0.5 - lightX) * 0.2 * canvasSize.width,
+                               height: (0.5 - lightY) * 0.2 * canvasSize.height)
+            var row = 0
+            var y = -pitch
+            while y < canvasSize.height + pitch {
+                // Every other row offset by half a pitch, which is what makes it a diamond lattice
+                // rather than a square grid.
+                var x = -pitch + (row % 2 == 0 ? 0 : pitch / 2)
+                while x < canvasSize.width + pitch {
+                    let cx = x + slide.width
+                    let cy = y + slide.height
+                    let dx = cx / canvasSize.width - lightX
+                    let dy = cy / canvasSize.height - lightY
+                    let nearness = max(0, 1 - (dx * dx + dy * dy).squareRoot() * 1.6)
+                    if nearness > 0.05 {
+                        var diamond = Path()
+                        diamond.move(to: CGPoint(x: cx, y: cy - r))
+                        diamond.addLine(to: CGPoint(x: cx + r, y: cy))
+                        diamond.addLine(to: CGPoint(x: cx, y: cy + r))
+                        diamond.addLine(to: CGPoint(x: cx - r, y: cy))
+                        diamond.closeSubpath()
+                        context.fill(diamond, with: .color(.white.opacity(0.25 + 0.7 * nearness)))
                     }
-                    y += step
+                    x += pitch
                 }
-                x += step
-            }
-        }
-    }
-
-    /// Straight-edged shards, clustered around two directions so they read as fractures in a sheet
-    /// rather than as scratches.
-    private var crackedIce: some View {
-        Canvas { context, canvasSize in
-            var generator = SeededGenerator(seed: UInt64(abs(seed.hashValue % 100_000)) &+ 31)
-            let span = max(canvasSize.width, canvasSize.height) * 1.6
-            context.translateBy(x: canvasSize.width / 2, y: canvasSize.height / 2)
-            // The facets swing with the light. A fracture that never moves is a printed line.
-            context.rotate(by: .degrees((lightX - 0.5) * 14))
-
-            for _ in 0..<22 {
-                // Two families, ±34° apart, which is what gives the shattered look its direction.
-                let family = generator.nextDouble(in: 0...1) < 0.5 ? -34.0 : 34.0
-                let angle = family + generator.nextDouble(in: -9...9)
-                let offset = generator.nextDouble(in: -0.55...0.55) * span
-                let width = 0.4 + generator.nextDouble(in: 0...1) * 2.2
-                let bright = 0.20 + generator.nextDouble(in: 0...1) * 0.55
-
-                var path = Path()
-                path.move(to: CGPoint(x: offset, y: -span / 2))
-                // One kink part-way down, so a shard is a fracture rather than a ruled line.
-                let kink = generator.nextDouble(in: -0.25...0.25) * span
-                path.addLine(to: CGPoint(x: offset + kink, y: 0))
-                path.addLine(to: CGPoint(x: offset + kink * 0.3, y: span / 2))
-
-                var rotated = context
-                rotated.rotate(by: .degrees(angle))
-                rotated.stroke(path, with: .color(.white.opacity(bright)), lineWidth: width)
-            }
-        }
-    }
-
-    /// A starfield with two soft clouds behind it. The rarest tier's print.
-    private var cosmos: some View {
-        Canvas { context, canvasSize in
-            var generator = SeededGenerator(seed: UInt64(abs(seed.hashValue % 100_000)) &+ 53)
-            // The clouds drift twice as far as the stars, which reads as depth.
-            let drift = CGSize(width: (0.5 - lightX) * 0.30 * canvasSize.width,
-                               height: (0.5 - lightY) * 0.30 * canvasSize.height)
-            for _ in 0..<2 {
-                let cx = generator.nextDouble(in: 0.2...0.8) * canvasSize.width + drift.width
-                let cy = generator.nextDouble(in: 0.2...0.8) * canvasSize.height + drift.height
-                let r = canvasSize.width * (0.28 + generator.nextDouble(in: 0...1) * 0.22)
-                context.fill(
-                    Path(ellipseIn: CGRect(x: cx - r, y: cy - r, width: r * 2, height: r * 2)),
-                    with: .radialGradient(
-                        Gradient(colors: [.white.opacity(0.30), .clear]),
-                        center: CGPoint(x: cx, y: cy), startRadius: 0, endRadius: r))
-            }
-            for _ in 0..<90 {
-                let x = generator.nextDouble(in: 0...1) * canvasSize.width + drift.width * 0.5
-                let y = generator.nextDouble(in: 0...1) * canvasSize.height + drift.height * 0.5
-                let r = (0.002 + generator.nextDouble(in: 0...1) * 0.006) * canvasSize.width
-                let bright = 0.25 + generator.nextDouble(in: 0...1) * 0.6
-                context.fill(
-                    Path(ellipseIn: CGRect(x: x - r, y: y - r, width: r * 2, height: r * 2)),
-                    with: .color(.white.opacity(bright)))
+                y += pitch
+                row += 1
             }
         }
     }
