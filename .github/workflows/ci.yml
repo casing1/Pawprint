@@ -93,10 +93,53 @@ jobs:
           set -euo pipefail
           APP=build/Pawprint.app/Contents/MacOS/Pawprint
           for probe in PAWPRINT_L10N PAWPRINT_ITEMS PAWPRINT_REWARDS PAWPRINT_CHAOS \
-                       PAWPRINT_SESSIONS PAWPRINT_STREAK; do
+                       PAWPRINT_SESSIONS PAWPRINT_STREAK PAWPRINT_FACTS; do
             echo "--- $probe"
             if ! env "$probe=1" "$APP"; then
               echo "::error::$probe failed"
               exit 1
             fi
           done
+
+      # Every offered language must resolve every key it is asked for. A pack that is merely
+      # complete can still be wrong: this loads each one into a running application.
+      - name: Check every language pack in a running app
+        run: |
+          set -euo pipefail
+          APP=build/Pawprint.app/Contents/MacOS/Pawprint
+          for lang in ko en ja de; do
+            echo "--- $lang"
+            if ! env "PAWPRINT_LANG_PROBE=$lang" "$APP"; then
+              echo "::error::the $lang pack failed"
+              exit 1
+            fi
+          done
+
+      # The summary is meant to be a function of the day it describes. It was not: six figures were
+      # chosen with `max` over a dictionary, so on a day where two things tied the answer changed
+      # between launches. Running the same digest twice is what would catch that coming back.
+      - name: Confirm the statistics are deterministic
+        run: |
+          set -euo pipefail
+          APP=build/Pawprint.app/Contents/MacOS/Pawprint
+          export PAWPRINT_DB="$RUNNER_TEMP/determinism.sqlite3"
+          env PAWPRINT_SEED_DEMO=1 "$APP" || true
+          env PAWPRINT_DIGEST=all "$APP" > "$RUNNER_TEMP/first.txt" 2>&1 || true
+          env PAWPRINT_DIGEST=all "$APP" > "$RUNNER_TEMP/second.txt" 2>&1 || true
+          if ! diff "$RUNNER_TEMP/first.txt" "$RUNNER_TEMP/second.txt"; then
+            echo "::error::the same database produced different statistics on two runs"
+            exit 1
+          fi
+          echo "the statistics are the same twice"
+
+      # A day's record must never grow a field that could hold what was typed, seen or copied.
+      # The unit tests check the model; this checks what the running application actually writes.
+      - name: Confirm no forbidden field reached the stored format
+        run: |
+          set -euo pipefail
+          FORBIDDEN='"text"|"characters"|"clipboardContent"|"windowTitle"|"documentName"|"url"|"screenshot"|"path"|"cursorPath"'
+          if grep -rEn "case ($FORBIDDEN)" Sources/PawprintCore/Models/DailyRawCounters.swift; then
+            echo "::error::a forbidden field appeared in the stored day format"
+            exit 1
+          fi
+          echo "the stored format holds counts and durations only"

@@ -337,32 +337,114 @@ worth fixing in S8, but the shipped cost of it is a quarter of what the baseline
 
 ## 10. Status
 
+Every stage has run.
+
 | Stage | State |
 |---|---|
 | S1 Baseline, plan, `PAWPRINT_PERF` | **Done** |
-| S3 Characterization tests | **Partial** — 88 tests: privacy invariants, day boundaries + DST, stored-data compatibility, summary determinism, streak rule, score overflow, lustre, **recording policy (A)**, **keyboard/mouse accumulation (C)** and language-pack integrity. Missing: system state (D), store-level compatibility on a real database fixture (F), update signing (G) |
-| S2 Module split | **Done** — 5,491 lines in `PawprintCore`, 702 `package` declarations, 16 written-out memberwise initializers, `DisplayCalibrating` seam. Verified identical by digest and by the 37 tests |
-| S10 Debug tooling out of the release | **Done** — `DebugSnapshot` and `DemoData` (2,562 lines) are `#if DEBUG`, the 36 environment branches moved from `AppDelegate` into `DebugCommand`, and the capture knobs fold to compile-time constants. Release binary 16,987,840 → 15,181,216 bytes (−10.6%), and `strings` finds no `PAWPRINT_`, `DebugSnapshot`, `DemoData` or `DebugCommand` in it. CI asserts this |
-| S11 Release workflow | **Done** — no GitHub expression reaches a shell; the tag is validated before it selects a ref; `scripts/test_validate_tag.sh` and `scripts/check_workflows.py` run in CI |
-| S4 Composition root | **Done** — `AppEnvironment` builds the application; `ActivityCenter` takes its store and clock; `ActivityStore` + `InMemoryActivityStore` make it constructible in a test; `TrackingCoordinator` no longer starts the centre it reports to. The 225 `.shared` lookups remain, which is S9 |
-| S5 Split ActivityCenter | **Done** — `RecordingPolicy`, `KeyboardAccumulator` and `PointerAccumulator` own the state that outlives an event and are tested on their own. The stateless `record*` methods stay on the facade deliberately: moving a one-line increment into a type that owns nothing is moving lines, not separating responsibilities |
-| S6 – S9, S12 | Not started |
-| F1 Uncapped score | **Done** — surplus kept apart from the 0–100 band, so grades and percentiles are untouched |
-| F2 Continuous lustre | **Done** — `CatLustre` in the core; 26 distinct rarity values become 108 distinct lustre values over 116 days |
-| F3 Foil finish | **Done** — `CatFoil`, continuous in lustre, masked away from the cat's face |
+| S2 Module split | **Done** — 5,491 lines in `PawprintCore`, 702 `package` declarations, 16 written-out memberwise initializers, `DisplayCalibrating` seam. Verified identical by digest |
+| S3 Characterization tests A–G | **Done** — 176 tests. Privacy invariants, day boundaries + DST, stored-data compatibility, summary determinism, streak rule, score overflow, lustre, recording policy (A), accumulation (C), **system state (D)**, language packs (E), **a committed legacy database (F)**, **version compare and Ed25519 (G)** |
+| S4 Composition root | **Done** — `AppEnvironment` builds the application; `ActivityCenter` takes its store and clock |
+| S5 Split ActivityCenter | **Done** — `RecordingPolicy`, `KeyboardAccumulator`, `PointerAccumulator` |
+| S6 Split StatsEngine | **Done** — 820 → 61 lines of composition over eight calculators in `Engine/Summary/`. `MachineFacts` replaces the five mid-calculation lookups, so a summary is a function of its arguments |
+| S7 Storage errors | **Done** — `StoreLog` (`os.Logger`, paths `.private`), `StoreHealth`, a visible banner, `PRAGMA user_version`, transactional migration after a backup, per-row recovery, no `fatalError` on open |
+| S8 Monitors and concurrency | **Done** — `Monitor` protocol with idempotent lifecycles, injected into `TrackingCoordinator`; two monitors that double-registered on a second `start()` fixed; `ActivityCenter` is `@MainActor` |
+| S9 Singletons out of SwiftUI | **Done** — injected at the four window roots and read from the environment; `ActivityCenter.shared` in the UI 29 → 10. `SettingsRootView` 795 → 121 over six files, `TodayView` 637 → 354 over three |
+| S10 Debug tooling out of the release | **Done** — release binary −10.6%; `strings` finds no tooling. CI asserts it |
+| S11 Release workflow | **Done** — no GitHub expression reaches a shell; hostile tags rejected in CI |
+| S12 CI gates, performance, `ARCHITECTURE.md` | **Done** — see below |
+| F1 Uncapped score | **Done** |
+| F2 Continuous lustre | **Done** |
+| F3 Foil finish | **Done** |
 
-### Acceptance checks, current state
+### Bugs found while refactoring, fixed in their own commits
+
+Each was found by the verification the stage required, not by looking for it.
+
+| Bug | Found by | Commit |
+|---|---|---|
+| `DayKey` overwrote the injected calendar's timezone | day-boundary tests passing in Seoul and failing on a UTC runner | separate |
+| The collar vanished on past days | the gallery passing streak 0 for every day but today | separate |
+| Six statistics changed when the app was relaunched | checksumming every stored day six times, in S6 | separate |
+| `%%%%` rendered two percent signs in en/ja/de | reading the German popover | separate |
+| Numbers grouped by the *system* locale, not the chosen language | a German build printing `1,500` for fifteen hundred | separate |
+| The activity clock's legend wrapped in every language but Korean | a fixed width measured against Korean | separate |
+| Two monitors double-registered on a second `start()` | writing the `Monitor` contract down, in S8 | with S8 |
+
+### Performance, across the whole refactor
+
+Debug build, 117-day demo database, same machine. S1 is the original; S9 is now.
+
+| Workload | S1 | after S5 | now | |
+|---|---:|---:|---:|---|
+| Summary, 1 day | 0.99 ms | 0.98 ms | 1.02 ms | +3% |
+| Load 30 days | 22.7 ms | 22.9 ms | 22.9 ms | ±0 |
+| Load 90 days | 66.4 ms | 66.3 ms | 66.9 ms | +1% |
+| Lifetime rebuild | 105 ms | 105 ms | 106 ms | ±0 |
+| 20k keys @96 WPM | 2,640 ms | 1,042 ms | 1,029 ms | **−61%** |
+| 20k keys, burst | 10,300 ms | 1,032 ms | 1,096 ms | **−89%** |
+| 100k cursor moves | 4,980 ms | 5,020 ms | 4,968 ms | ±0 |
+| 20k clicks | 1,020 ms | 1,028 ms | 1,034 ms | +1% |
+| 5k app switches | 498 ms | 503 ms | 533 ms | +7% |
+
+The two keystroke rows are the S5 fix: the live-WPM window was rescanned on every key and is now
+trimmed from the front, which is why a burst costs the same as ordinary typing instead of four
+times as much. Everything else is within measurement noise; nothing regressed materially.
+
+Release binary: 16,987,840 → 15,181,216 bytes (−10.6%), from S10.
+
+### Acceptance checks
 
 | Check | |
 |---|---|
 | `swift build -c debug` | Pass |
 | `swift build -c release` | Pass |
-| `swift test` | Pass — 88 tests, 0 failures, in four timezones |
+| `swift test` | Pass — 176 tests, 0 failures, in four timezones |
 | `./scripts/build_app.sh release` | Pass |
 | `lipo -archs` | `x86_64 arm64` |
-| Existing database loads without loss | Pass — 115-day checksum identical |
+| Existing database loads without loss | Pass — 116-day digest identical through S6–S9 |
 | Core summaries unchanged | Pass — no field differs |
-| No significant performance regression | Pass — worst +1.2% on the release build |
+| Statistics are deterministic | Pass — the same digest twice, gated in CI |
+| Every language pack resolves in a running app | Pass — gated in CI |
+| No significant performance regression | Pass — see the table above |
 | Release build free of debug tooling | Pass — asserted in CI |
-| Release workflow safe from tag injection | Pass — `scripts/test_validate_tag.sh` |
-| Everything else in §17 | Not yet met — the stages they depend on have not run |
+| Release workflow safe from tag injection | Pass |
+| Stored format holds counts and durations only | Pass — asserted in CI |
+
+### Reproducing all of it
+
+```bash
+swift build -c debug && swift build -c release
+swift test
+for tz in UTC America/New_York Pacific/Kiritimati; do TZ=$tz swift test; done
+./scripts/test_validate_tag.sh
+python3 scripts/check_workflows.py
+./scripts/build_app.sh debug
+APP=build/Pawprint.app/Contents/MacOS/Pawprint
+for p in PAWPRINT_L10N PAWPRINT_ITEMS PAWPRINT_REWARDS PAWPRINT_CHAOS \
+         PAWPRINT_SESSIONS PAWPRINT_STREAK PAWPRINT_FACTS; do env "$p=1" "$APP"; done
+for l in ko en ja de; do env "PAWPRINT_LANG_PROBE=$l" "$APP"; done
+env PAWPRINT_DIGEST=all "$APP" > a.txt; env PAWPRINT_DIGEST=all "$APP" > b.txt; diff a.txt b.txt
+env PAWPRINT_PERF=1 "$APP"
+```
+
+To prove a *change* preserved behaviour, build the previous commit in a `git worktree`, point both
+binaries at frozen copies of the same database, and diff `PAWPRINT_DIGEST=all`. Copy the `-wal` and
+`-shm` files alongside the database or recent writes are lost.
+
+### Remaining technical debt
+
+Named rather than hidden. None of it blocks a release.
+
+- **Ten `ActivityCenter.shared` reads survive in the UI**, all inside closures that would need
+  their behaviour rewritten, not just their lookup. S9 stopped at the declaration sites.
+- **`LifetimeStats.totalEnergyWattHours` still reaches for the machine.** It is read straight from
+  a view, and threading `MachineFacts` through every reader would cost more than it buys. It goes
+  through `MachineFacts.current`, so there is one place the battery is asked.
+- **`PawpetView` is 1,314 lines and `PawpetTraits` 832.** Drawing code with a lot of geometry in
+  it; long, but not tangled with anything else.
+- **`DebugSnapshot` is 2,364 lines.** It is entirely `#if DEBUG` and ships in nothing.
+- **`InMemoryActivityStore` and `PawprintStore` share no test suite.** The protocol is the contract;
+  a suite run against both would catch them drifting apart.
+- **The store's non-throwing API is a deliberate trade.** Failures are logged, recorded and shown,
+  but a caller that wanted to *react* to one — retry a save, say — cannot.
