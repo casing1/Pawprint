@@ -1258,6 +1258,55 @@ enum DebugSnapshot {
         exit(0)
     }
 
+    // MARK: - Regional conversions (PAWPRINT_FACTS)
+
+    /// Prints the fun conversions each language actually renders, for one fixed day.
+    ///
+    /// The bug this exists to catch cannot be seen by reading either half on its own: a pack says
+    /// "Zugspitze" while the arithmetic still divides by Hallasan's 1,947 m, and the sentence looks
+    /// perfectly fine. Printing the four languages side by side off *identical* input makes the
+    /// referent and its number visible together — the landmark names must all differ, and so must
+    /// the percentages beside them.
+    static func probeRegionalFacts() {
+        // A deliberately heavy day, so every gated comparison clears its threshold and shows up.
+        let scrollScreens = 900.0
+        let cursorMetres = 1_400.0
+        let characterKeys = 40_000
+
+        var landmarks: [String: [String]] = [:]
+        for language in AppLanguage.allCases {
+            guard let code = language.code else { continue }   // skip .system
+            LocalizationManager.shared.apply(language)
+            let references = RegionalReferences.forLanguage(code)
+            write("\n[\(code)]  towers \(Int(references.towerSmall))/\(Int(references.towerMedium))"
+                  + "/\(Int(references.towerLarge))/\(Int(references.towerHuge))m"
+                  + "  mountains \(Int(references.mountainMedium))/\(Int(references.mountainLarge))m"
+                  + "  route \(Int(references.intercityRoute / 1000))km"
+                  + "  \(Int(references.currencyPerKWh))/kWh"
+                  + "  \(Int(references.gramsCO2PerKWh))gCO₂\n")
+
+            let scroll = FunConversions.scrollFacts(screens: scrollScreens, screenHeightMeters: 0.3)
+            let cursor = FunConversions.cursorFacts(meters: cursorMetres)
+            let keyboard = FunConversions.keyboardFacts(characterKeys: characterKeys,
+                                                        totalKeys: characterKeys)
+            for fact in scroll + cursor + keyboard {
+                write("    \(fact.text)\n")
+            }
+            landmarks[code] = scroll.map(\.text)
+        }
+
+        // Every language must name its own landmarks; identical lines mean one pack was missed.
+        for (a, b) in [("ko", "en"), ("ko", "ja"), ("ko", "de"), ("en", "ja"), ("en", "de"), ("ja", "de")] {
+            guard let left = landmarks[a], let right = landmarks[b] else { continue }
+            if left == right {
+                write("\nFACTS FAIL — \(a) and \(b) render identical scroll comparisons\n")
+                exit(1)
+            }
+        }
+        write("\nFACTS OK\n")
+        exit(0)
+    }
+
     // MARK: - Summary digest (PAWPRINT_DIGEST)
 
     /// Prints one day's summary as a stable list of numbers, plus a checksum over every stored day.

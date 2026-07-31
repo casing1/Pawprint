@@ -161,6 +161,10 @@ enum DebugCommand {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { DebugSnapshot.probeLustre() }
         }
 
+        if ProcessInfo.processInfo.environment["PAWPRINT_FACTS"] != nil {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { DebugSnapshot.probeRegionalFacts() }
+        }
+
         if ProcessInfo.processInfo.environment["PAWPRINT_DIGEST"] != nil {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { DebugSnapshot.probeSummaryDigest() }
         }

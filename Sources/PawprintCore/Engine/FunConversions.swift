@@ -47,14 +47,12 @@ package enum FunConversions {
         package static let eScooterWhPerKm = 15.0
 
         // Externalities
-        /// Korean grid average, ~0.459 kg CO₂ per kWh.
-        package static let gramsCO2PerKWh = 459.0
         /// A mature tree absorbs roughly 22kg CO₂ a year — about 2.5g an hour.
         package static let treeCO2GramsPerHour = 2.51
-        /// Korean residential average, roughly 130 KRW per kWh.
-        package static let krwPerKWh = 130.0
     }
 
+    /// Distances that are the same number in every country. The one that isn't — the intercity
+    /// trip — lives in `RegionalReferences`.
     private enum Distance {
         package static let marathon = 42_195.0
         package static let trackLoop = 400.0
@@ -63,26 +61,20 @@ package enum FunConversions {
         package static let basketballCourt = 28.0
         package static let bowlingLane = 18.3
         package static let boeing747 = 70.0
-        package static let seoulToBusan = 325_000.0
         package static let earthCircumference = 40_075_000.0
     }
 
     private enum Height {
         package static let buildingFloor = 3.2
         package static let stairStep = 0.18
-        package static let namsanTower = 236.0
-        package static let building63 = 249.0
-        package static let eiffelTower = 330.0
-        package static let lotteWorldTower = 555.0
-        package static let hallasan = 1_947.0
-        package static let baekdusan = 2_744.0
+        /// Everest and the Earth mean the same thing to everybody; the towers and the two smaller
+        /// mountains do not, and are in `RegionalReferences`.
         package static let everest = 8_848.0
     }
 
     private enum Text {
         package static let a4CharsPerPage = 1_800.0
-        package static let manuscriptSheet = 200.0        // 원고지 200자
-        package static let kakaoMessage = 20.0
+        package static let chatMessage = 20.0
         package static let tweet = 280.0
         package static let shortNovel = 100_000.0
     }
@@ -113,7 +105,7 @@ package enum FunConversions {
 
     private static func meters(_ value: Double) -> String {
         value >= 1000
-            ? String(format: "%.2fkm", value / 1000)
+            ? Formatters.decimalText(value / 1000, places: 2) + "km"
             : String(format: "%.0fm", value)
     }
 
@@ -122,7 +114,7 @@ package enum FunConversions {
     }
 
     private static func one(_ value: Double) -> String {
-        String(format: "%.1f", value)
+        Formatters.decimalText(value, places: 1)
     }
 
     private static func whole(_ value: Double) -> String {
@@ -149,7 +141,8 @@ package enum FunConversions {
     /// "밥을 약 0.02번" and "전자레인지를 약 900,000초" are both technically true and both useless.
     /// One gate, applied uniformly, means a light day and a heavy day each surface a different
     /// handful of comparisons instead of the same two every time.
-    static package func energyFacts(fromBatteryPercent percent: Int) -> [FunFact] {
+    static package func energyFacts(fromBatteryPercent percent: Int,
+                                    references: RegionalReferences = .current) -> [FunFact] {
         guard percent > 0, let wh = BatteryHardware.shared.wattHours(fromPercent: percent), wh > 0 else { return [] }
         let kWh = wh / 1000
         var b = Builder(topic: .energy, subject: L10n.t("funConversions.3ff56496", percent))
@@ -196,14 +189,16 @@ package enum FunConversions {
         ratio(wh / Energy.eScooterWhPerKm) { L10n.t("funConversions.71d37a56", one($0)) }
 
         // Externalities
-        let grams = kWh * Energy.gramsCO2PerKWh
+        let grams = kWh * references.gramsCO2PerKWh
         ratio(grams, low: 1, high: 1_000_000) { L10n.t("funConversions.ee2798a2", whole($0)) }
         ratio(grams / Energy.treeCO2GramsPerHour, low: 1) {
             $0 >= 24
                 ? L10n.t("funConversions.d4d8267f", one($0 / 24))
                 : L10n.t("funConversions.70b8e455", whole($0))
         }
-        ratio(kWh * Energy.krwPerKWh, low: 1, high: 1_000_000) { L10n.t("funConversions.832752df", whole($0)) }
+        ratio(kWh * references.currencyPerKWh, low: 1, high: 1_000_000) {
+            L10n.t("funConversions.832752df", whole($0))
+        }
 
         return b.facts
     }
@@ -214,7 +209,8 @@ package enum FunConversions {
         Double(keystrokes) * mmPerKeystroke / 1000
     }
 
-    static package func keyboardFacts(characterKeys: Int, totalKeys: Int) -> [FunFact] {
+    static package func keyboardFacts(characterKeys: Int, totalKeys: Int,
+                                      references: RegionalReferences = .current) -> [FunFact] {
         var facts: [FunFact] = []
 
         let travel = fingerTravelMeters(keystrokes: totalKeys)
@@ -234,10 +230,11 @@ package enum FunConversions {
         var t = Builder(topic: .text, subject: L10n.t("funConversions.1ac20bca", Formatters.groupedNumber(characterKeys)))
         t.add(when: Double(characterKeys) / Text.a4CharsPerPage >= 0.2,
               L10n.t("funConversions.8f5f2e35", one(Double(characterKeys) / Text.a4CharsPerPage)))
-        t.add(when: Double(characterKeys) / Text.manuscriptSheet >= 1,
-              L10n.t("funConversions.862e28fa", count(Double(characterKeys) / Text.manuscriptSheet)))
-        t.add(when: Double(characterKeys) / Text.kakaoMessage >= 5,
-              L10n.t("funConversions.5aff25fe", count(Double(characterKeys) / Text.kakaoMessage)))
+        t.add(when: Double(characterKeys) / references.manuscriptSheetChars >= 1,
+              L10n.t("funConversions.862e28fa",
+                     count(Double(characterKeys) / references.manuscriptSheetChars)))
+        t.add(when: Double(characterKeys) / Text.chatMessage >= 5,
+              L10n.t("funConversions.5aff25fe", count(Double(characterKeys) / Text.chatMessage)))
         t.add(when: Double(characterKeys) / Text.tweet >= 3,
               L10n.t("funConversions.0937a4b6", count(Double(characterKeys) / Text.tweet)))
         t.add(when: Double(characterKeys) / Text.shortNovel * 100 >= 1,
@@ -247,7 +244,8 @@ package enum FunConversions {
 
     // MARK: - Cursor
 
-    static package func cursorFacts(meters value: Double) -> [FunFact] {
+    static package func cursorFacts(meters value: Double,
+                                    references: RegionalReferences = .current) -> [FunFact] {
         guard value >= 1 else { return [] }
         var b = Builder(topic: .cursor, subject: L10n.t("funConversions.a55d569f"))
 
@@ -264,28 +262,40 @@ package enum FunConversions {
               L10n.t("funConversions.fc768e2c", one(value / Distance.trackLoop)))
         b.add(when: value / Distance.marathon * 100 >= 0.5,
               L10n.t("funConversions.5dab39f8", one(value / Distance.marathon * 100)))
-        b.add(when: value / Distance.seoulToBusan * 100 >= 0.1,
-              String(format: L10n.t("funConversions.8c82341c"), value / Distance.seoulToBusan * 100))
+        // `locale:` so the "%.2f" in the template is written the way this language writes decimals.
+        b.add(when: value / references.intercityRoute * 100 >= 0.1,
+              String(format: L10n.t("funConversions.8c82341c"),
+                     locale: LocalizationManager.activeLocale,
+                     value / references.intercityRoute * 100))
         b.add(when: value / Distance.earthCircumference * 100 >= 0.001,
-              String(format: L10n.t("funConversions.fc5ba1b8"), value / Distance.earthCircumference * 100))
+              String(format: L10n.t("funConversions.fc5ba1b8"),
+                     locale: LocalizationManager.activeLocale,
+                     value / Distance.earthCircumference * 100))
         return b.facts
     }
 
     // MARK: - Scroll
 
-    static package func scrollFacts(screens: Double, screenHeightMeters: Double) -> [FunFact] {
+    static package func scrollFacts(screens: Double, screenHeightMeters: Double,
+                                    references: RegionalReferences = .current) -> [FunFact] {
         guard screens >= 0.5 else { return [] }
         let h = screens * screenHeightMeters
         var b = Builder(topic: .scroll, subject: L10n.t("funConversions.4ab67311", count(screens)))
 
         b.add(when: h / Height.stairStep >= 20, L10n.t("funConversions.ebd62fd4", count(h / Height.stairStep)))
         b.add(when: h / Height.buildingFloor >= 1, L10n.t("funConversions.44265811", whole(h / Height.buildingFloor)))
-        b.add(when: h / Height.namsanTower * 100 >= 5, L10n.t("funConversions.e8938a1d", whole(h / Height.namsanTower * 100)))
-        b.add(when: h / Height.building63 * 100 >= 5, L10n.t("funConversions.6da5b474", whole(h / Height.building63 * 100)))
-        b.add(when: h / Height.eiffelTower * 100 >= 5, L10n.t("funConversions.aedf7161", whole(h / Height.eiffelTower * 100)))
-        b.add(when: h / Height.lotteWorldTower * 100 >= 5, L10n.t("funConversions.9bbfbe7a", whole(h / Height.lotteWorldTower * 100)))
-        b.add(when: h / Height.hallasan * 100 >= 2, L10n.t("funConversions.9e49a594", whole(h / Height.hallasan * 100)))
-        b.add(when: h / Height.baekdusan * 100 >= 2, L10n.t("funConversions.234d1075", whole(h / Height.baekdusan * 100)))
+        b.add(when: h / references.towerSmall * 100 >= 5,
+              L10n.t("funConversions.e8938a1d", whole(h / references.towerSmall * 100)))
+        b.add(when: h / references.towerMedium * 100 >= 5,
+              L10n.t("funConversions.6da5b474", whole(h / references.towerMedium * 100)))
+        b.add(when: h / references.towerLarge * 100 >= 5,
+              L10n.t("funConversions.aedf7161", whole(h / references.towerLarge * 100)))
+        b.add(when: h / references.towerHuge * 100 >= 5,
+              L10n.t("funConversions.9bbfbe7a", whole(h / references.towerHuge * 100)))
+        b.add(when: h / references.mountainMedium * 100 >= 2,
+              L10n.t("funConversions.9e49a594", whole(h / references.mountainMedium * 100)))
+        b.add(when: h / references.mountainLarge * 100 >= 2,
+              L10n.t("funConversions.234d1075", whole(h / references.mountainLarge * 100)))
         b.add(when: h / Height.everest * 100 >= 1, L10n.t("funConversions.90f861e0", one(h / Height.everest * 100)))
         return b.facts
     }

@@ -199,6 +199,18 @@ package enum Tables {
 
     static package var activeCode: String { lock.withLock { code } }
 
+    /// The active code, loading the packs first if nothing has asked for a string yet.
+    ///
+    /// `activeCode` is `""` until the first lookup, which is fine for the callers that only compare
+    /// it — but a caller *choosing* something from it, like `RegionalReferences`, would silently
+    /// pick the fallback during start-up.
+    static package var resolvedCode: String {
+        lock.withLock {
+            ensureBaseLoaded()
+            return code
+        }
+    }
+
     static package func setActive(_ table: [String: String], code newCode: String = "") {
         lock.withLock { activeTable = table; code = newCode }
     }
