@@ -1050,6 +1050,26 @@ enum DebugSnapshot {
             return window
         }
 
+        // The sheet a cat opens when you click it. Worth capturing on its own: it is where the
+        // rarity breakdown, the lustre and the large foil card actually live.
+        steps.append(("cat-detail", {
+            controller.closePopover()
+            let store = PawprintStore.shared
+            let days = store.allDays().map {
+                SummaryCache.shared.summary(for: $0, dayStartHour: 0)
+            }
+            let streaks = StreakRule.streaks(for: days)
+            // The best cat in the history, because a middling one shows less.
+            let best = days.max {
+                PawpetTraits.forDay($0, streakDays: streaks[$0.day] ?? 0).lustre.value
+                    < PawpetTraits.forDay($1, streakDays: streaks[$1.day] ?? 0).lustre.value
+            } ?? ActivityCenter.shared.todaySummary
+            sheetWindow(PawpetDetailView(summary: best, streakDays: streaks[best.day] ?? 0,
+                                         onClose: {}),
+                        width: 400, height: 560)
+                .makeKeyAndOrderFront(nil)
+        }))
+
         steps.append(("achievements", {
             controller.closePopover()
             sheetWindow(HiddenAchievementsView(onClose: {}), width: 430, height: 620)

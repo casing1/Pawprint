@@ -379,6 +379,10 @@ struct PawpetDetailView: View {
                         .frame(width: max(3, geo.size.width * CGFloat(t.rarity) / 100))
                 }
             }
+            // A GeometryReader has no height of its own and will take whatever the stack offers,
+            // so this is what keeps the bar a bar.
+            .frame(height: 6)
+
             // The continuous companion. Rarity says which items the day earned; this says how
             // emphatically, and it is what the card's finish is drawn from.
             HStack(spacing: 4) {
@@ -390,7 +394,6 @@ struct PawpetDetailView: View {
                     .padding(.horizontal, 5).padding(.vertical, 1)
                     .background(Capsule().fill(t.rarityColor.opacity(0.18)))
             }
-            .frame(height: 6)
 
             Text(L10n.t("pawpetGalleryView.e8492bce", PawpetTraits.paletteName(t.paletteIndex), t.patternName))
                 .font(.caption2).foregroundStyle(.secondary)
@@ -411,11 +414,17 @@ struct PawpetDetailView: View {
                 )
                 Spacer()
             }
+            // A Grid rather than a fixed label column. 42 points fits the Korean names, which are
+            // two or three characters; "Backdrop", "Expression" and "Surroundings" broke across
+            // two lines in English. The column now takes its width from the widest label in
+            // whatever language is loaded.
+            Grid(alignment: .leadingFirstTextBaseline, horizontalSpacing: 6, verticalSpacing: 5) {
             ForEach(t.rarityBreakdown, id: \.label) { row in
-                HStack(spacing: 6) {
+                GridRow {
                     Text(row.label)
                         .font(.system(size: 10, weight: .medium))
-                        .frame(width: 42, alignment: .leading)
+                        .fixedSize()
+                        .gridColumnAlignment(.leading)
                     Text(row.detail)
                         .font(.system(size: 10))
                         .foregroundStyle(row.earned > 0 ? Color.secondary : Color.secondary.opacity(0.5))
@@ -435,6 +444,7 @@ struct PawpetDetailView: View {
                         .foregroundStyle(.tertiary)
                         .frame(width: 34, alignment: .trailing)
                 }
+            }
             }
         }
     }
