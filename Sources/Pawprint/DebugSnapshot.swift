@@ -2312,6 +2312,9 @@ enum DebugSnapshot {
     @MainActor
     /// `bare` skips the debug matte — fine for inspecting a layout, wrong for artwork that ships.
     private static func capture<V: View>(_ view: V, name: String, scale: CGFloat = 2, bare: Bool = false) {
+        // The same injection the real windows do. Views read the activity centre from the
+        // environment now, and an `ImageRenderer` is a root like any other.
+        let view = view.pawprintEnvironment()
         let matted = AnyView(bare ? AnyView(view) : AnyView(view.padding(8).background(Color(white: 0.15))))
         let renderer = ImageRenderer(content: matted)
         renderer.scale = scale

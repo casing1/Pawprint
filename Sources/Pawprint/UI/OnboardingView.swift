@@ -16,7 +16,7 @@ import PawprintCore
 @MainActor
 struct OnboardingView: View {
     @Bindable var permissions = PermissionsManager.shared
-    @Bindable var activityCenter = ActivityCenter.shared
+    @Environment(ActivityCenter.self) private var activityCenter
 
     @State private var notificationStatus: UNAuthorizationStatus = .notDetermined
     @State private var launchAtLogin = LaunchAtLogin.isEnabled
@@ -272,7 +272,8 @@ final class OnboardingWindowController: NSObject, NSWindowDelegate {
             return
         }
 
-        let hosting = NSHostingController(rootView: OnboardingView { [weak self] in self?.finish() })
+        let hosting = NSHostingController(rootView: OnboardingView { [weak self] in self?.finish() }
+            .pawprintEnvironment())
         let window = NSWindow(contentViewController: hosting)
         window.title = L10n.t("onboardingView.19668f3a")
         window.styleMask = [.titled, .closable]

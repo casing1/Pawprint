@@ -3,7 +3,7 @@ import PawprintCore
 
 @MainActor
 struct CalendarView: View {
-    @Bindable var activityCenter = ActivityCenter.shared
+    @Environment(ActivityCenter.self) private var activityCenter
     /// Selected basis, resolved from the catalog by id so a newly added metric appears here
     /// automatically. Falls back to the default if a stored id no longer exists.
     private var metric: MetricDefinition {

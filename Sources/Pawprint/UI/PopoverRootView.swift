@@ -18,7 +18,7 @@ enum PopoverTab: Int, CaseIterable {
 @MainActor
 struct PopoverRootView: View {
     @Bindable var permissions = PermissionsManager.shared
-    @Bindable var activityCenter = ActivityCenter.shared
+    @Environment(ActivityCenter.self) private var activityCenter
     @Bindable var achievements = AchievementEngine.shared
     @State private var tab: PopoverTab
 

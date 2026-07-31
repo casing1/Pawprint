@@ -136,7 +136,7 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
     func showPopover(on tab: PopoverTab) {
         guard let button = statusItem?.button, !popover.isShown else { return }
         // Rebuild each time so the popover always opens on fresh stats.
-        popover.contentViewController = NSHostingController(rootView: PopoverRootView(startOn: tab))
+        popover.contentViewController = NSHostingController(rootView: PopoverRootView(startOn: tab).pawprintEnvironment())
 
         // Pawprint runs as an accessory app (no Dock icon), so it is never the active
         // application on its own. Without activating first, the popover's window never

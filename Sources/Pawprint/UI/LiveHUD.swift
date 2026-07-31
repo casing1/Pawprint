@@ -9,7 +9,7 @@ import PawprintCore
 /// see it without opening the popover.
 @MainActor
 struct LiveHUDView: View {
-    @Bindable var activityCenter = ActivityCenter.shared
+    @Environment(ActivityCenter.self) private var activityCenter
 
     /// Ticks the clock-based readouts, which change without any input arriving.
     @State private var now = Date()
@@ -227,7 +227,7 @@ final class LiveHUDController: NSObject, NSWindowDelegate {
             return
         }
 
-        let hosting = NSHostingController(rootView: LiveHUDView())
+        let hosting = NSHostingController(rootView: LiveHUDView().pawprintEnvironment())
         hosting.view.frame = NSRect(x: 0, y: 0, width: 190, height: 200)
 
         let panel = NSPanel(

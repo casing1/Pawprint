@@ -9,7 +9,7 @@ import PawprintCore
 /// built by re-deriving traits from history already in the database.
 @MainActor
 struct PawpetGalleryView: View {
-    @Bindable var activityCenter = ActivityCenter.shared
+    @Environment(ActivityCenter.self) private var activityCenter
 
     @State private var days: [DailySummary] = []
     @State private var streaks: [String: Int] = [:]

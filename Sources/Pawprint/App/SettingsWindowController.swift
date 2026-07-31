@@ -29,7 +29,8 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
         }
 
         let hosting = NSHostingController(
-            rootView: SettingsRootView(startOn: DebugEnvironment.settingsTab))
+            rootView: SettingsRootView(startOn: DebugEnvironment.settingsTab)
+                .pawprintEnvironment())
         let window = NSWindow(contentViewController: hosting)
         window.title = L10n.t("settingsWindowController.4e8f752d")
         window.styleMask = [.titled, .closable, .miniaturizable]

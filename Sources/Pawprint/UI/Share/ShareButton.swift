@@ -9,7 +9,7 @@ struct ShareButton: View {
     let label: String
     let suggestedFileName: String
 
-    @Bindable private var activityCenter = ActivityCenter.shared
+    @Environment(ActivityCenter.self) private var activityCenter
     private var metrics: [MetricDefinition] {
         MetricCatalog.shareMetrics(settings: activityCenter.settings)
     }

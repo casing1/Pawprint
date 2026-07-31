@@ -3,7 +3,7 @@ import PawprintCore
 
 @MainActor
 struct RecordsView: View {
-    @Bindable var activityCenter = ActivityCenter.shared
+    @Environment(ActivityCenter.self) private var activityCenter
     /// Loaded once per tab appearance (cached across visits by `SummaryCache`).
     @State private var pastSummaries: [DailySummary] = []
     @State private var presentedMonth: WrappedMonth?
