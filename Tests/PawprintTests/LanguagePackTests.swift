@@ -53,6 +53,33 @@ final class LanguagePackTests: XCTestCase {
         }
     }
 
+    /// A literal percent sign is written `%%`, and only `%%`.
+    ///
+    /// These templates reach `String(format:)` exactly once — `L10n.t` only substitutes `%@` — so
+    /// `%%` collapses to one percent and `%%%%` collapses to two. English shipped `%.2f%%%%` from
+    /// the beginning and rendered "about 0.0035%% of the Earth's circumference"; Japanese and
+    /// German inherited it when they were translated from the English pack.
+    func testALiteralPercentIsWrittenExactlyTwice() throws {
+        for code in AppLanguage.availableCodes {
+            for (key, text) in try pack(code) {
+                XCTAssertFalse(text.contains("%%%"), "\(code) \(key): renders more than one percent")
+            }
+        }
+    }
+
+    /// Every language marks a percentage in the same places as the base pack does.
+    func testPercentSignsMatchTheBasePack() throws {
+        let korean = try pack("ko")
+        for code in AppLanguage.availableCodes where code != "ko" {
+            for (key, text) in try pack(code) {
+                guard let original = korean[key] else { continue }
+                XCTAssertEqual(text.components(separatedBy: "%%").count,
+                               original.components(separatedBy: "%%").count,
+                               "\(code) \(key): '%%' count differs from the base pack")
+            }
+        }
+    }
+
     /// A pack may be incomplete — that is what the English fallback is for — but it may not contain
     /// keys that exist nowhere else, which are typos rather than translations.
     func testNoPackInventsKeys() throws {
