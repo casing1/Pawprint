@@ -274,13 +274,36 @@ struct PawpetGalleryView: View {
                 CatFoil(lustre: t.lustre, seed: summary.day, size: 62) {
                     PawpetView(summary: summary, size: 62, streakDays: streak(for: summary),
                                showsAura: true)
+                } subject: {
+                    // The same cat with no aura behind it: only its alpha is used, and the aura
+                    // would leak the background into the artwork's mask.
+                    PawpetView(summary: summary, size: 62, streakDays: streak(for: summary),
+                               showsAura: false)
                 }
                     .overlay(alignment: .topLeading) {
                         Text(t.rarityGrade)
                             .font(.system(size: 8, weight: .heavy))
                             .foregroundStyle(.white)
                             .padding(.horizontal, 3).padding(.vertical, 1)
-                            .background(Capsule().fill(t.rarityColor))
+                            .background {
+                                // The grade stamp is its own element and gets its own finish: flat
+                                // ink up to holographic, then a struck-metal sweep, the way a set
+                                // symbol is foiled on a card whose artwork is.
+                                Capsule().fill(t.rarityColor)
+                                    .overlay {
+                                        if t.lustre.finish >= .prismatic {
+                                            Capsule().fill(
+                                                LinearGradient(
+                                                    stops: [
+                                                        .init(color: .white.opacity(0.0), location: 0.15),
+                                                        .init(color: .white.opacity(0.75), location: 0.42),
+                                                        .init(color: .white.opacity(0.0), location: 0.68),
+                                                    ],
+                                                    startPoint: .topLeading, endPoint: .bottomTrailing))
+                                            .blendMode(.plusLighter)
+                                        }
+                                    }
+                            }
                             .padding(2)
                     }
                 HStack(spacing: 3) {
@@ -337,6 +360,9 @@ struct PawpetDetailView: View {
             HStack(alignment: .top, spacing: 14) {
                 CatFoil(lustre: t.lustre, seed: summary.day, size: 150) {
                     PawpetView(summary: summary, size: 150, streakDays: streakDays)
+                } subject: {
+                    PawpetView(summary: summary, size: 150, streakDays: streakDays,
+                               showsAura: false)
                 }
                 rarityPanel(t)
             }
