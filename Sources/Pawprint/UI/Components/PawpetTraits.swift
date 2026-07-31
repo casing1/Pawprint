@@ -367,13 +367,37 @@ struct PawpetTraits {
     /// (colour, pattern, ears) contribute nothing: they're uniformly random, so scoring them
     /// would just add noise you can't influence.
     var rarity: Int {
-        Int(rarityPoints.rounded())
+        Int(rarityScore.rounded())
     }
 
-    /// The same total before rounding, which is what lustre is built on.
+    /// The combined figure, to two decimals — what the gallery sorts on and the sheet shows.
+    ///
+    /// Rarity used to be the item total alone, which meant a settled user earned nearly the same
+    /// number every day: the same items keep being granted, so the same score keeps coming out, and
+    /// two hundred days collapse onto a handful of values. What separates those days is not what
+    /// the cat is wearing but what the day was, and that is what lustre measures.
+    ///
+    /// So the day is folded in — through `lustre.effort`, deliberately, not through `lustre.value`.
+    /// The value already carries the item total at 0.40, and blending rarity with it would count
+    /// the items twice, once directly and once through the back door, leaving a combined figure
+    /// that says less than either part on its own.
+    ///
+    /// The split is the mirror of lustre's. Rarity is 70% items because it is a statement about the
+    /// *cat*; lustre is 60% effort because it is a statement about the *day*. Same two inputs,
+    /// opposite emphasis, two questions that stay worth asking separately.
+    var rarityScore: Double {
+        let combined = 0.70 * rarityPoints + 0.30 * (lustre.effort * 100)
+        return min(100, max(0, (combined * 100).rounded() / 100))
+    }
+
+    /// The item total on its own, 0–100. Still the basis of the per-axis breakdown, and still what
+    /// lustre is built on.
     var rarityPoints: Double {
         rarityBreakdown.reduce(0) { $0 + $1.earned }
     }
+
+    /// Two decimals, which is the whole point of combining them.
+    var rarityDisplay: String { String(format: "%.2f", rarityScore) }
 
     /// The continuous companion to `rarity`: see `CatLustre`. Sorts the gallery and drives the
     /// card's finish, so two cats with the same items still look — and rank — differently.

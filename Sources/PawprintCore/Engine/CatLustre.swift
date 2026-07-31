@@ -51,10 +51,18 @@ package struct CatLustre: Equatable {
     /// rather than snapping only at the boundaries.
     package var intensity: Double
 
-    package init(value: Double, finish: Finish, intensity: Double) {
+    /// The day's own contribution, 0–1, before it is blended with the items.
+    ///
+    /// Exposed because rarity needs it too, and needs it *without* the item total already mixed in:
+    /// blending rarity with `value` would count the items twice, once directly and once through
+    /// here, which is how a combined figure ends up saying less than either of its parts.
+    package var effort: Double = 0
+
+    package init(value: Double, finish: Finish, intensity: Double, effort: Double = 0) {
         self.value = value
         self.finish = finish
         self.intensity = intensity
+        self.effort = effort
     }
 
     /// Two decimal places, which is where the separation actually shows.
@@ -112,7 +120,8 @@ package struct CatLustre: Equatable {
         let span = next - finish.threshold
         let intensity = span > 0 ? ((value - finish.threshold) / span).clamped(to: 0...1) : 1
 
-        return CatLustre(value: value, finish: finish, intensity: intensity)
+        return CatLustre(value: value, finish: finish, intensity: intensity,
+                         effort: pow(effortShare, 1.6))
     }
 }
 

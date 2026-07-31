@@ -89,8 +89,10 @@ struct PawpetGalleryView: View {
             let ascending: Bool
             switch sort {
             case .rarity:
-                let a = traits(for: lhs).rarity
-                let b = traits(for: rhs).rarity
+                // The combined figure, not the rounded grade: sorting on an integer put dozens of
+                // days on the same rung, which is the clustering this whole scale exists to break.
+                let a = traits(for: lhs).rarityScore
+                let b = traits(for: rhs).rarityScore
                 // Ties fall back to date so the order is stable and never looks shuffled.
                 ascending = a == b ? lhs.day < rhs.day : a < b
             case .lustre:
@@ -286,7 +288,7 @@ struct PawpetGalleryView: View {
                 HStack(spacing: 3) {
                     Text(Formatters.shortDayLabel(summary.day))
                         .font(.system(size: 8)).foregroundStyle(.secondary)
-                    Text(sort == .lustre ? t.lustre.display : "\(t.rarity)")
+                    Text(sort == .lustre ? t.lustre.display : t.rarityDisplay)
                         .font(.system(size: 8, weight: .semibold).monospacedDigit())
                         .foregroundStyle(t.rarityColor)
                 }
@@ -294,7 +296,7 @@ struct PawpetGalleryView: View {
             }
         }
         .buttonStyle(.plain)
-        .help(L10n.t("pawpetGalleryView.5837d7db", Formatters.dayLabel(summary.day), t.rarityLabel, t.rarity, t.lustre.display, t.lustre.finishName, t.caption))
+        .help(L10n.t("pawpetGalleryView.5837d7db", Formatters.dayLabel(summary.day), t.rarityLabel, t.rarityDisplay, t.lustre.display, t.lustre.finishName, t.caption))
     }
 
     private func load() {
@@ -368,7 +370,7 @@ struct PawpetDetailView: View {
                     .foregroundStyle(t.rarityColor)
                 VStack(alignment: .leading, spacing: 0) {
                     Text(t.rarityLabel).font(.callout.weight(.semibold))
-                    Text(L10n.t("pawpetGalleryView.67c51b91", t.rarity))
+                    Text(L10n.t("pawpetGalleryView.67c51b91", t.rarityDisplay))
                         .font(.caption2.monospacedDigit()).foregroundStyle(.secondary)
                 }
             }
@@ -376,7 +378,7 @@ struct PawpetDetailView: View {
                 ZStack(alignment: .leading) {
                     Capsule().fill(Color.secondary.opacity(0.2))
                     Capsule().fill(t.rarityColor)
-                        .frame(width: max(3, geo.size.width * CGFloat(t.rarity) / 100))
+                        .frame(width: max(3, geo.size.width * CGFloat(t.rarityScore) / 100))
                 }
             }
             // A GeometryReader has no height of its own and will take whatever the stack offers,

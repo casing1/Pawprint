@@ -1226,12 +1226,16 @@ enum DebugSnapshot {
         let traits = days.map { PawpetTraits(day: $0.day, summary: $0, streakDays: streaks[$0.day] ?? 0) }
         guard !traits.isEmpty else { write("LUSTRE no days\n"); exit(1) }
 
-        let rarities = traits.map(\.rarity)
+        let rarities = traits.map { String(format: "%.2f", $0.rarityScore) }
+        let grades = traits.map(\.rarity)
         let lustres = traits.map { $0.lustre.value }
 
-        var collisions: [Int: Int] = [:]
+        var collisions: [String: Int] = [:]
         for r in rarities { collisions[r, default: 0] += 1 }
         let worstRarity = collisions.values.max() ?? 0
+        var gradeCollisions: [Int: Int] = [:]
+        for g in grades { gradeCollisions[g, default: 0] += 1 }
+        let worstGrade = gradeCollisions.values.max() ?? 0
 
         var lustreCollisions: [String: Int] = [:]
         for l in lustres { lustreCollisions[String(format: "%.2f", l), default: 0] += 1 }
@@ -1241,9 +1245,10 @@ enum DebugSnapshot {
               + String(format: "pointsPerMetre=%.1f screenH=%.1f\n",
                        DisplayCalibration.current.pointsPerMetre,
                        DisplayCalibration.current.screenHeightPoints))
-        write("  distinct rarity values : \(Set(rarities).count)\n")
+        write("  distinct rarity values : \(Set(rarities).count) (rounded: \(Set(grades).count))\n")
         write("  distinct lustre values : \(Set(lustres.map { String(format: "%.2f", $0) }).count)\n")
-        write("  largest rarity tie     : \(worstRarity) days share one value\n")
+        write("  largest rarity tie     : \(worstRarity) days share one value "
+              + "(rounded: \(worstGrade))\n")
         write("  largest lustre tie     : \(worstLustre) days share one value\n")
 
         for finish in CatLustre.Finish.allCases {
@@ -1252,7 +1257,7 @@ enum DebugSnapshot {
         }
 
         // The separation that matters: cats whose items are identical.
-        let byRarity = Dictionary(grouping: traits, by: \.rarity)
+        let byRarity = Dictionary(grouping: traits, by: \.rarityPoints)
         if let (value, tied) = byRarity.max(by: { $0.value.count < $1.value.count }), tied.count > 1 {
             let spread = tied.map(\.lustre.value)
             write("  rarity \(value) is shared by \(tied.count) days; their lustre spans "

@@ -139,16 +139,25 @@ final class CatLustreTests: XCTestCase {
         XCTAssertEqual(CatLustre(value: 93.0, finish: .radiant, intensity: 0).display, "93.00")
     }
 
-    // MARK: - Rarity is untouched
+    // MARK: - How rarity and lustre relate
 
-    /// The whole design rests on rarity keeping its meaning, so this checks the traits still grade
-    /// the same way they always did.
+    /// Rarity is no longer the item total.
+    ///
+    /// This test used to assert that it was — `rarity == round(rarityPoints)` — which held while
+    /// lustre was a separate companion figure. It no longer is: the day is folded into rarity too,
+    /// through `effort`, so that a settled user's days stop landing on the same number. The item
+    /// total is still there and still the larger share; it is simply not the whole of it. See
+    /// `RarityScoreTests` for the combination itself.
     @MainActor
-    func testRarityAndItsGradeAreUnchangedByLustre() {
+    func testRarityIsItemLedButNotItemsAlone() {
         let traits = PawpetTraits(day: "2026-03-09", summary: day(), streakDays: 20)
-        XCTAssertEqual(traits.rarity, Int(traits.rarityPoints.rounded()))
+        XCTAssertEqual(traits.rarity, Int(traits.rarityScore.rounded()))
         XCTAssertTrue(["S", "A", "B", "C", "D"].contains(traits.rarityGrade))
-        // Lustre is derived from the same traits, never the other way round.
+        // Items lead: seven tenths of the score, and the rest cannot exceed thirty points.
+        XCTAssertGreaterThanOrEqual(traits.rarityScore, traits.rarityPoints * 0.70 - 0.01)
+        XCTAssertLessThanOrEqual(traits.rarityScore, traits.rarityPoints * 0.70 + 30.01)
+        // Lustre is still derived from the item total, never from the combined score — otherwise
+        // the two would feed each other.
         XCTAssertEqual(traits.lustre.value,
                        CatLustre.compute(itemPoints: traits.rarityPoints, summary: day()).value)
     }
