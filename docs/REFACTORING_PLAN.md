@@ -324,11 +324,13 @@ worth fixing in S8, but the shipped cost of it is a quarter of what the baseline
 | Stage | State |
 |---|---|
 | S1 Baseline, plan, `PAWPRINT_PERF` | **Done** |
-| S3 Characterization tests | **Partial** — 37 tests: privacy invariants, day boundaries + DST, stored-data compatibility, summary determinism, streak rule. Missing: recording policy (A), keyboard/mouse accumulation (C), system state (D), store-level compatibility on a real database fixture (F), update signing (G) |
+| S3 Characterization tests | **Partial** — 66 tests: privacy invariants, day boundaries + DST, stored-data compatibility, summary determinism, streak rule, score overflow, lustre, and **recording policy (A)**. Missing: keyboard/mouse accumulation (C), system state (D), store-level compatibility on a real database fixture (F), update signing (G) |
 | S2 Module split | **Done** — 5,491 lines in `PawprintCore`, 702 `package` declarations, 16 written-out memberwise initializers, `DisplayCalibrating` seam. Verified identical by digest and by the 37 tests |
 | S10 Debug tooling out of the release | **Done** — `DebugSnapshot` and `DemoData` (2,562 lines) are `#if DEBUG`, the 36 environment branches moved from `AppDelegate` into `DebugCommand`, and the capture knobs fold to compile-time constants. Release binary 16,987,840 → 15,181,216 bytes (−10.6%), and `strings` finds no `PAWPRINT_`, `DebugSnapshot`, `DemoData` or `DebugCommand` in it. CI asserts this |
 | S11 Release workflow | **Done** — no GitHub expression reaches a shell; the tag is validated before it selects a ref; `scripts/test_validate_tag.sh` and `scripts/check_workflows.py` run in CI |
-| S4 – S9, S12 | Not started |
+| S4 Injectable time | **Partial** — `Clock` / `SystemClock` / `TestClock` exist in the core. The composition root and the removal of the 225 `.shared` lookups have not started |
+| S5 Split ActivityCenter | **Partial** — `RecordingPolicy` extracted: pause, excluded applications, system processes and the per-category switches are a value type in the core, tested on their own. The remaining responsibilities (rollover, sessions, accumulators, persistence) are still on `ActivityCenter` |
+| S6 – S9, S12 | Not started |
 | F1 Uncapped score | **Done** — surplus kept apart from the 0–100 band, so grades and percentiles are untouched |
 | F2 Continuous lustre | **Done** — `CatLustre` in the core; 26 distinct rarity values become 108 distinct lustre values over 116 days |
 | F3 Foil finish | **Done** — `CatFoil`, continuous in lustre, masked away from the cat's face |
@@ -339,7 +341,7 @@ worth fixing in S8, but the shipped cost of it is a quarter of what the baseline
 |---|---|
 | `swift build -c debug` | Pass |
 | `swift build -c release` | Pass |
-| `swift test` | Pass — 37 tests, 0 failures |
+| `swift test` | Pass — 66 tests, 0 failures, in four timezones |
 | `./scripts/build_app.sh release` | Pass |
 | `lipo -archs` | `x86_64 arm64` |
 | Existing database loads without loss | Pass — 115-day checksum identical |

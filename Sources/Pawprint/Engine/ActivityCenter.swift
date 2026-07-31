@@ -56,9 +56,12 @@ final class ActivityCenter {
     }
 
     /// True when recording is actually happening right now (not paused, current app not excluded).
-    var isRecordingActive: Bool {
-        !settings.isPaused && !isCurrentAppExcluded
+    /// The recording gate, in one place and testable on its own. See `RecordingPolicy`.
+    var policy: RecordingPolicy {
+        RecordingPolicy(settings: settings, frontmostBundleID: currentFrontmostBundleID)
     }
+
+    var isRecordingActive: Bool { policy.isRecordingActive }
 
     private(set) var isCurrentAppExcluded: Bool = false
 
@@ -474,14 +477,7 @@ final class ActivityCenter {
     // MARK: - Shared bookkeeping used by every tracker
 
     func isCategoryEnabled(_ category: CollectionCategory) -> Bool {
-        switch category {
-        case .keyboard: return settings.collectKeyboard
-        case .mouse: return settings.collectMouse
-        case .appUsage: return settings.collectAppUsage
-        case .clipboard: return settings.collectClipboard
-        case .sleepWake: return settings.collectSleepWake
-        case .powerPeripherals: return settings.collectPowerPeripherals
-        }
+        policy.isCategoryEnabled(category)
     }
 
     /// Call at the top of every raw event handler. Applies day rollover, the pause/exclusion/
@@ -682,21 +678,9 @@ final class ActivityCenter {
     /// System UI processes that become "frontmost" without the user choosing them — the lock
     /// screen, Spotlight, the screensaver. Counting these as apps made the lock screen show up
     /// as the most-used "app" of the day.
-    private static let systemProcessBundleIDs: Set<String> = [
-        "com.apple.loginwindow",
-        "com.apple.SecurityAgent",
-        "com.apple.ScreenSaver.Engine",
-        "com.apple.Spotlight",
-        "com.apple.WindowManager",
-        "com.apple.notificationcenterui",
-        "com.apple.controlcenter",
-        "com.apple.systemuiserver",
-        "com.apple.dock",
-        "com.apple.CoreServices.uiagent",
-    ]
 
     func isExcluded(bundleID: String) -> Bool {
-        Self.systemProcessBundleIDs.contains(bundleID) || settings.excludedApps.contains { $0.bundleID == bundleID }
+        policy.isExcluded(bundleID: bundleID)
     }
 
     /// Records a just-ended app activation period. Gated on that session's *own* app being
