@@ -16,6 +16,13 @@ struct TodayView: View {
         VStack(alignment: .leading, spacing: 14) {
             header
 
+            // The one place a storage failure becomes visible. Everything below assumes the day is
+            // being kept; when it isn't, saying so beats letting the numbers climb convincingly on
+            // a screen that is the only copy of them.
+            if let failure = StoreHealth.shared.lastFailure {
+                StorageWarning(failure: failure)
+            }
+
             if let broken = RecordTracker.shared.pendingCelebration {
                 RecordBrokenBanner(standing: broken) { RecordTracker.shared.clearCelebration() }
             }
@@ -598,5 +605,33 @@ private struct IndexBadge: View {
         .frame(maxWidth: .infinity)
         .padding(8)
         .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(.quaternary.opacity(0.4)))
+    }
+}
+
+/// Shown at the top of Today when storage has failed.
+///
+/// Deliberately plain and non-alarming: it says what happened and what would help, and it goes
+/// away on its own the moment a write succeeds. It is not a modal and there is nothing to dismiss —
+/// a warning the user can silence while the problem continues is worse than none.
+struct StorageWarning: View {
+    let failure: StoreFailure
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 8) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .foregroundStyle(.orange)
+                .font(.caption)
+            Text(failure.summary)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 0)
+        }
+        .padding(10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(Color.orange.opacity(0.12))
+        )
     }
 }
