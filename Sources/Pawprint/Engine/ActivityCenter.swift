@@ -496,7 +496,7 @@ final class ActivityCenter {
     /// clock showing nothing after six. Captures should depend on the seeded data and the clock,
     /// not on the hour they were taken.
     @ObservationIgnored
-    private let isCaptureRun = ProcessInfo.processInfo.environment["PAWPRINT_SHOTS"] != nil
+    private let isCaptureRun = CaptureMode.isActive
 
     @discardableResult
     func beginEvent(at date: Date, category: CollectionCategory) -> Bool {

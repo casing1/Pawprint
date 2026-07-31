@@ -26,7 +26,7 @@ final class MenuBarIconAnimator {
     @ObservationIgnored private var currentInterval: TimeInterval = 0
     @ObservationIgnored private var tickCount = 0
     /// Set via the PAWPRINT_DEBUG_PAW env var to log tick/frame activity to stderr.
-    @ObservationIgnored private let debugLogging = ProcessInfo.processInfo.environment["PAWPRINT_DEBUG_PAW"] != nil
+    @ObservationIgnored private let debugLogging = DebugEnvironment.logsPawFrames
 
     /// One cycle: one paw wiggle, or one tail wave. Both icons share the frame clock, so keeping
     /// them to one motion per cycle is what makes them move at the same pace.

@@ -24,7 +24,7 @@ struct PopoverRootView: View {
 
     /// Capture only; the app itself always opens the gallery on rarity.
     static let gallerySort: PawpetGalleryView.SortField = {
-        switch ProcessInfo.processInfo.environment["PAWPRINT_SHOT_SORT"] {
+        switch DebugEnvironment.gallerySort {
         case "date": return .date
         case "lustre": return .lustre
         case "score": return .score
@@ -35,7 +35,7 @@ struct PopoverRootView: View {
     /// `var`, not `let`, only so the capture harness can shoot one tab at two different heights
     /// in a single run. Nothing in the app writes it.
     static var scrollHeight: CGFloat =
-        ProcessInfo.processInfo.environment["PAWPRINT_SHOT_HEIGHT"].flatMap { CGFloat(Double($0) ?? 0) }
+        DebugEnvironment.popoverHeight.flatMap { CGFloat(Double($0) ?? 0) }
             ?? 520
 
     /// Capture only: opens the popover already scrolled to a named section.

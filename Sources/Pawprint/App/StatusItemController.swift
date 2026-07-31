@@ -31,7 +31,7 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         // Animated closes complete a runloop turn or more after `close()` returns, so a capture
         // that closes and immediately reopens found the popover still on its way out and did
         // nothing. Without animation the state is exactly what the last call left it as.
-        popover.animates = ProcessInfo.processInfo.environment["PAWPRINT_SHOTS"] == nil
+        popover.animates = !CaptureMode.isActive
         popover.delegate = self
         // Content is built on first open and torn down on close. Keeping a live
         // `NSHostingController` around would leave the whole SwiftUI tree — and its refresh

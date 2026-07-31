@@ -1,6 +1,11 @@
 import Foundation
 import PawprintCore
 
+// `#if DEBUG`: this fabricates a history for the README screenshots and has no business in a
+// build anyone installs.
+
+#if DEBUG
+
 /// Fabricates a plausible history so the README can show the real app with something in it.
 ///
 /// A screenshot of an empty Pawprint shows nothing about Pawprint. Rather than mocking up the UI,
@@ -302,3 +307,5 @@ enum DemoData {
         return apps[0]
     }
 }
+
+#endif

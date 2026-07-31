@@ -6,6 +6,14 @@ import IOKit.hid
 import SwiftUI
 import PawprintCore
 
+// Development tooling: screenshot capture, GIF and card rendering, and the probe suite that
+// verifies invariants a unit test cannot reach because they need a running application.
+//
+// `#if DEBUG` so none of it reaches a shipped build. The probes still run — `build_app.sh debug`
+// is what CI and the release checks point at.
+
+#if DEBUG
+
 /// Debug-only helpers, all gated behind environment variables so they never run in normal use.
 /// They exist because this app has no testable UI surface from the command line — rendering the
 /// popover to PNGs and dumping window state is the only way to catch layout and focus regressions.
@@ -2256,3 +2264,5 @@ enum DebugSnapshot {
         write("SNAPSHOT \(name) \(Int(image.size.width))x\(Int(image.size.height))\n")
     }
 }
+
+#endif

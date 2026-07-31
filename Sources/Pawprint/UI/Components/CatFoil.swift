@@ -43,7 +43,7 @@ struct CatFoil<Content: View>: View {
     /// Screenshot capture forces a light position, because a captured window has no pointer in it
     /// and the whole effect would otherwise photograph as its resting state.
     static var forcedPointer: UnitPoint? {
-        guard let raw = ProcessInfo.processInfo.environment["PAWPRINT_FOIL_POINTER"] else { return nil }
+        guard let raw = DebugEnvironment.foilPointer else { return nil }
         let parts = raw.split(separator: ",").compactMap { Double($0) }
         guard parts.count == 2 else { return nil }
         return UnitPoint(x: parts[0], y: parts[1])

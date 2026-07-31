@@ -326,7 +326,9 @@ worth fixing in S8, but the shipped cost of it is a quarter of what the baseline
 | S1 Baseline, plan, `PAWPRINT_PERF` | **Done** |
 | S3 Characterization tests | **Partial** — 37 tests: privacy invariants, day boundaries + DST, stored-data compatibility, summary determinism, streak rule. Missing: recording policy (A), keyboard/mouse accumulation (C), system state (D), store-level compatibility on a real database fixture (F), update signing (G) |
 | S2 Module split | **Done** — 5,491 lines in `PawprintCore`, 702 `package` declarations, 16 written-out memberwise initializers, `DisplayCalibrating` seam. Verified identical by digest and by the 37 tests |
-| S4 – S12 | Not started |
+| S10 Debug tooling out of the release | **Done** — `DebugSnapshot` and `DemoData` (2,562 lines) are `#if DEBUG`, the 36 environment branches moved from `AppDelegate` into `DebugCommand`, and the capture knobs fold to compile-time constants. Release binary 16,987,840 → 15,181,216 bytes (−10.6%), and `strings` finds no `PAWPRINT_`, `DebugSnapshot`, `DemoData` or `DebugCommand` in it. CI asserts this |
+| S11 Release workflow | **Done** — no GitHub expression reaches a shell; the tag is validated before it selects a ref; `scripts/test_validate_tag.sh` and `scripts/check_workflows.py` run in CI |
+| S4 – S9, S12 | Not started |
 | F1 Uncapped score | **Done** — surplus kept apart from the 0–100 band, so grades and percentiles are untouched |
 | F2 Continuous lustre | **Done** — `CatLustre` in the core; 26 distinct rarity values become 108 distinct lustre values over 116 days |
 | F3 Foil finish | **Done** — `CatFoil`, continuous in lustre, masked away from the cat's face |
@@ -343,4 +345,6 @@ worth fixing in S8, but the shipped cost of it is a quarter of what the baseline
 | Existing database loads without loss | Pass — 115-day checksum identical |
 | Core summaries unchanged | Pass — no field differs |
 | No significant performance regression | Pass — worst +1.2% on the release build |
+| Release build free of debug tooling | Pass — asserted in CI |
+| Release workflow safe from tag injection | Pass — `scripts/test_validate_tag.sh` |
 | Everything else in §17 | Not yet met — the stages they depend on have not run |
