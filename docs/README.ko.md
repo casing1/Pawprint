@@ -2,7 +2,7 @@
 
 <img src="images/banner.png" alt="Pawprint" width="100%">
 
-[English](../README.md) · **한국어**
+[English](../README.md) · **한국어** · [日本語](README.ja.md) · [Deutsch](README.de.md)
 
 <a href="https://github.com/yhcho0405/Pawprint/releases/latest/download/Pawprint.dmg">
 <img src="https://img.shields.io/badge/macOS용%20다운로드-.dmg-1a7f37?style=for-the-badge&logo=apple&logoColor=white" alt="macOS용 다운로드" height="42">

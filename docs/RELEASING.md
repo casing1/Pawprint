@@ -36,7 +36,11 @@ DMG와 ZIP을 둘 다 내는 이유: DMG는 첫 설치에 친절한 형식이지
 
 키는 `scripts/updatekeys.swift generate`로 만듭니다.
 
-- **공개키**: `Sources/Pawprint/Engine/UpdateChecker.swift`의 `UpdateDistribution.publicKey`
+- **공개키**: `Sources/PawprintCore/Models/UpdateDistribution.swift`의 `UpdateDistribution.publicKey`
+
+  릴리즈 워크플로는 이 경로를 고정으로 쓰지 않고 `Sources` 전체에서 찾습니다. 예전에 상수가
+  `UpdateChecker.swift`에 있었고 리팩터링으로 옮겨졌을 때, 고정 경로를 grep 하던 단계가 빈 키를
+  얻어 서명 검증이 엉뚱한 이유로 실패했기 때문입니다. 지금은 키를 못 찾으면 그 자리에서 실패합니다.
 - **개인키**: GitHub 저장소 시크릿 `PAWPRINT_UPDATE_PRIVATE_KEY`
 
 **공개키를 바꾸면 이전에 발행한 모든 릴리즈의 서명이 무효가 됩니다.** 개인키를 잃어버리면
