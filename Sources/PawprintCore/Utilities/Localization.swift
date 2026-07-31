@@ -79,10 +79,19 @@ final package class LocalizationManager {
     /// changes number formatting too.
     package nonisolated static var usesMyriadGrouping: Bool { Tables.activeCode == "ko" }
 
-    /// Locale for `DateFormatter`, following the active pack so weekday and month names match the
-    /// rest of the UI instead of staying Korean.
+    /// Locale for `DateFormatter`, so weekday and month names match the rest of the UI.
+    ///
+    /// Derived from the active pack rather than hard-coded to two, which is what left a German
+    /// build printing "31. Jul (Fri)" — the pack translated the *pattern* but `DateFormatter`
+    /// resolved `E` against `en_US`. Anything unlisted still falls to English, matching the pack
+    /// fallback.
     package nonisolated static var activeLocale: Locale {
-        Locale(identifier: Tables.activeCode == "ko" ? "ko_KR" : "en_US")
+        switch Tables.activeCode {
+        case "ko": return Locale(identifier: "ko_KR")
+        case "ja": return Locale(identifier: "ja_JP")
+        case "de": return Locale(identifier: "de_DE")
+        default: return Locale(identifier: "en_US")
+        }
     }
 
     package nonisolated static func systemPreferredCode() -> String? {
