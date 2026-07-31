@@ -132,8 +132,15 @@ package enum DerivedIndices {
             best[facet] = candidate
         }
 
+        // `best.values` is a dictionary's, so its order varies per process, and Swift's sort is
+        // not stable — two facets of equal strength produced a different set of three tags on
+        // different launches. The tag's own name settles it.
         let tags = best.values
-            .sorted { $0.strength > $1.strength }
+            .sorted { lhs, rhs in
+                lhs.strength == rhs.strength
+                    ? lhs.tag.rawValue < rhs.tag.rawValue
+                    : lhs.strength > rhs.strength
+            }
             .prefix(3)
             .map(\.tag)
 

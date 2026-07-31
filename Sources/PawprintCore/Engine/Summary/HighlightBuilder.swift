@@ -59,7 +59,8 @@ package enum HighlightBuilder {
         for session in raw.appSessions {
             byHour[calendar.component(.hour, from: session.start), default: 0] += 1
         }
-        if let peak = byHour.max(by: { $0.value < $1.value }), peak.value >= 3 {
+        if let peak = byHour.max(by: { $0.value == $1.value ? $0.key > $1.key : $0.value < $1.value }),
+           peak.value >= 3 {
             return L10n.t("statsEngine.a2a40af5", Formatters.approximateHourLabel(peak.key), peak.value)
         }
         if let peakMinute = raw.activityPerMinute.enumerated().max(by: { $0.element < $1.element }),

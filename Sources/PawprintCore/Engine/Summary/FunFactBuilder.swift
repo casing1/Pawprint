@@ -59,7 +59,9 @@ package enum FunFactBuilder {
                 add(.keys, L10n.t("statsEngine.a12cddd4", 100 - left))
             }
         }
-        if let top = summary.keyCategoryCounts.max(by: { $0.value < $1.value }), top.value > 0 {
+        if let top = summary.keyCategoryCounts.max(by: {
+            $0.value == $1.value ? $0.key.rawValue > $1.key.rawValue : $0.value < $1.value
+        }), top.value > 0 {
             add(.keys, L10n.t("statsEngine.75e25f7f", keyCategoryLabel(top.key)))
         }
         if let undo = summary.shortcutCounts[.undo], undo > 5 {

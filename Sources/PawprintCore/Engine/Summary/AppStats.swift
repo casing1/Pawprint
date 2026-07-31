@@ -36,7 +36,14 @@ package enum AppStats {
         }
         return byApp.map { bundleID, value in
             AppUsageStat(bundleID: bundleID, appName: value.name, totalSeconds: value.seconds, activationCount: value.count)
-        }.sorted { $0.totalSeconds > $1.totalSeconds }
+        }.sorted { lhs, rhs in
+            // The bundle identifier breaks ties. Without it two apps with identical time swap
+            // places between launches, and `topApp` — the "you spent most of today in" line —
+            // names a different one each time.
+            lhs.totalSeconds == rhs.totalSeconds
+                ? lhs.bundleID < rhs.bundleID
+                : lhs.totalSeconds > rhs.totalSeconds
+        }
     }
 
     /// Merges the per-app input tallies into display-ready profiles. App names come from the
@@ -59,7 +66,13 @@ package enum AppStats {
             )
         }
         .filter { $0.totalInput > 0 }
-        .sorted { $0.totalInput > $1.totalInput }
+        // Built from a `Set`, whose order varies per process, then sorted by a key that ties —
+        // so the order had two sources of arbitrariness. The identifier settles both.
+        .sorted { lhs, rhs in
+            lhs.totalInput == rhs.totalInput
+                ? lhs.bundleID < rhs.bundleID
+                : lhs.totalInput > rhs.totalInput
+        }
     }
 
     /// How concentrated app time was. Uses a Herfindahl index (sum of squared shares), which is
@@ -71,7 +84,11 @@ package enum AppStats {
         var herfindahl = 0.0
         var running = 0.0
         var appsForHalf = 0
-        for app in usage.sorted(by: { $0.totalSeconds > $1.totalSeconds }) {
+        for app in usage.sorted(by: { lhs, rhs in
+            lhs.totalSeconds == rhs.totalSeconds
+                ? lhs.bundleID < rhs.bundleID
+                : lhs.totalSeconds > rhs.totalSeconds
+        }) {
             let share = app.totalSeconds / total
             herfindahl += share * share
             if running < total / 2 {
@@ -106,7 +123,8 @@ package enum TimeStats {
             s.avgFocusSeconds = Double(s.totalFocusSeconds) / Double(raw.focusSessions.count)
         }
         s.bestFocusHour = bestFocusHour(raw.focusSessions)
-        s.topInterruptingApp = raw.focusInterruptionsByApp.max { $0.value < $1.value }?.key
+        s.topInterruptingApp = raw.focusInterruptionsByApp
+            .max { $0.value == $1.value ? $0.key > $1.key : $0.value < $1.value }?.key
         s.longestBreakSeconds = longestBreak(raw.activitySessions)
     }
 
@@ -118,7 +136,9 @@ package enum TimeStats {
             let hour = calendar.component(.hour, from: session.start)
             byHour[hour, default: 0] += session.duration
         }
-        return byHour.max { $0.value < $1.value }?.key
+        // The earliest hour wins a tie. Taking the dictionary's maximum unqualified is what
+        // made this the one figure that changed when you relaunched the app.
+        return byHour.max { $0.value == $1.value ? $0.key > $1.key : $0.value < $1.value }?.key
     }
 
     /// Longest gap between consecutive activity sessions — the day's biggest break.

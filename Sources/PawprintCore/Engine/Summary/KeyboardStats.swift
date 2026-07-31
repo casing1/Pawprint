@@ -70,7 +70,8 @@ package enum KeyboardStats {
             uniquingKeysWith: +
         )
         s.distinctKeysUsed = s.keyCodeCounts.count
-        if let top = s.keyCodeCounts.max(by: { $0.value < $1.value }) {
+        // Lowest key code wins a tie, so "your most pressed key" is the same key tomorrow.
+        if let top = s.keyCodeCounts.max(by: { $0.value == $1.value ? $0.key > $1.key : $0.value < $1.value }) {
             s.mostPressedKeyLabel = KeyboardLayout.label(for: top.key)
             s.mostPressedKeyCount = top.value
         }
