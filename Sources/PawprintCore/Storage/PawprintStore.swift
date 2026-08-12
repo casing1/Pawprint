@@ -302,6 +302,24 @@ final package class PawprintStore {
     // MARK: - Settings
 
     package func loadSettings() -> AppSettings {
+        // The in-memory fallback has no copy of the user's privacy choices. Treating that empty
+        // database as a fresh install would enable every tracker (and network update checks), even
+        // when the unavailable file says they are paused or excluded. Keep the UI available, but
+        // fail closed until persistent settings can be read again on a later launch.
+        if isDegraded {
+            var settings = AppSettings()
+            settings.collectKeyboard = false
+            settings.collectMouse = false
+            settings.collectAppUsage = false
+            settings.collectClipboard = false
+            settings.collectSleepWake = false
+            settings.collectPowerPeripherals = false
+            settings.isPaused = true
+            settings.updateCheckEnabled = false
+            settings.updateCheckAutomatically = false
+            return settings
+        }
+
         var result: AppSettings?
         read("SELECT value FROM app_settings WHERE key = 'settings' LIMIT 1;") { row in
             guard let json = row.columnText(0)?.data(using: .utf8) else { return }

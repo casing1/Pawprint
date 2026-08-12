@@ -63,6 +63,20 @@ final class StoreFailureTests: XCTestCase {
         day.totalKeyPresses = 7
         store.saveDay(day)
         XCTAssertEqual(store.loadDay("2026-07-31")?.totalKeyPresses, 7)
+
+        // An empty in-memory database must not look like a fresh install. The unavailable file may
+        // contain a pause, category opt-outs, exclusions, or an update-check opt-out, so degraded
+        // storage has to fail closed rather than silently replacing those privacy choices.
+        let settings = store.loadSettings()
+        XCTAssertTrue(settings.isPaused)
+        XCTAssertFalse(settings.collectKeyboard)
+        XCTAssertFalse(settings.collectMouse)
+        XCTAssertFalse(settings.collectAppUsage)
+        XCTAssertFalse(settings.collectClipboard)
+        XCTAssertFalse(settings.collectSleepWake)
+        XCTAssertFalse(settings.collectPowerPeripherals)
+        XCTAssertFalse(settings.updateCheckEnabled)
+        XCTAssertFalse(settings.updateCheckAutomatically)
     }
 
     // MARK: - Schema version
