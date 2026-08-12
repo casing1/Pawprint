@@ -45,6 +45,13 @@ echo "==> Pushing"
 git push -q origin main
 git push -q origin "v$VERSION"
 
+# repository_dispatch is deliberately used instead of a tag-push trigger: GitHub always loads a
+# repository-dispatch workflow from the default branch, so tag-controlled workflow code can never
+# receive the update signing key.
+gh api --method POST "repos/{owner}/{repo}/dispatches" \
+    -f event_type=publish-release \
+    -f "client_payload[tag]=v$VERSION"
+
 echo ""
 echo "==> Tagged v$VERSION and pushed. The Release workflow is building it now:"
 echo "    https://github.com/yhcho0405/Pawprint/actions"
