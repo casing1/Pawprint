@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Feeds `validate_tag.sh` the things an attacker would type into the workflow_dispatch form.
+# Feeds `validate_tag.sh` the things an attacker could put in a repository-dispatch payload.
 #
 # The point is not that the regex looks strict. It is that a tag which tries to run a command is
 # rejected *and* that nothing runs while it is being rejected: each hostile case writes to a canary

@@ -62,8 +62,17 @@ Apple Developer ID($99/년)를 발급받으면 Gatekeeper 경고 없이 배포�
 정해진 주기는 강제하지 않습니다. 의미 있는 변경이 모이면 `release.sh`를 실행하세요.
 버전은 semver를 따릅니다 — 기능 추가는 minor, 버그 수정은 patch.
 
-실패한 릴리즈를 다시 발행하려면 Actions에서 **Release** 워크플로를
-`workflow_dispatch`로 실행하고 태그를 입력하세요. 기존 에셋은 덮어씁니다.
+실패한 릴리즈를 다시 발행하려면 GitHub CLI로 아래의 신뢰된 기본 브랜치 워크플로를
+다시 호출하세요. 기존 에셋은 덮어씁니다.
+
+```bash
+gh api --method POST repos/yhcho0405/Pawprint/dispatches \
+  -f event_type=publish-release -f 'client_payload[tag]=v0.2.0'
+```
+
+릴리즈는 태그 push로 직접 실행되지 않습니다. `repository_dispatch` 워크플로는 항상 기본
+브랜치에서 로드되고, 워크플로는 태그가 `main` 이력의 커밋을 가리키는지도 확인합니다.
+따라서 검토되지 않은 태그의 워크플로나 스크립트에 업데이트 서명 개인키가 노출되지 않습니다.
 
 ## 안정적인 서명 인증서 (권장)
 

@@ -1,16 +1,11 @@
 name: Release
 
-# Publishing is driven by tags: `scripts/release.sh 0.2.0` bumps the version, tags, and pushes,
-# and everything below runs from that tag. `workflow_dispatch` exists so a release can be retried
-# without inventing a new version number.
+# A repository dispatch always loads this workflow from the default branch. This matters because
+# the job handles the update signing key: a tag must never be allowed to provide the workflow that
+# receives that secret. `scripts/release.sh` creates the tag and sends the dispatch.
 on:
-  push:
-    tags: ['v*']
-  workflow_dispatch:
-    inputs:
-      tag:
-        description: 'Existing tag to (re)publish, e.g. v0.2.0'
-        required: true
+  repository_dispatch:
+    types: [publish-release]
 
 permissions:
   contents: write
@@ -27,28 +22,36 @@ jobs:
       CERTIFICATE_P12: ${{ secrets.MACOS_CERTIFICATE_P12 }}
       CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
     steps:
-      # Checked out at the commit that triggered the run — a real SHA, never a string anyone
-      # typed. This exists only to get `scripts/` on disk so the tag can be validated before it is
-      # used for anything.
+      # repository_dispatch runs the default-branch workflow; pin the initial checkout too. No
+      # tag-controlled file is executed until the tag has been proven to belong to main.
       - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
 
-      # The tag can be hand-typed into the workflow_dispatch form, and this job holds the signing
-      # key. Validated before it selects a ref, and passed through the environment rather than
-      # interpolated into the shell. `scripts/test_validate_tag.sh` covers the hostile cases.
+      # Validate both the spelling and the object server-side. A syntactically valid tag pointing
+      # at an unreviewed commit is no more trustworthy than a tag containing shell syntax.
       - name: Validate the tag
         id: version
         env:
-          RAW_TAG: ${{ github.event.inputs.tag || github.ref_name }}
+          RAW_TAG: ${{ github.event.client_payload.tag }}
         run: |
           set -euo pipefail
           VERSION=$(./scripts/validate_tag.sh "$RAW_TAG")
+          git fetch --force origin "refs/tags/$RAW_TAG:refs/tags/$RAW_TAG"
+          COMMIT=$(git rev-parse "$RAW_TAG^{commit}")
+          if ! git merge-base --is-ancestor "$COMMIT" origin/main; then
+            echo "::error::release tag must point to a commit on main"
+            exit 1
+          fi
           echo "tag=$RAW_TAG"     >> "$GITHUB_OUTPUT"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "commit=$COMMIT"   >> "$GITHUB_OUTPUT"
 
       # Now the real one, at the tag the release is actually for.
       - uses: actions/checkout@v4
         with:
-          ref: ${{ steps.version.outputs.tag }}
+          ref: ${{ steps.version.outputs.commit }}
           fetch-depth: 0
 
       # The tag is the single source of truth for the version — the checked-in Info.plist is only
@@ -180,7 +183,7 @@ jobs:
             fi
           } > "$NOTES_FILE"
 
-          # `--clobber` so a re-run of workflow_dispatch replaces assets instead of failing.
+          # `--clobber` so a repeated dispatch replaces assets instead of failing.
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release upload "$TAG" \
               "dist/Pawprint-$VERSION.dmg" \

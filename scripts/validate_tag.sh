@@ -2,10 +2,9 @@
 #
 # Accepts a release tag, or refuses it.
 #
-# The release workflow can be started by hand with a tag typed into a form, and that string used to
-# be interpolated straight into a shell body on a runner holding the signing key. This is the check
-# that stands in the way. It lives in a file rather than inline in the workflow so it can be tested
-# against hostile input without dispatching a release — see `scripts/test_validate_tag.sh`.
+# The release workflow receives a tag in a repository-dispatch payload. This check rejects hostile
+# input before the workflow fetches that tag. It lives in a file rather than inline in the workflow
+# so it can be tested without dispatching a release — see `scripts/test_validate_tag.sh`.
 #
 # Prints the version (the tag without its leading `v`) on success. Exits non-zero on anything else.
 set -euo pipefail
