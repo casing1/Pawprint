@@ -10,6 +10,7 @@ struct PawprintApp: App {
         // SwiftUI scene so the standard ⌘, window and its lifecycle come for free.
         Settings {
             SettingsRootView()
+                .pawprintEnvironment()
         }
     }
 }

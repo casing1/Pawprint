@@ -85,6 +85,24 @@ final class AdventureIsolationTests: XCTestCase {
         )
     }
 
+    func testSwiftUISettingsSceneInjectsTheAppEnvironment() throws {
+        let repository = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repository.appendingPathComponent(
+                "Sources/Pawprint/App/PawprintApp.swift"
+            ),
+            encoding: .utf8
+        )
+
+        XCTAssertTrue(
+            source.contains("SettingsRootView()\n                .pawprintEnvironment()"),
+            "The system-owned Settings scene must inject ActivityCenter before restoration renders it"
+        )
+    }
+
     func testMenuBarAnimationIsCappedAtEightFramesPerSecond() {
         let sampleWPMValues: [Double] = [0, 5, 20, 35, 55, 90]
 
