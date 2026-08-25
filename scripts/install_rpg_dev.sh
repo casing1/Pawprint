@@ -9,6 +9,8 @@ set -euo pipefail
 # grants survive rebuilds. Release artifacts continue to use scripts/build_app.sh and never take
 # this path.
 
+export DEVELOPER_DIR="/Library/Developer/CommandLineTools"
+
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SOURCE_APP="$ROOT_DIR/build/Pawprint.app"
 TARGET_APP="/Applications/Pawprint RPG Dev.app"
@@ -84,11 +86,32 @@ stop_exact_app() {
 }
 
 echo "==> Building the current RPG development source"
-PAWPRINT_SWIFTPM_SCRATCH_PATH="$RPG_DEV_SCRATCH_PATH" \
+PAWPRINT_LEGACY_UI=1 \
+    PAWPRINT_SWIFTPM_SCRATCH_PATH="$RPG_DEV_SCRATCH_PATH" \
     "$ROOT_DIR/scripts/build_app.sh" "$CONFIG"
 
 echo "==> Preparing the isolated development bundle"
 ditto "$SOURCE_APP" "$STAGING_APP"
+
+# Never install an SDK-26-linked development binary: it would silently reintroduce the wider,
+# taller controls and changed popover/scroller rendering that made the base UI diverge from 0.10.
+LINKED_SDKS="$(xcrun vtool -show-build "$STAGING_APP/Contents/MacOS/Pawprint" \
+    | awk '$1 == "sdk" { print $2 }')"
+if [ -z "$LINKED_SDKS" ]; then
+    echo "Refusing to install: the development binary has no LC_BUILD_VERSION SDK." >&2
+    exit 1
+fi
+while IFS= read -r linked_sdk; do
+    case "$linked_sdk" in
+        15.*) ;;
+        *)
+            echo "Refusing to install: the development binary links SDK $linked_sdk, not 15.x." >&2
+            exit 1
+            ;;
+    esac
+done <<< "$LINKED_SDKS"
+LINKED_SDK_MARKER="$(printf '%s\n' "$LINKED_SDKS" | awk '!seen[$0]++' | paste -sd, -)"
+
 /usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier $DEV_BUNDLE_ID" \
     "$STAGING_APP/Contents/Info.plist"
 /usr/libexec/PlistBuddy -c "Set :CFBundleName $DEV_APP_NAME" \
@@ -96,6 +119,8 @@ ditto "$SOURCE_APP" "$STAGING_APP"
 /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName $DEV_APP_NAME" \
     "$STAGING_APP/Contents/Info.plist"
 /usr/libexec/PlistBuddy -c "Add :PawprintDevelopmentBuild bool true" \
+    "$STAGING_APP/Contents/Info.plist"
+/usr/libexec/PlistBuddy -c "Add :PawprintUICompatibilitySDK string $LINKED_SDK_MARKER" \
     "$STAGING_APP/Contents/Info.plist"
 
 codesign --force --deep --timestamp=none --sign - \

@@ -112,6 +112,24 @@ final class AdventureIsolationTests: XCTestCase {
         XCTAssertTrue(source.contains(".frame(width: 380)"))
     }
 
+    func testRPGDevelopmentBuildPreservesPawprintV010LinkedSDKAppearance() throws {
+        let buildScript = try repositorySource("scripts/build_app.sh")
+        let installer = try repositorySource("scripts/install_rpg_dev.sh")
+
+        XCTAssertTrue(installer.contains("PAWPRINT_LEGACY_UI=1"))
+        XCTAssertTrue(
+            installer.contains("export DEVELOPER_DIR=\"/Library/Developer/CommandLineTools\"")
+        )
+        XCTAssertTrue(buildScript.contains("MacOSX15.4.sdk"))
+        XCTAssertTrue(buildScript.contains("export SDKROOT=\"$LEGACY_UI_SDK\""))
+        XCTAssertTrue(buildScript.contains("named(shouldNotifyObservers)"))
+        XCTAssertTrue(buildScript.contains("xcrun vtool -show-build"))
+        XCTAssertTrue(
+            installer.contains("the development binary links SDK $linked_sdk, not 15.x"),
+            "Installation must fail closed before an SDK-26-linked build can replace the app"
+        )
+    }
+
     func testAdventureRemainsReachableFromTheTopBarAndGallery() throws {
         let popoverSource = try repositorySource(
             "Sources/Pawprint/UI/PopoverRootView.swift"
