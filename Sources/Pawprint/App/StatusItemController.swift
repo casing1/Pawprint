@@ -45,6 +45,7 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         // The text beside the icon (WPM, key count…) changes far more slowly than the animation,
         // so it gets its own lazy refresh rather than riding the frame timer.
         refreshTitle()
+        refreshPace()
         let timer = Timer(timeInterval: 1.5, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated {
                 self?.refreshPace()
@@ -53,6 +54,7 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
                 if (self?.titleTick ?? 0) % 4 == 0 { self?.refreshTitle() }
             }
         }
+        timer.tolerance = 0.3
         RunLoop.main.add(timer, forMode: .common)
         paceTimer = timer
     }
@@ -136,7 +138,15 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
     func showPopover(on tab: PopoverTab) {
         guard let button = statusItem?.button, !popover.isShown else { return }
         // Rebuild each time so the popover always opens on fresh stats.
-        popover.contentViewController = NSHostingController(rootView: PopoverRootView(startOn: tab).pawprintEnvironment())
+        popover.contentViewController = NSHostingController(
+            rootView: PopoverRootView(
+                startOn: tab,
+                dismissPopover: { [weak self] in
+                    self?.closePopover()
+                }
+            )
+            .pawprintEnvironment()
+        )
 
         // Pawprint runs as an accessory app (no Dock icon), so it is never the active
         // application on its own. Without activating first, the popover's window never
@@ -157,4 +167,3 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         popover.contentViewController = nil
     }
 }
-

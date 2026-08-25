@@ -21,6 +21,7 @@ struct PopoverRootView: View {
     @Environment(ActivityCenter.self) private var activityCenter
     @Bindable var achievements = AchievementEngine.shared
     @State private var tab: PopoverTab
+    private let dismissPopover: () -> Void
 
     /// Capture only; the app itself always opens the gallery on rarity.
     static let gallerySort: PawpetGalleryView.SortField = {
@@ -51,8 +52,12 @@ struct PopoverRootView: View {
 
     /// Screenshot capture opens the popover directly on the tab it wants; everywhere else this
     /// defaults to Today exactly as before.
-    init(startOn: PopoverTab = .today) {
+    init(
+        startOn: PopoverTab = .today,
+        dismissPopover: @escaping () -> Void = {}
+    ) {
         _tab = State(initialValue: startOn)
+        self.dismissPopover = dismissPopover
     }
 
     private var colorScheme: ColorScheme? {
@@ -117,7 +122,11 @@ struct PopoverRootView: View {
                         switch tab {
                         case .today: TodayView()
                         case .calendar: CalendarView()
-                        case .gallery: PawpetGalleryView(initialSort: PopoverRootView.gallerySort)
+                        case .gallery:
+                            PawpetGalleryView(
+                                initialSort: PopoverRootView.gallerySort,
+                                onOpenAdventureHUD: openAdventureHUD
+                            )
                         case .records: RecordsView()
                         }
                     }
@@ -152,6 +161,14 @@ struct PopoverRootView: View {
             .help(activityCenter.settings.isPaused ? L10n.t("popoverRootView.6491e6a9") : L10n.t("popoverRootView.5a694dfb"))
 
             Button {
+                openAdventureHUD()
+            } label: {
+                Image(systemName: "map.fill")
+            }
+            .buttonStyle(.plain)
+            .help(L10n.t("adventure.expedition.hud.title"))
+
+            Button {
                 LiveHUDController.shared.toggle()
             } label: {
                 Image(systemName: "rectangle.inset.filled.badge.record")
@@ -177,6 +194,16 @@ struct PopoverRootView: View {
         }
         .padding(.horizontal, 14)
         .padding(.top, 10)
+    }
+
+    private func openAdventureHUD() {
+        let controller = AdventureExpeditionHUDController.shared
+        if controller.isVisible {
+            controller.hide()
+        } else {
+            dismissPopover()
+            controller.show()
+        }
     }
 }
 

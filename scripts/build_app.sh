@@ -10,6 +10,11 @@ BUILD_DIR="$ROOT_DIR/build"
 APP_NAME="Pawprint"
 APP_BUNDLE="$BUILD_DIR/$APP_NAME.app"
 CONFIG="${1:-debug}"
+# SwiftPM's SQLite build database can be unreliable in synced/Desktop folders on some machines.
+# Keep the existing repository-local default, while allowing development builds to put only
+# SwiftPM's disposable cache elsewhere:
+#   PAWPRINT_SWIFTPM_SCRATCH_PATH=/private/tmp/pawprint-build ./scripts/build_app.sh
+SWIFTPM_SCRATCH_PATH="${PAWPRINT_SWIFTPM_SCRATCH_PATH:-$ROOT_DIR/.build}"
 
 echo "==> Building ($CONFIG)..."
 cd "$ROOT_DIR"
@@ -25,19 +30,20 @@ if [ "$CONFIG" = "release" ]; then
     MIN_MACOS="$(/usr/libexec/PlistBuddy -c 'Print :LSMinimumSystemVersion' "$ROOT_DIR/scripts/Info.plist")"
     for arch in arm64 x86_64; do
         echo "    ...$arch"
-        swift build -c release --triple "$arch-apple-macosx$MIN_MACOS"
+        swift build --scratch-path "$SWIFTPM_SCRATCH_PATH" \
+            -c release --triple "$arch-apple-macosx$MIN_MACOS"
     done
     BIN_PATH="$BUILD_DIR/$APP_NAME-universal"
     mkdir -p "$BUILD_DIR"
     lipo -create -output "$BIN_PATH" \
-        "$ROOT_DIR/.build/arm64-apple-macosx/release/$APP_NAME" \
-        "$ROOT_DIR/.build/x86_64-apple-macosx/release/$APP_NAME"
+        "$SWIFTPM_SCRATCH_PATH/arm64-apple-macosx/release/$APP_NAME" \
+        "$SWIFTPM_SCRATCH_PATH/x86_64-apple-macosx/release/$APP_NAME"
     echo "==> Universal binary: $(lipo -archs "$BIN_PATH")"
 else
     # Debug builds stay native — they only ever run on the machine that produced them, and
     # building twice would double every edit-run cycle.
-    swift build
-    BIN_PATH="$ROOT_DIR/.build/debug/$APP_NAME"
+    swift build --scratch-path "$SWIFTPM_SCRATCH_PATH"
+    BIN_PATH="$SWIFTPM_SCRATCH_PATH/debug/$APP_NAME"
 fi
 
 # Assemble into a staging bundle and only swap it into place once it is signed *and* verified.

@@ -218,12 +218,28 @@ final class LiveHUDController: NSObject, NSWindowDelegate {
         frame.size = fitted
         frame.origin = NSPoint(x: right - fitted.width, y: top - fitted.height)
         panel.setFrame(frame, display: true, animate: true)
+        AdventureExpeditionHUDController.shared.avoidOverlap(with: frame)
     }
 
     func show() {
         if let panel {
+            // Hiding releases the SwiftUI tree so its one-second clock cannot keep running in an
+            // invisible window. Recreate only when the HUD is explicitly shown again.
+            let hosting = NSHostingController(rootView: LiveHUDView())
+            hosting.view.frame = NSRect(
+                origin: .zero,
+                size: panel.frame.size
+            )
+            panel.contentViewController = hosting
             panel.orderFrontRegardless()
             isVisible = true
+            DispatchQueue.main.async { [weak self] in
+                guard self?.isVisible == true else { return }
+                self?.refreshSize()
+            }
+            AdventureExpeditionHUDController.shared.avoidOverlap(
+                with: panel.frame
+            )
             return
         }
 
@@ -254,10 +270,15 @@ final class LiveHUDController: NSObject, NSWindowDelegate {
 
         panel.orderFrontRegardless()
         isVisible = true
+        AdventureExpeditionHUDController.shared.avoidOverlap(
+            with: panel.frame
+        )
     }
 
     func hide() {
         panel?.orderOut(nil)
+        panel?.contentViewController = nil
+        dragAnchor = nil
         isVisible = false
     }
 

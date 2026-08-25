@@ -16,12 +16,17 @@ struct PawpetGalleryView: View {
     @State private var selected: DailySummary?
     @State private var filter: Filter = .all
     @State private var sort: SortField
+    private let onOpenAdventureHUD: (() -> Void)?
 
     /// Screenshot capture asks for date order. Sorted by rarity the grid opens on the best cats,
     /// which all look alike — same crown, same sunglasses — and hides the variety that is the
     /// point of the collection.
-    init(initialSort: SortField = .rarity) {
+    init(
+        initialSort: SortField = .rarity,
+        onOpenAdventureHUD: (() -> Void)? = nil
+    ) {
         _sort = State(initialValue: initialSort)
+        self.onOpenAdventureHUD = onOpenAdventureHUD
     }
     @State private var descending = true
     @State private var showingItemCatalog = false
@@ -149,6 +154,13 @@ struct PawpetGalleryView: View {
         HStack(spacing: 6) {
             browseButton(L10n.t("itemCatalog.button"), "square.grid.2x2") { showingItemCatalog = true }
             browseButton(L10n.t("achievements.button"), "rosette") { showingAchievements = true }
+            browseButton(L10n.t("adventure.button"), "map") {
+                if let onOpenAdventureHUD {
+                    onOpenAdventureHUD()
+                } else {
+                    AdventureExpeditionHUDController.shared.show()
+                }
+            }
             Spacer(minLength: 0)
         }
     }

@@ -106,3 +106,48 @@ struct PermissionOnboardingView: View {
         }
     }
 }
+
+/// Presents the permission-only onboarding UI when a development build has lost its TCC grants.
+///
+/// This is deliberately separate from `OnboardingWindowController`: closing a repair window must
+/// not rewrite first-run state, and the user should land directly on the two controls that need
+/// attention rather than replaying the entire welcome flow.
+@MainActor
+final class PermissionRepairWindowController: NSObject, NSWindowDelegate {
+    static let shared = PermissionRepairWindowController()
+
+    private var window: NSWindow?
+
+    func present() {
+        if let window {
+            bringToFront(window)
+            return
+        }
+
+        let hosting = NSHostingController(rootView: PermissionOnboardingView())
+        let window = NSWindow(contentViewController: hosting)
+        window.title = L10n.t("permissionOnboardingView.d85887e6")
+        window.styleMask = [.titled, .closable]
+        window.isReleasedWhenClosed = false
+        window.isRestorable = false
+        window.level = .floating
+        window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+        window.center()
+        window.delegate = self
+        self.window = window
+
+        bringToFront(window)
+    }
+
+    private func bringToFront(_ window: NSWindow) {
+        NSApp.setActivationPolicy(.regular)
+        NSApp.activate(ignoringOtherApps: true)
+        window.orderFrontRegardless()
+        window.makeKey()
+    }
+
+    func windowWillClose(_ notification: Notification) {
+        window = nil
+        AppWindowActivationPolicy.restore(afterClosing: notification)
+    }
+}

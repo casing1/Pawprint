@@ -97,11 +97,6 @@ final class MenuBarIconAnimator {
                          canvasWidth: catCanvasWidth, canvasHeight: canvasSize)
     }
 
-    /// One full drift of the sleep marks every ~13s: about four image swaps a second while the
-    /// user is away, against forty while typing. The timer that used to stop entirely now just
-    /// slows right down.
-    private static let sleepInterval: TimeInterval = 0.28
-
     /// The menu bar caps height at about 18pt but does not care about width, so the cat is drawn
     /// at the height limit and given a wider canvas to be bulky in. At 17pt in a square canvas it
     /// was legible but small next to the paw.
@@ -144,20 +139,14 @@ final class MenuBarIconAnimator {
         return catFrames[frame % catFrames.count]
     }
 
-    /// Pushes the current icon out again. Needed when the chosen style changes: while parked there
-    /// is no timer running at all, so a switch would otherwise not show until the next keystroke.
+    /// Pushes the current icon out again. Needed when the chosen style changes while the animation
+    /// is parked and therefore has no timer available to publish the new still.
     func refreshIcon() {
-        // Switching to the cat while idle has to start the breath; switching to the paw has to
-        // stop it, or a paw would sit there ticking at the sleep rate for no reason.
         if isSleeping {
-            if style == .cat {
-                retime(to: Self.sleepInterval)
-            } else {
-                timer?.invalidate()
-                timer = nil
-                currentInterval = 0
-                frame = 0
-            }
+            timer?.invalidate()
+            timer = nil
+            currentInterval = 0
+            frame = 0
         }
         onFrame?(currentImage)
     }
@@ -204,9 +193,13 @@ final class MenuBarIconAnimator {
         currentInterval = 0
     }
 
-    /// How long without any input before the paw settles and the timer stops entirely. Animating
-    /// while the user is away from the Mac costs battery for something nobody is looking at.
-    private static let idleParkSeconds: TimeInterval = 30
+    /// How long without any input before the icon settles and the timer stops entirely.
+    private static let idleParkSeconds: TimeInterval = 15
+
+    /// Updating an NSStatusItem is much more expensive than advancing an in-memory frame index:
+    /// AppKit redraws every status-item replicant. Eight frames per second keeps the motion legible
+    /// without spending a core on a decorative menu icon.
+    static let minimumActiveFrameInterval: TimeInterval = 0.125
 
     /// Re-evaluates the animation pace. Stops the timer outright once the user has been idle,
     /// and restarts it on the next sign of life.
@@ -219,17 +212,11 @@ final class MenuBarIconAnimator {
         retime(to: interval(forWPM: liveWPM))
     }
 
-    /// Idle state. The paw settles and the timer stops outright; the cat lies down and keeps
-    /// breathing, which is the whole point of having a sleeping pose rather than a frozen one.
+    /// Idle state. Both styles become a still and release their timer. The cat keeps its sleeping
+    /// drawing, but no longer redraws an unseen breathing cycle forever.
     private func park() {
         let wasSleeping = isSleeping
         isSleeping = true
-        if style == .cat {
-            frame = 0
-            onFrame?(currentImage)
-            retime(to: Self.sleepInterval)
-            return
-        }
         guard timer != nil || frame != 0 || !wasSleeping else { return }
         timer?.invalidate()
         timer = nil
@@ -241,15 +228,19 @@ final class MenuBarIconAnimator {
         }
     }
 
-    private func interval(forWPM wpm: Double) -> TimeInterval {
+    static func frameInterval(forWPM wpm: Double) -> TimeInterval {
         switch wpm {
-        case 70...: return 0.021
-        case 45..<70: return 0.028
-        case 25..<45: return 0.038
-        case 10..<25: return 0.052
-        case 1..<10: return 0.072
-        default: return 0.10      // idle sway — still alive, just lazy
+        case 70...: return minimumActiveFrameInterval
+        case 45..<70: return 0.15
+        case 25..<45: return 0.18
+        case 10..<25: return 0.22
+        case 1..<10: return 0.28
+        default: return 0.40
         }
+    }
+
+    private func interval(forWPM wpm: Double) -> TimeInterval {
+        Self.frameInterval(forWPM: wpm)
     }
 
     private func retime(to interval: TimeInterval) {
@@ -259,6 +250,7 @@ final class MenuBarIconAnimator {
         let t = Timer(timeInterval: interval, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated { self?.advance() }
         }
+        t.tolerance = min(0.02, interval * 0.15)
         RunLoop.main.add(t, forMode: .common)
         timer = t
         if debugLogging {

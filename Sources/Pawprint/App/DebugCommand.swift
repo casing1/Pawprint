@@ -18,7 +18,10 @@ enum DebugCommand {
 
     /// Reads the environment and starts whatever it asks for. No-op when nothing does.
     @MainActor
-    static func runIfRequested(_ delegate: AppDelegate) {
+    static func runIfRequested(
+        _ delegate: AppDelegate,
+        adventureSnapshot: AdventureSnapshotConfiguration? = nil
+    ) {
         // End-to-end exercise of the update pipeline: check → download → ditto → signature
         // verification → swap. There is no other way to prove the install path works, since it
         // replaces the running bundle and can't be unit-tested in-process.
@@ -237,6 +240,14 @@ enum DebugCommand {
         }
         if ProcessInfo.processInfo.environment["PAWPRINT_SNAPSHOT"] != nil {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { DebugSnapshot.run(); NSApp.terminate(nil) }
+        }
+        if let adventureSnapshot {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                AdventureOpener.open()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                    DebugSnapshot.captureAdventureWindow(to: adventureSnapshot.outputPath)
+                }
+            }
         }
     }
 }

@@ -302,8 +302,6 @@ final class OnboardingWindowController: NSObject, NSWindowDelegate {
             settings.hasCompletedOnboarding = true
             ActivityCenter.shared.updateSettings(settings)
         }
-        if !ActivityCenter.shared.settings.showDockIcon {
-            NSApp.setActivationPolicy(.accessory)
-        }
+        AppWindowActivationPolicy.restore(afterClosing: notification)
     }
 }
