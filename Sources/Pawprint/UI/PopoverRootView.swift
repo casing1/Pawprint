@@ -33,11 +33,16 @@ struct PopoverRootView: View {
         }
     }()
 
+    /// Pawprint 0.10.0's menu-bar surface. Adventure is presented in its own window and must not
+    /// make the compact Pawprint surface grow or reflow.
+    static let contentWidth: CGFloat = 380
+    static let defaultScrollHeight: CGFloat = 520
+
     /// `var`, not `let`, only so the capture harness can shoot one tab at two different heights
     /// in a single run. Nothing in the app writes it.
     static var scrollHeight: CGFloat =
         DebugEnvironment.popoverHeight.flatMap { CGFloat(Double($0) ?? 0) }
-            ?? 520
+            ?? defaultScrollHeight
 
     /// Capture only: opens the popover already scrolled to a named section.
     ///
@@ -144,7 +149,7 @@ struct PopoverRootView: View {
             // activity clock and everything else below the fold.
             .frame(height: PopoverRootView.scrollHeight)
         }
-        .frame(width: 380)
+        .frame(width: Self.contentWidth)
     }
 
     private var topBar: some View {
@@ -159,14 +164,6 @@ struct PopoverRootView: View {
             }
             .buttonStyle(.plain)
             .help(activityCenter.settings.isPaused ? L10n.t("popoverRootView.6491e6a9") : L10n.t("popoverRootView.5a694dfb"))
-
-            Button {
-                openAdventureHUD()
-            } label: {
-                Image(systemName: "map.fill")
-            }
-            .buttonStyle(.plain)
-            .help(L10n.t("adventure.expedition.hud.title"))
 
             Button {
                 LiveHUDController.shared.toggle()

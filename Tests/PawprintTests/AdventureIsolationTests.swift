@@ -119,6 +119,39 @@ final class AdventureIsolationTests: XCTestCase {
         )
     }
 
+    func testAdventurePreservesPawprintPopoverDimensions() {
+        XCTAssertEqual(PopoverRootView.contentWidth, 380)
+        XCTAssertEqual(PopoverRootView.defaultScrollHeight, 520)
+    }
+
+    func testAdventureDoesNotAddAControlToPawprintTopBar() throws {
+        let repository = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let popoverSource = try String(
+            contentsOf: repository.appendingPathComponent(
+                "Sources/Pawprint/UI/PopoverRootView.swift"
+            ),
+            encoding: .utf8
+        )
+        let gallerySource = try String(
+            contentsOf: repository.appendingPathComponent(
+                "Sources/Pawprint/UI/PawpetGalleryView.swift"
+            ),
+            encoding: .utf8
+        )
+
+        XCTAssertFalse(
+            popoverSource.contains("Image(systemName: \"map.fill\")"),
+            "Adventure belongs behind the Gallery entry, not in Pawprint's compact top bar"
+        )
+        XCTAssertTrue(
+            gallerySource.contains("browseButton(L10n.t(\"adventure.button\")"),
+            "Removing the top-bar control must not make Adventure unreachable"
+        )
+    }
+
     func testAdventurePresentationHasNoPerpetualAnimation() throws {
         let repository = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
