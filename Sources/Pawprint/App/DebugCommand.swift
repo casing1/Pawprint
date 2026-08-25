@@ -22,6 +22,15 @@ enum DebugCommand {
         _ delegate: AppDelegate,
         adventureSnapshot: AdventureSnapshotConfiguration? = nil
     ) {
+        // Opens the real status-item popover for local WindowServer frame probes. Launching via
+        // the app bundle keeps the same TCC identity as normal use, unlike invoking the embedded
+        // executable directly.
+        if CommandLine.arguments.contains("--popover-probe") {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                delegate.statusItemController.showPopover(on: .today)
+            }
+        }
+
         // End-to-end exercise of the update pipeline: check → download → ditto → signature
         // verification → swap. There is no other way to prove the install path works, since it
         // replaces the running bundle and can't be unit-tested in-process.

@@ -121,10 +121,10 @@ final class AdventureIsolationTests: XCTestCase {
 
     func testAdventurePreservesPawprintPopoverDimensions() {
         XCTAssertEqual(PopoverRootView.contentWidth, 380)
-        XCTAssertEqual(PopoverRootView.defaultScrollHeight, 520)
+        XCTAssertEqual(PopoverRootView.defaultScrollHeight, 556)
     }
 
-    func testAdventureDoesNotAddAControlToPawprintTopBar() throws {
+    func testAdventureRemainsReachableFromTheTopBarAndGallery() throws {
         let repository = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
             .deletingLastPathComponent()
@@ -142,9 +142,9 @@ final class AdventureIsolationTests: XCTestCase {
             encoding: .utf8
         )
 
-        XCTAssertFalse(
+        XCTAssertTrue(
             popoverSource.contains("Image(systemName: \"map.fill\")"),
-            "Adventure belongs behind the Gallery entry, not in Pawprint's compact top bar"
+            "The top-bar map is the direct entry point to Adventure"
         )
         XCTAssertTrue(
             gallerySource.contains("browseButton(L10n.t(\"adventure.button\")"),

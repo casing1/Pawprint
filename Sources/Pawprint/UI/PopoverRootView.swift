@@ -33,10 +33,10 @@ struct PopoverRootView: View {
         }
     }()
 
-    /// Pawprint 0.10.0's menu-bar surface. Adventure is presented in its own window and must not
-    /// make the compact Pawprint surface grow or reflow.
+    /// Pawprint's full category popover target is 406 × 640 points including AppKit chrome on the
+    /// current macOS. This build's AppKit header adds 84 points around the scroll region.
     static let contentWidth: CGFloat = 380
-    static let defaultScrollHeight: CGFloat = 520
+    static let defaultScrollHeight: CGFloat = 556
 
     /// `var`, not `let`, only so the capture harness can shoot one tab at two different heights
     /// in a single run. Nothing in the app writes it.
@@ -164,6 +164,14 @@ struct PopoverRootView: View {
             }
             .buttonStyle(.plain)
             .help(activityCenter.settings.isPaused ? L10n.t("popoverRootView.6491e6a9") : L10n.t("popoverRootView.5a694dfb"))
+
+            Button {
+                openAdventureHUD()
+            } label: {
+                Image(systemName: "map.fill")
+            }
+            .buttonStyle(.plain)
+            .help(L10n.t("adventure.expedition.hud.title"))
 
             Button {
                 LiveHUDController.shared.toggle()
