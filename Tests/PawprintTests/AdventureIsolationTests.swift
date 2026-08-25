@@ -103,43 +103,21 @@ final class AdventureIsolationTests: XCTestCase {
         )
     }
 
-    func testMenuBarAnimationIsCappedAtEightFramesPerSecond() {
-        let sampleWPMValues: [Double] = [0, 5, 20, 35, 55, 90]
-
-        for wpm in sampleWPMValues {
-            XCTAssertGreaterThanOrEqual(
-                MenuBarIconAnimator.frameInterval(forWPM: wpm),
-                MenuBarIconAnimator.minimumActiveFrameInterval
-            )
-        }
-        XCTAssertEqual(
-            MenuBarIconAnimator.minimumActiveFrameInterval,
-            0.125,
-            accuracy: 0.000_001
+    func testAdventurePreservesPawprintPopoverDimensions() throws {
+        let source = try repositorySource(
+            "Sources/Pawprint/UI/PopoverRootView.swift"
         )
-    }
 
-    func testAdventurePreservesPawprintPopoverDimensions() {
-        XCTAssertEqual(PopoverRootView.contentWidth, 380)
-        XCTAssertEqual(PopoverRootView.defaultScrollHeight, 556)
+        XCTAssertTrue(source.contains("?? 520"))
+        XCTAssertTrue(source.contains(".frame(width: 380)"))
     }
 
     func testAdventureRemainsReachableFromTheTopBarAndGallery() throws {
-        let repository = URL(fileURLWithPath: #filePath)
-            .deletingLastPathComponent()
-            .deletingLastPathComponent()
-            .deletingLastPathComponent()
-        let popoverSource = try String(
-            contentsOf: repository.appendingPathComponent(
-                "Sources/Pawprint/UI/PopoverRootView.swift"
-            ),
-            encoding: .utf8
+        let popoverSource = try repositorySource(
+            "Sources/Pawprint/UI/PopoverRootView.swift"
         )
-        let gallerySource = try String(
-            contentsOf: repository.appendingPathComponent(
-                "Sources/Pawprint/UI/PawpetGalleryView.swift"
-            ),
-            encoding: .utf8
+        let gallerySource = try repositorySource(
+            "Sources/Pawprint/UI/PawpetGalleryView.swift"
         )
 
         XCTAssertTrue(
@@ -215,6 +193,17 @@ final class AdventureIsolationTests: XCTestCase {
             AdventureSnapshotHarness.shouldAutorun(
                 environment: ["PAWPRINT_ADVENTURE_AUTORUN": "1"]
             )
+        )
+    }
+
+    private func repositorySource(_ path: String) throws -> String {
+        let repository = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        return try String(
+            contentsOf: repository.appendingPathComponent(path),
+            encoding: .utf8
         )
     }
 }

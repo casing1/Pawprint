@@ -45,7 +45,6 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         // The text beside the icon (WPM, key count…) changes far more slowly than the animation,
         // so it gets its own lazy refresh rather than riding the frame timer.
         refreshTitle()
-        refreshPace()
         let timer = Timer(timeInterval: 1.5, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated {
                 self?.refreshPace()
@@ -54,7 +53,6 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
                 if (self?.titleTick ?? 0) % 4 == 0 { self?.refreshTitle() }
             }
         }
-        timer.tolerance = 0.3
         RunLoop.main.add(timer, forMode: .common)
         paceTimer = timer
     }

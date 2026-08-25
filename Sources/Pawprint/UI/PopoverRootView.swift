@@ -33,16 +33,11 @@ struct PopoverRootView: View {
         }
     }()
 
-    /// Pawprint's full category popover target is 406 × 640 points including AppKit chrome on the
-    /// current macOS. This build's AppKit header adds 84 points around the scroll region.
-    static let contentWidth: CGFloat = 380
-    static let defaultScrollHeight: CGFloat = 556
-
     /// `var`, not `let`, only so the capture harness can shoot one tab at two different heights
     /// in a single run. Nothing in the app writes it.
     static var scrollHeight: CGFloat =
         DebugEnvironment.popoverHeight.flatMap { CGFloat(Double($0) ?? 0) }
-            ?? defaultScrollHeight
+            ?? 520
 
     /// Capture only: opens the popover already scrolled to a named section.
     ///
@@ -149,7 +144,7 @@ struct PopoverRootView: View {
             // activity clock and everything else below the fold.
             .frame(height: PopoverRootView.scrollHeight)
         }
-        .frame(width: Self.contentWidth)
+        .frame(width: 380)
     }
 
     private var topBar: some View {
