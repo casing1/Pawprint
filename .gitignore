@@ -19,3 +19,6 @@ Package.resolved
 # Screenshot workbench: throwaway demo database, raw captures and the capture guide.
 # Regenerate with .demo/CAPTURE.md; never a build input.
 .demo/
+
+# Stray local Python virtualenv, not part of the project.
+/.venv/
