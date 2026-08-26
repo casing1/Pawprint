@@ -218,12 +218,16 @@ final class LiveHUDController: NSObject, NSWindowDelegate {
         frame.size = fitted
         frame.origin = NSPoint(x: right - fitted.width, y: top - fitted.height)
         panel.setFrame(frame, display: true, animate: true)
+        AdventureExpeditionHUDController.shared.avoidOverlap(with: frame)
     }
 
     func show() {
         if let panel {
             panel.orderFrontRegardless()
             isVisible = true
+            AdventureExpeditionHUDController.shared.avoidOverlap(
+                with: panel.frame
+            )
             return
         }
 
@@ -254,6 +258,9 @@ final class LiveHUDController: NSObject, NSWindowDelegate {
 
         panel.orderFrontRegardless()
         isVisible = true
+        AdventureExpeditionHUDController.shared.avoidOverlap(
+            with: panel.frame
+        )
     }
 
     func hide() {

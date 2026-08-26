@@ -915,6 +915,32 @@ enum DebugSnapshot {
         exit(0)
     }
 
+    /// Captures the real adventure window. The split view and scroll views need a live AppKit
+    /// host; ImageRenderer does not lay them out the same way a user sees them.
+    @MainActor
+    static func captureAdventureWindow(to path: String) {
+        guard let window = AdventureWindowController.shared.adventureWindow,
+              window.isVisible,
+              let view = window.contentView
+        else {
+            write("ADVENTURE WINDOW NOT FOUND\n")
+            exit(1)
+        }
+        view.layoutSubtreeIfNeeded()
+        guard let bitmap = view.bitmapImageRepForCachingDisplay(in: view.bounds) else {
+            write("ADVENTURE BITMAP FAILED\n")
+            exit(1)
+        }
+        view.cacheDisplay(in: view.bounds, to: bitmap)
+        guard let png = bitmap.representation(using: .png, properties: [:]) else {
+            write("ADVENTURE PNG FAILED\n")
+            exit(1)
+        }
+        try? png.write(to: URL(fileURLWithPath: path))
+        write("ADVENTURE SHOT window \(window.windowNumber) \(window.title)\n")
+        exit(FileManager.default.fileExists(atPath: path) ? 0 : 1)
+    }
+
     // MARK: - Menu bar animations (PAWPRINT_GIF)
 
     /// Writes animated GIFs of the menu bar icons, drawn on a strip that looks like a menu bar.

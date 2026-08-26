@@ -10,6 +10,101 @@ BUILD_DIR="$ROOT_DIR/build"
 APP_NAME="Pawprint"
 APP_BUNDLE="$BUILD_DIR/$APP_NAME.app"
 CONFIG="${1:-debug}"
+# SwiftPM's SQLite build database can be unreliable in synced/Desktop folders on some machines.
+# Keep the existing repository-local default, while allowing development builds to put only
+# SwiftPM's disposable cache elsewhere:
+#   PAWPRINT_SWIFTPM_SCRATCH_PATH=/private/tmp/pawprint-build ./scripts/build_app.sh
+SWIFTPM_SCRATCH_PATH="${PAWPRINT_SWIFTPM_SCRATCH_PATH:-$ROOT_DIR/.build}"
+LEGACY_UI_BUILD="${PAWPRINT_LEGACY_UI:-0}"
+LEGACY_UI_SDK="${PAWPRINT_LEGACY_UI_SDK:-/Library/Developer/CommandLineTools/SDKs/MacOSX15.4.sdk}"
+
+# Pawprint 0.10.0 was linked against the macOS 15 SDK. On macOS 26, merely keeping the
+# SwiftUI source unchanged is not enough: AppKit intentionally gives apps linked against the
+# newer SDK different control metrics, popover material, corner geometry, and scrollers.
+# Development builds that include Adventure therefore compile against the available macOS 15
+# SDK so the untouched Pawprint UI keeps its 0.10 appearance.
+#
+# Swift 6.3's Observation macro emits one additional private member that the 15.4 SDK's macro
+# declaration does not list. Patch only that declaration in a disposable overlay; all AppKit and
+# SwiftUI interfaces still come from the real 15.4 SDK.
+if [ "$LEGACY_UI_BUILD" = "1" ]; then
+    if [ ! -d "$LEGACY_UI_SDK" ]; then
+        echo "Legacy Pawprint UI SDK not found: $LEGACY_UI_SDK" >&2
+        exit 1
+    fi
+
+    LEGACY_UI_SDK_VERSION="$(/usr/libexec/PlistBuddy -c 'Print :Version' \
+        "$LEGACY_UI_SDK/SDKSettings.plist")"
+    case "$LEGACY_UI_SDK_VERSION" in
+        15.*) ;;
+        *)
+            echo "Refusing legacy UI build with non-macOS-15 SDK: $LEGACY_UI_SDK_VERSION" >&2
+            exit 1
+            ;;
+    esac
+
+    OBSERVATION_OVERLAY_ROOT="$SWIFTPM_SCRATCH_PATH/pawprint-sdk15-overlay"
+    OBSERVATION_OVERLAY_MODULE="$OBSERVATION_OVERLAY_ROOT/Observation.swiftmodule"
+    rm -rf "$OBSERVATION_OVERLAY_ROOT"
+    mkdir -p "$OBSERVATION_OVERLAY_ROOT"
+    cp -R "$LEGACY_UI_SDK/usr/lib/swift/Observation.swiftmodule" \
+        "$OBSERVATION_OVERLAY_MODULE"
+
+    for interface in "$OBSERVATION_OVERLAY_MODULE/"*.swiftinterface; do
+        sed -i '' \
+            's/named(withMutation))/named(withMutation), named(shouldNotifyObservers))/' \
+            "$interface"
+    done
+
+    if ! grep -q 'named(shouldNotifyObservers)' \
+        "$OBSERVATION_OVERLAY_MODULE/arm64e-apple-macos.swiftinterface"; then
+        echo "Failed to prepare the Swift 6 Observation compatibility overlay." >&2
+        exit 1
+    fi
+
+    export SDKROOT="$LEGACY_UI_SDK"
+    SWIFT_BUILD_ARGUMENTS=(
+        --sdk "$LEGACY_UI_SDK"
+        -Xswiftc -I
+        -Xswiftc "$OBSERVATION_OVERLAY_ROOT"
+    )
+    echo "==> Pawprint 0.10 UI compatibility SDK: macOS $LEGACY_UI_SDK_VERSION"
+fi
+
+run_swift_build() {
+    # macOS still ships Bash 3.2, where expanding an empty array under `set -u` aborts. Keep the
+    # normal release path argument-free instead of relying on an empty compatibility array.
+    if [ "$LEGACY_UI_BUILD" = "1" ]; then
+        swift build --scratch-path "$SWIFTPM_SCRATCH_PATH" \
+            "${SWIFT_BUILD_ARGUMENTS[@]}" "$@"
+    else
+        swift build --scratch-path "$SWIFTPM_SCRATCH_PATH" "$@"
+    fi
+}
+
+verify_legacy_ui_sdk() {
+    local binary_path="$1"
+    local build_versions
+    local linked_sdk
+    local found_sdk=false
+
+    build_versions="$(xcrun vtool -show-build "$binary_path")"
+    while IFS= read -r linked_sdk; do
+        found_sdk=true
+        case "$linked_sdk" in
+            15.*) ;;
+            *)
+                echo "Refusing legacy UI build linked against SDK $linked_sdk: $binary_path" >&2
+                exit 1
+                ;;
+        esac
+    done < <(printf '%s\n' "$build_versions" | awk '$1 == "sdk" { print $2 }')
+
+    if [ "$found_sdk" != true ]; then
+        echo "Could not find LC_BUILD_VERSION in legacy UI binary: $binary_path" >&2
+        exit 1
+    fi
+}
 
 echo "==> Building ($CONFIG)..."
 cd "$ROOT_DIR"
@@ -25,19 +120,24 @@ if [ "$CONFIG" = "release" ]; then
     MIN_MACOS="$(/usr/libexec/PlistBuddy -c 'Print :LSMinimumSystemVersion' "$ROOT_DIR/scripts/Info.plist")"
     for arch in arm64 x86_64; do
         echo "    ...$arch"
-        swift build -c release --triple "$arch-apple-macosx$MIN_MACOS"
+        run_swift_build \
+            -c release --triple "$arch-apple-macosx$MIN_MACOS"
     done
     BIN_PATH="$BUILD_DIR/$APP_NAME-universal"
     mkdir -p "$BUILD_DIR"
     lipo -create -output "$BIN_PATH" \
-        "$ROOT_DIR/.build/arm64-apple-macosx/release/$APP_NAME" \
-        "$ROOT_DIR/.build/x86_64-apple-macosx/release/$APP_NAME"
+        "$SWIFTPM_SCRATCH_PATH/arm64-apple-macosx/release/$APP_NAME" \
+        "$SWIFTPM_SCRATCH_PATH/x86_64-apple-macosx/release/$APP_NAME"
     echo "==> Universal binary: $(lipo -archs "$BIN_PATH")"
 else
     # Debug builds stay native — they only ever run on the machine that produced them, and
     # building twice would double every edit-run cycle.
-    swift build
-    BIN_PATH="$ROOT_DIR/.build/debug/$APP_NAME"
+    run_swift_build
+    BIN_PATH="$(run_swift_build --show-bin-path)/$APP_NAME"
+fi
+
+if [ "$LEGACY_UI_BUILD" = "1" ]; then
+    verify_legacy_ui_sdk "$BIN_PATH"
 fi
 
 # Assemble into a staging bundle and only swap it into place once it is signed *and* verified.

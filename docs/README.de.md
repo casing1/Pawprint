@@ -94,6 +94,22 @@ Rund <b>171 Billionen</b> Kombinationen sind erreichbar.</sub>
 
 <br>
 
+## Nimm deine Katzen mit ins Abenteuer
+
+> Vorschau des Entwicklungszweigs: Dieser RPG-Modus ist nicht im öffentlichen
+> Pawprint-0.10.0-DMG enthalten.
+
+Im entstehenden RPG-Modus wählst du drei Katzen aus vergangenen Tagen und führst sie durch eine
+rundenbasierte Expedition mit drei Kämpfen. Das Fellmuster bestimmt ihre Rolle, die Aura ihre
+Affinität und der Ausdruck ihre Passivfähigkeit. Ihr Seltenheitsrang gibt nur einen kleinen
+Wertebonus. Eine ausgewogene Gruppe wird empfohlen, ist aber nicht vorgeschrieben.
+
+Im Hintergrund schreitet nichts von selbst voran. Abenteuer-XP, Routenstempel und die Bindung
+jeder Katze bleiben auf diesem Mac gespeichert; die laufende Expedition mit HP, Mana und Relikten
+bleibt dagegen nur im Arbeitsspeicher. Abenteuerbelohnungen verändern weder den Aktivitätsverlauf
+noch den Seltenheitsrang einer Katze. Sämtliche Formeln und Belohnungen sowie die noch nicht
+implementierten Funktionen stehen in der [aktuellen Implementierungsspezifikation](ADVENTURE_SPEC.de.md).
+
 ## Was es bemerkt
 
 | | |

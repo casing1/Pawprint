@@ -64,14 +64,24 @@ final class ActivityCenter {
     /// True when recording is actually happening right now (not paused, current app not excluded).
     /// The recording gate, in one place and testable on its own. See `RecordingPolicy`.
     var policy: RecordingPolicy {
-        RecordingPolicy(settings: settings, frontmostBundleID: currentFrontmostBundleID)
+        var alwaysExcludedBundleIDs = Set(["com.pawprint.app"])
+        if let runningBundleID = Bundle.main.bundleIdentifier {
+            alwaysExcludedBundleIDs.insert(runningBundleID)
+        }
+        return RecordingPolicy(
+            settings: settings,
+            frontmostBundleID: currentFrontmostBundleID,
+            alwaysExcludedBundleIDs: alwaysExcludedBundleIDs
+        )
     }
 
     var isRecordingActive: Bool { policy.isRecordingActive }
 
     private(set) var isCurrentAppExcluded: Bool = false
 
-    @ObservationIgnored private var currentDayString: String
+    /// Changes only at the configured day boundary, so Adventure can refresh its roster without
+    /// subscribing to the 1.5-second `todaySummary` refresh.
+    private(set) var currentDayString: String
     /// Injected, so a test can hand over a store it controls. Defaults to the real one.
     @ObservationIgnored let store: any ActivityStore
     /// Where "now" comes from. Injected for the same reason.
@@ -208,7 +218,9 @@ final class ActivityCenter {
     /// only on launch and day rollover — not per event.
     /// Re-reads everything after the database was written behind the app's back. Only the
     /// screenshot harness does that, when it seeds a demo history into a throwaway file.
+    @MainActor
     func reloadAfterExternalChange() {
+        AdventureRosterCatalog.invalidate()
         today = store.loadDay(currentDayString) ?? DailyRawCounters(day: currentDayString)
         SummaryCache.shared.invalidateAll()
         reloadRecentDaysCache()
@@ -372,7 +384,11 @@ final class ActivityCenter {
         store.saveSettings(newSettings)
         refreshExclusionState()
         if dockIconChanged {
-            NSApp.setActivationPolicy(newSettings.showDockIcon ? .regular : .accessory)
+            // A normal Adventure/Settings/Onboarding window still needs `.regular` even when the
+            // persistent Dock icon preference is off.
+            MainActor.assumeIsolated {
+                AppWindowActivationPolicy.refresh(wantsDockIcon: newSettings.showDockIcon)
+            }
         }
         if focusThresholdChanged {
             focusEngine.focusThresholdSeconds = TimeInterval(newSettings.focusThresholdSeconds)
@@ -405,8 +421,11 @@ final class ActivityCenter {
     @ObservationIgnored private var wasRecordingActive = true
 
     private func refreshExclusionState() {
+        // Use the same central policy as app sessions and per-app attribution. Checking only the
+        // user-managed list here let Pawprint's own normal windows pass the shared `beginEvent`
+        // gate, so interacting with Adventure could inflate the very totals it was displaying.
         isCurrentAppExcluded = currentFrontmostBundleID.map { bundleID in
-            settings.excludedApps.contains { $0.bundleID == bundleID }
+            isExcluded(bundleID: bundleID)
         } ?? false
         suspendIfNeeded()
     }
@@ -445,6 +464,11 @@ final class ActivityCenter {
         guard settings.retentionDays > 0 else { return }
         let cutoff = DayKey.addingDays(-settings.retentionDays, to: currentDayString)
         store.deleteDays(before: cutoff)
+        Task { @MainActor in
+            AdventureExpeditionCenter.shared
+                .deleteDateLinkedData(before: cutoff)
+            AdventureRosterCatalog.invalidate()
+        }
     }
 
     func persist() {
@@ -454,7 +478,9 @@ final class ActivityCenter {
     /// Re-reads today's counters from disk. Used after Settings deletes today's row (or
     /// everything) so the in-memory snapshot doesn't resurrect what was just deleted on the
     /// next periodic flush.
+    @MainActor
     func reloadToday() {
+        AdventureRosterCatalog.invalidate()
         today = store.loadDay(currentDayString) ?? DailyRawCounters(day: currentDayString)
         SummaryCache.shared.invalidateAll()
         reloadRecentDaysCache()
@@ -654,6 +680,28 @@ final class ActivityCenter {
     /// screen, Spotlight, the screensaver. Counting these as apps made the lock screen show up
     /// as the most-used "app" of the day.
 
+    /// Pawprint's own windows must never feed activity back into the statistics they display.
+    ///
+    /// The fixed release identifier covers test/launcher contexts where `Bundle.main` is not the
+    /// app bundle; the runtime identifier also covers locally re-signed development variants.
+    static func isOwnProcess(
+        bundleID: String,
+        runningBundleID: String? = Bundle.main.bundleIdentifier
+    ) -> Bool {
+        bundleID == "com.pawprint.app" || runningBundleID == bundleID
+    }
+
+    /// One exclusion policy shared by raw-event gating, sessions, switches and attribution.
+    static func shouldExclude(
+        bundleID: String,
+        runningBundleID: String?,
+        isUserExcluded: Bool
+    ) -> Bool {
+        isOwnProcess(bundleID: bundleID, runningBundleID: runningBundleID)
+            || RecordingPolicy.systemProcessBundleIDs.contains(bundleID)
+            || isUserExcluded
+    }
+
     func isExcluded(bundleID: String) -> Bool {
         policy.isExcluded(bundleID: bundleID)
     }
@@ -702,13 +750,18 @@ final class ActivityCenter {
     /// and feeds the focus-session engine.
     func appDidActivate(bundleID: String, name: String, at date: Date) {
         rolloverIfNeeded(at: date)
-        let hadPreviousApp = currentFrontmostBundleID != nil
+        // Leaving an excluded app is not a recorded switch either. Without checking the previous
+        // bundle before replacing it, external → Pawprint was dropped but Pawprint → external
+        // still added one phantom switch.
+        let hadCountablePreviousApp = currentFrontmostBundleID.map {
+            !isExcluded(bundleID: $0)
+        } ?? false
         currentFrontmostBundleID = bundleID
         currentFrontmostAppName = name
         refreshExclusionState()
 
         guard beginEvent(at: date, category: .appUsage) else { return }
-        if hadPreviousApp {
+        if hadCountablePreviousApp {
             today.totalAppSwitches += 1
         }
         focusEngine.appActivated(
@@ -883,4 +936,3 @@ final class ActivityCenter {
         today.dragDistancePoints += points
     }
 }
-

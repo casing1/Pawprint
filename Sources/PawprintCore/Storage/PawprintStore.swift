@@ -346,6 +346,43 @@ final package class PawprintStore {
         """, [jsonString]) { .couldNotSaveSettings($0) }
     }
 
+    // MARK: - Adventure progression
+
+    /// Adventure progression is stored in the same SQLite file as every other Pawprint record.
+    ///
+    /// The app target owns the schema of this JSON value; Core only provides the lifecycle-safe
+    /// slot so exports, deletion, file permissions, and local-data documentation do not diverge
+    /// across a second preferences file.
+    package func loadAdventureProgressData() -> Data? {
+        var result: Data?
+        read("SELECT value FROM app_settings WHERE key = 'adventure_progress_v1' LIMIT 1;") { row in
+            result = row.columnText(0)?.data(using: .utf8)
+        }
+        return result
+    }
+
+    package func saveAdventureProgressData(_ data: Data) {
+        guard let jsonString = String(data: data, encoding: .utf8) else {
+            StoreHealth.shared.record(
+                .couldNotSaveSettings("adventure progress: could not encode")
+            )
+            return
+        }
+        write("""
+            INSERT INTO app_settings (key, value)
+            VALUES ('adventure_progress_v1', ?)
+            ON CONFLICT(key) DO UPDATE SET value = excluded.value;
+        """, [jsonString]) {
+            .couldNotSaveSettings("adventure progress: \($0)")
+        }
+    }
+
+    package func deleteAdventureProgressData() {
+        write("DELETE FROM app_settings WHERE key = 'adventure_progress_v1';") {
+            .couldNotSaveSettings("delete adventure progress: \($0)")
+        }
+    }
+
     // MARK: - Achievements
 
     /// Stored in `app_settings` rather than alongside daily stats so that deleting a day's

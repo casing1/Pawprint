@@ -90,11 +90,13 @@ struct DataSettingsTab: View {
         let key = DayKey.string(for: date, dayStartHour: activityCenter.settings.dayStartHour)
         PawprintStore.shared.deleteDay(key)
         SummaryCache.shared.invalidate(key)
+        AdventureExpeditionCenter.shared.deleteData(forDay: key)
         activityCenter.reloadToday()
     }
 
     private func deleteAll(includingAchievements: Bool) {
         PawprintStore.shared.deleteAll()
+        AdventureExpeditionCenter.shared.deleteAllData()
         if includingAchievements {
             AchievementEngine.shared.resetAll()
         }

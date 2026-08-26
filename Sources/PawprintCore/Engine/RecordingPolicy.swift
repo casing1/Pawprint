@@ -35,15 +35,23 @@ package struct RecordingPolicy {
     package var settings: AppSettings
     /// Bundle identifier of the frontmost application, if there is one.
     package var frontmostBundleID: String?
+    /// Application-owned bundles that must never feed their own interaction back into Pawprint.
+    package var alwaysExcludedBundleIDs: Set<String>
 
-    package init(settings: AppSettings, frontmostBundleID: String? = nil) {
+    package init(
+        settings: AppSettings,
+        frontmostBundleID: String? = nil,
+        alwaysExcludedBundleIDs: Set<String> = []
+    ) {
         self.settings = settings
         self.frontmostBundleID = frontmostBundleID
+        self.alwaysExcludedBundleIDs = alwaysExcludedBundleIDs
     }
 
     /// Excluded either because the user said so, or because it is a system process.
     package func isExcluded(bundleID: String) -> Bool {
-        Self.systemProcessBundleIDs.contains(bundleID)
+        alwaysExcludedBundleIDs.contains(bundleID)
+            || Self.systemProcessBundleIDs.contains(bundleID)
             || settings.excludedApps.contains { $0.bundleID == bundleID }
     }
 

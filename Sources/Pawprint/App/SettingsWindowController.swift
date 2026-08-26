@@ -2,6 +2,55 @@ import AppKit
 import SwiftUI
 import PawprintCore
 
+/// Keeps the menu-bar-only activation policy from stranding another normal window.
+///
+/// Settings used to be the only auxiliary window, so closing it could always return the app to
+/// `.accessory`. Adventure makes multiple windows possible: whichever one closes first must leave
+/// the app regular while another titled window is still open.
+@MainActor
+enum AppWindowActivationPolicy {
+    static func desiredPolicy(
+        wantsDockIcon: Bool,
+        hasVisibleTitledWindow: Bool
+    ) -> NSApplication.ActivationPolicy {
+        wantsDockIcon || hasVisibleTitledWindow ? .regular : .accessory
+    }
+
+    static func refresh(wantsDockIcon: Bool) {
+        let hasVisibleTitledWindow = NSApp.windows.contains { window in
+            (window.isVisible || window.isMiniaturized)
+                && window.styleMask.contains(.titled)
+        }
+        NSApp.setActivationPolicy(
+            desiredPolicy(
+                wantsDockIcon: wantsDockIcon,
+                hasVisibleTitledWindow: hasVisibleTitledWindow
+            )
+        )
+    }
+
+    static func restore(afterClosing notification: Notification) {
+        let closingWindow = notification.object as? NSWindow
+        DispatchQueue.main.async {
+            let closingWindowReopened = closingWindow.map {
+                $0.isVisible || $0.isMiniaturized
+            } ?? false
+            let hasAnotherWindow = closingWindowReopened || NSApp.windows.contains { window in
+                window !== closingWindow
+                    && (window.isVisible || window.isMiniaturized)
+                    && window.styleMask.contains(.titled)
+            }
+            let wantsDockIcon = ActivityCenter.shared.settings.showDockIcon
+            NSApp.setActivationPolicy(
+                desiredPolicy(
+                    wantsDockIcon: wantsDockIcon,
+                    hasVisibleTitledWindow: hasAnotherWindow
+                )
+            )
+        }
+    }
+}
+
 /// Owns the Settings window.
 ///
 /// SwiftUI's `Settings` scene is opened via `NSApp.showSettingsWindow:`, but that selector is not
@@ -43,11 +92,7 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
     }
 
     func windowWillClose(_ notification: Notification) {
-        // Restore the menu-bar-only policy unless the user actually wants a Dock icon.
-        let wantsDockIcon = ActivityCenter.shared.settings.showDockIcon
-        DispatchQueue.main.async {
-            NSApp.setActivationPolicy(wantsDockIcon ? .regular : .accessory)
-        }
+        AppWindowActivationPolicy.restore(afterClosing: notification)
     }
 }
 
