@@ -93,6 +93,21 @@ Around <b>171 trillion</b> combinations are reachable.</sub>
 
 <br>
 
+## Take your cats exploring
+
+> Development branch preview: this RPG mode is not included in the public Pawprint 0.10.0 DMG.
+
+The RPG mode under development lets you pick three cats from previous days and take them through
+a three-battle, turn-based expedition. A cat's coat pattern sets its role, its aura sets its
+affinity, its expression becomes a passive, and its rarity grade adds only a small stat edge. A
+balanced party is recommended, never required.
+
+Nothing advances in the background. Adventure XP, route stamps and each cat's bond stay on this
+Mac, while the active run, health, mana and relics live only in memory. Adventure rewards never
+rewrite activity history or change a cat's grade. See the
+[current implementation specification](docs/ADVENTURE_SPEC.md) for complete formulas and
+rewards, plus a list of features that are not implemented yet.
+
 ## What it notices
 
 | | |
